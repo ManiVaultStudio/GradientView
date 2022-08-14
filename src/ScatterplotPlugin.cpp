@@ -164,6 +164,8 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
 
         return dropRegions;
     });
+
+    _scatterPlotWidget->installEventFilter(this);
 }
 
 ScatterplotPlugin::~ScatterplotPlugin()
@@ -542,6 +544,94 @@ void ScatterplotPlugin::setXDimension(const std::int32_t& dimensionIndex)
 void ScatterplotPlugin::setYDimension(const std::int32_t& dimensionIndex)
 {
     updateData();
+}
+
+bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
+{
+    auto shouldPaint = false;
+
+    switch (event->type())
+    {
+    case QEvent::Resize:
+    {
+        const auto resizeEvent = static_cast<QResizeEvent*>(event);
+
+        break;
+    }
+
+    case QEvent::MouseButtonPress:
+    {
+        auto mouseEvent = static_cast<QMouseEvent*>(event);
+
+        qDebug() << "Mouse button press";
+
+        //_mousePressed = true;
+
+        break;
+    }
+
+    case QEvent::MouseButtonRelease:
+    {
+        auto mouseEvent = static_cast<QMouseEvent*>(event);
+
+        //_mousePressed = false;
+
+        break;
+    }
+
+    case QEvent::MouseMove:
+    {
+        auto mouseEvent = static_cast<QMouseEvent*>(event);
+
+        QPoint mousePos = QPoint(mouseEvent->x(), mouseEvent->y());
+
+        _scatterPlotWidget->setCurrentPosition(mousePos);
+        hdps::Bounds bounds = _scatterPlotWidget->getBounds();
+
+        if (!_positionDataset.isValid())
+            return QObject::eventFilter(target, event);
+
+        const auto w = _scatterPlotWidget->width();
+        const auto h = _scatterPlotWidget->height();
+        const auto size = w < h ? w : h;
+
+        // Loop over all points and establish whether they are selected or not
+        int closestIndex = 0;
+        float minDist = std::numeric_limits<float>::max();
+        for (std::uint32_t i = 0; i < _positions.size(); i++) {
+            const auto pointUV = Vector2f((_positions[i].x - bounds.getLeft()) / bounds.getWidth(), (bounds.getTop() - _positions[i].y) / bounds.getHeight());
+            const auto uvOffset = Vector2f((w - size) / 2.0f, (h - size) / 2.0f);
+            const auto uv = uvOffset + Vector2f(pointUV.x * size, pointUV.y * size);
+
+            Vector2f diff = uv - Vector2f(mousePos.x(), mousePos.y());
+            float sqrDist = diff.x * diff.x + diff.y * diff.y;
+            if (sqrDist < minDist)
+            {
+                closestIndex = i;
+                minDist = sqrDist;
+            }
+        }
+
+        // Create vector for target selection indices
+        std::vector<std::uint32_t> targetSelectionIndices;
+        targetSelectionIndices.push_back(closestIndex);
+
+        // Apply the selection indices
+        _positionDataset->setSelectionIndices(targetSelectionIndices);
+
+        // Notify others that the selection changed
+        _core->notifyDatasetSelectionChanged(_positionDataset);
+
+        //_explanationWidget->update();
+
+        break;
+    }
+
+    default:
+        break;
+    }
+
+    return QObject::eventFilter(target, event);
 }
 
 QIcon ScatterplotPluginFactory::getIcon() const

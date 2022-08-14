@@ -99,6 +99,8 @@ private:
     void calculatePositions(const Points& points);
     void updateSelection();
 
+    bool eventFilter(QObject* target, QEvent* event);
+
 private:
     Dataset<Points>                 _positionDataset;           /** Smart pointer to points dataset for point position */
     Dataset<Points>                 _positionSourceDataset;     /** Smart pointer to source of the points dataset for point position (if any) */

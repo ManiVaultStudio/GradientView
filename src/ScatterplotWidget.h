@@ -87,6 +87,8 @@ public:
     void setScalarEffect(PointEffect effect);
     void setPointScaling(hdps::gui::PointScaling scalingMode);
 
+    void setCurrentPosition(QPoint pos) { _currentPoint = pos; update(); }
+
     /**
      * Set sigma value for kernel density esitmation.
      * @param sigma kernel width as a fraction of the output square width. Typical values are [0.01 .. 0.5]
@@ -167,4 +169,6 @@ private:
     Bounds                  _dataBounds;                        /** Bounds of the loaded data */
     QImage                  _colorMapImage;
     PixelSelectionTool      _pixelSelectionTool;
+
+    QPoint                  _currentPoint;
 };
