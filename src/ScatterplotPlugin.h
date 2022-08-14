@@ -35,6 +35,8 @@ public:
 
     void init() override;
 
+    void onDataEvent(hdps::DataEvent* dataEvent);
+
     /**
      * Load one (or more datasets in the view)
      * @param datasets Dataset(s) to load

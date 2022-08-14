@@ -216,6 +216,10 @@ void ScatterplotPlugin::init()
         selectPoints();
     });
 
+    _eventListener.setEventCore(Application::core());
+    _eventListener.addSupportedEventType(static_cast<std::uint32_t>(EventType::DataSelectionChanged));
+    _eventListener.registerDataEventByType(PointType, std::bind(&ScatterplotPlugin::onDataEvent, this, std::placeholders::_1));
+
     // Load points when the pointer to the position dataset changes
     connect(&_positionDataset, &Dataset<Points>::changed, this, &ScatterplotPlugin::positionDatasetChanged);
 
@@ -230,6 +234,93 @@ void ScatterplotPlugin::init()
 
     // Do an initial update of the window title
     updateWindowTitle();
+}
+
+void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
+{
+    if (dataEvent->getType() == EventType::DataSelectionChanged)
+    {
+        if (dataEvent->getDataset() == _positionDataset)
+        {
+            if (_positionDataset->isDerivedData())
+            {
+                hdps::Dataset<Points> sourceDataset = _positionDataset->getSourceDataset<Points>();
+                hdps::Dataset<Points> selection = sourceDataset->getSelection();
+
+                std::vector<float> dimRanking(sourceDataset->getNumDimensions());
+
+                int numDimensions = _positionSourceDataset->getNumDimensions();
+
+                if (selection->indices.size() > 0)
+                {
+                    int index = selection->indices[0];
+                    Vector2f center = _positions[index];
+
+                    std::vector<float> dimAveragesSmall(numDimensions);
+                    std::vector<float> dimAveragesLarge(numDimensions);
+
+                    // Small circle
+                    {
+                        std::vector<int> circleIndices;
+                        for (int i = 0; i < _positions.size(); i++)
+                        {
+                            Vector2f& pos = _positions[i];
+
+                            Vector2f diff = center - pos;
+                            float len = sqrt(diff.x * diff.x + diff.y * diff.y);
+                            if (len < 0.025f)
+                            {
+                                circleIndices.push_back(i);
+                            }
+                        }
+                        for (int d = 0; d < numDimensions; d++)
+                        {
+                            for (int& index : circleIndices)
+                            {
+                                float v = _positionSourceDataset->getValueAt(index * numDimensions + d);
+                                dimAveragesSmall[d] += v;
+                            }
+                            dimAveragesSmall[d] /= circleIndices.size();
+                        }
+                    }
+                    // Large circle
+                    {
+                        std::vector<int> circleIndices;
+                        for (int i = 0; i < _positions.size(); i++)
+                        {
+                            Vector2f& pos = _positions[i];
+
+                            Vector2f diff = center - pos;
+                            float len = sqrt(diff.x * diff.x + diff.y * diff.y);
+                            if (len < 0.05f)
+                            {
+                                circleIndices.push_back(i);
+                            }
+                        }
+                        for (int d = 0; d < numDimensions; d++)
+                        {
+                            for (int& index : circleIndices)
+                            {
+                                float v = _positionSourceDataset->getValueAt(index * numDimensions + d);
+                                dimAveragesLarge[d] += v;
+                            }
+                            dimAveragesLarge[d] /= circleIndices.size();
+                        }
+                    }
+
+                    std::vector<float> diffAverages(numDimensions);
+                    for (int d = 0; d < numDimensions; d++)
+                    {
+                        diffAverages[d] = dimAveragesSmall[d] - dimAveragesLarge[d];
+                    }
+
+                    int gradientDim = std::max_element(diffAverages.begin(), diffAverages.end()) - diffAverages.begin();
+
+                    //_explanationModel.computeDimensionRanks(dimRanking, selection->indices);
+                }
+            }
+        }
+    }
 }
 
 void ScatterplotPlugin::loadData(const Datasets& datasets)
