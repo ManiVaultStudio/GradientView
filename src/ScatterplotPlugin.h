@@ -14,6 +14,7 @@ using namespace hdps::util;
 class Points;
 
 class ScatterplotWidget;
+class ProjectionView;
 
 namespace hdps
 {
@@ -93,6 +94,7 @@ public:
 
     /** Get reference to the scatter plot widget */
     ScatterplotWidget& getScatterplotWidget();
+    ProjectionView& getProjectionView() { return *_projectionView; }
 
     SettingsAction& getSettingsAction() { return _settingsAction; }
 
@@ -109,9 +111,10 @@ private:
     std::vector<hdps::Vector2f>     _positions;                 /** Point positions */
     unsigned int                    _numPoints;                 /** Number of point positions */
     
-    
 protected:
     ScatterplotWidget*          _scatterPlotWidget;
+    ProjectionView*             _projectionView;
+
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;
 };

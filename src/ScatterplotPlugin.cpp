@@ -1,5 +1,6 @@
 #include "ScatterplotPlugin.h"
 #include "ScatterplotWidget.h"
+#include "ProjectionView.h"
 #include "DataHierarchyItem.h"
 #include "Application.h"
 
@@ -38,6 +39,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _positions(),
     _numPoints(0),
     _scatterPlotWidget(new ScatterplotWidget()),
+    _projectionView(new ProjectionView()),
     _dropWidget(nullptr),
     _settingsAction(this)
 {
@@ -180,6 +182,7 @@ void ScatterplotPlugin::init()
     layout->setSpacing(0);
     layout->addWidget(_settingsAction.createWidget(&getWidget()));
     layout->addWidget(_scatterPlotWidget, 100);
+    layout->addWidget(_projectionView, 100);
 
     auto bottomToolbarWidget = new QWidget();
     auto bottomToolbarLayout = new QHBoxLayout();
@@ -251,6 +254,22 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
 
                 int numDimensions = _positionSourceDataset->getNumDimensions();
 
+                // Determine projection bounds
+                float minX = std::numeric_limits<float>::max();
+                float minY = std::numeric_limits<float>::max();
+                float maxX = -std::numeric_limits<float>::max();
+                float maxY = -std::numeric_limits<float>::max();
+                for (int i = 0; i < _positions.size(); i++)
+                {
+                    if (_positions[i].x < minX) minX = _positions[i].x;
+                    if (_positions[i].y < minY) minY = _positions[i].y;
+                    if (_positions[i].x > maxX) maxX = _positions[i].x;
+                    if (_positions[i].y > maxY) maxY = _positions[i].y;
+                }
+                float rangeX = maxX - minX;
+                float rangeY = maxY - minY;
+                float size = std::min(rangeX, rangeY);
+
                 if (selection->indices.size() > 0)
                 {
                     int index = selection->indices[0];
@@ -268,11 +287,13 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
 
                             Vector2f diff = center - pos;
                             float len = sqrt(diff.x * diff.x + diff.y * diff.y);
-                            if (len < 0.025f)
+
+                            if (len < 0.05f * size)
                             {
                                 circleIndices.push_back(i);
                             }
                         }
+
                         for (int d = 0; d < numDimensions; d++)
                         {
                             for (int& index : circleIndices)
@@ -292,7 +313,7 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
 
                             Vector2f diff = center - pos;
                             float len = sqrt(diff.x * diff.x + diff.y * diff.y);
-                            if (len < 0.05f)
+                            if (len < 0.1f * size)
                             {
                                 circleIndices.push_back(i);
                             }
@@ -316,7 +337,23 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
 
                     int gradientDim = std::max_element(diffAverages.begin(), diffAverages.end()) - diffAverages.begin();
 
-                    //_explanationModel.computeDimensionRanks(dimRanking, selection->indices);
+                    // Set appropriate coloring of gradient view, FIXME use colormap later
+                    std::vector<float> dimValues;
+                    _positionSourceDataset->extractDataForDimension(dimValues, gradientDim);
+
+                    float minV = *std::min_element(dimValues.begin(), dimValues.end());
+                    float maxV = *std::max_element(dimValues.begin(), dimValues.end());
+                    for (int i = 0; i < dimValues.size(); i++)
+                    {
+                        dimValues[i] /= maxV - minV;
+                    }
+
+                    std::vector<Vector3f> colors(_positions.size());
+                    for (int i = 0; i < dimValues.size(); i++)
+                    {
+                        colors[i] = Vector3f(dimValues[i], dimValues[i], dimValues[i]);
+                    }
+                    _projectionView->setColors(colors);
                 }
             }
         }
@@ -585,6 +622,7 @@ void ScatterplotPlugin::updateData()
 
         // Pass the 2D points to the scatter plot widget
         _scatterPlotWidget->setData(&_positions);
+        _projectionView->setData(&_positions);
 
         updateSelection();
     }

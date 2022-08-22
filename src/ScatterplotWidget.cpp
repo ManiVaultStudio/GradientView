@@ -34,7 +34,7 @@ namespace
 
 ScatterplotWidget::ScatterplotWidget() :
     _densityRenderer(DensityRenderer::RenderMode::DENSITY),
-    _backgroundColor(1, 1, 1),
+    _backgroundColor(255, 255, 255, 255),
     _pointRenderer(),
     _pixelSelectionTool(this)
 {

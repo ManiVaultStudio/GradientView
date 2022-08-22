@@ -29,6 +29,8 @@ set(PLUGIN
 set(UI
     src/ScatterplotWidget.h
     src/ScatterplotWidget.cpp
+    src/ProjectionView.h
+    src/ProjectionView.cpp
     src/ExportImageDialog.h
     src/ExportImageDialog.cpp
 )
