@@ -94,7 +94,6 @@ public:
 
     /** Get reference to the scatter plot widget */
     ScatterplotWidget& getScatterplotWidget();
-    ProjectionView& getProjectionView() { return *_projectionView; }
 
     SettingsAction& getSettingsAction() { return _settingsAction; }
 
@@ -112,8 +111,8 @@ private:
     unsigned int                    _numPoints;                 /** Number of point positions */
     
 protected:
-    ScatterplotWidget*          _scatterPlotWidget;
-    ProjectionView*             _projectionView;
+    ScatterplotWidget*              _scatterPlotWidget;
+    std::vector<ProjectionView*>    _projectionViews;
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;

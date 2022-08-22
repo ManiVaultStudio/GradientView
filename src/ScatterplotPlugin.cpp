@@ -39,13 +39,18 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _positions(),
     _numPoints(0),
     _scatterPlotWidget(new ScatterplotWidget()),
-    _projectionView(new ProjectionView()),
+    _projectionViews(3),
     _dropWidget(nullptr),
     _settingsAction(this)
 {
     setObjectName("GradientExplorer");
 
     _dropWidget = new DropWidget(_scatterPlotWidget);
+
+    for (int i = 0; i < _projectionViews.size(); i++)
+    {
+        _projectionViews[i] = new ProjectionView();
+    }
 
     getWidget().setFocusPolicy(Qt::ClickFocus);
 
@@ -177,12 +182,18 @@ ScatterplotPlugin::~ScatterplotPlugin()
 void ScatterplotPlugin::init()
 {
     auto layout = new QVBoxLayout();
+    auto plotLayout = new QHBoxLayout();
+    auto gradientViewLayout = new QVBoxLayout();
 
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->addWidget(_settingsAction.createWidget(&getWidget()));
-    layout->addWidget(_scatterPlotWidget, 100);
-    layout->addWidget(_projectionView, 100);
+    gradientViewLayout->addWidget(_projectionViews[0], 33);
+    gradientViewLayout->addWidget(_projectionViews[1], 33);
+    gradientViewLayout->addWidget(_projectionViews[2], 33);
+    plotLayout->addWidget(_scatterPlotWidget, 60);
+    plotLayout->addLayout(gradientViewLayout, 30);
+    layout->addLayout(plotLayout, 100);
 
     auto bottomToolbarWidget = new QWidget();
     auto bottomToolbarLayout = new QHBoxLayout();
@@ -335,25 +346,32 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                         diffAverages[d] = dimAveragesSmall[d] - dimAveragesLarge[d];
                     }
 
-                    int gradientDim = std::max_element(diffAverages.begin(), diffAverages.end()) - diffAverages.begin();
+                    // Sort averages from high to low
+                    std::vector<size_t> idx(diffAverages.size());
+                    std::iota(idx.begin(), idx.end(), 0);
+
+                    std::stable_sort(idx.begin(), idx.end(), [&diffAverages](size_t i1, size_t i2) {return diffAverages[i1] > diffAverages[i2]; });
 
                     // Set appropriate coloring of gradient view, FIXME use colormap later
-                    std::vector<float> dimValues;
-                    _positionSourceDataset->extractDataForDimension(dimValues, gradientDim);
-
-                    float minV = *std::min_element(dimValues.begin(), dimValues.end());
-                    float maxV = *std::max_element(dimValues.begin(), dimValues.end());
-                    for (int i = 0; i < dimValues.size(); i++)
+                    for (int pi = 0; pi < _projectionViews.size(); pi++)
                     {
-                        dimValues[i] /= maxV - minV;
-                    }
+                        std::vector<float> dimValues;
+                        _positionSourceDataset->extractDataForDimension(dimValues, idx[pi]);
 
-                    std::vector<Vector3f> colors(_positions.size());
-                    for (int i = 0; i < dimValues.size(); i++)
-                    {
-                        colors[i] = Vector3f(dimValues[i], dimValues[i], dimValues[i]);
+                        float minV = *std::min_element(dimValues.begin(), dimValues.end());
+                        float maxV = *std::max_element(dimValues.begin(), dimValues.end());
+                        for (int i = 0; i < dimValues.size(); i++)
+                        {
+                            dimValues[i] /= maxV - minV;
+                        }
+
+                        std::vector<Vector3f> colors(_positions.size());
+                        for (int i = 0; i < dimValues.size(); i++)
+                        {
+                            colors[i] = Vector3f(dimValues[i], dimValues[i], dimValues[i]);
+                        }
+                        _projectionViews[pi]->setColors(colors);
                     }
-                    _projectionView->setColors(colors);
                 }
             }
         }
@@ -622,7 +640,8 @@ void ScatterplotPlugin::updateData()
 
         // Pass the 2D points to the scatter plot widget
         _scatterPlotWidget->setData(&_positions);
-        _projectionView->setData(&_positions);
+        for (int i = 0; i < _projectionViews.size(); i++)
+            _projectionViews[i]->setData(&_positions);
 
         updateSelection();
     }
