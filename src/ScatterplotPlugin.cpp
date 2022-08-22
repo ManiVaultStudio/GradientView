@@ -292,14 +292,15 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     // Small circle
                     {
                         std::vector<int> circleIndices;
+                        float radiusSqr = powf(0.05f * size, 2);
                         for (int i = 0; i < _positions.size(); i++)
                         {
                             Vector2f& pos = _positions[i];
 
                             Vector2f diff = center - pos;
-                            float len = sqrt(diff.x * diff.x + diff.y * diff.y);
+                            float len = diff.x * diff.x + diff.y * diff.y;
 
-                            if (len < 0.05f * size)
+                            if (len < radiusSqr)
                             {
                                 circleIndices.push_back(i);
                             }
@@ -318,13 +319,14 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     // Large circle
                     {
                         std::vector<int> circleIndices;
+                        float radiusSqr = powf(0.1f * size, 2);
                         for (int i = 0; i < _positions.size(); i++)
                         {
                             Vector2f& pos = _positions[i];
 
                             Vector2f diff = center - pos;
-                            float len = sqrt(diff.x * diff.x + diff.y * diff.y);
-                            if (len < 0.1f * size)
+                            float len = diff.x * diff.x + diff.y * diff.y;
+                            if (len < radiusSqr)
                             {
                                 circleIndices.push_back(i);
                             }
