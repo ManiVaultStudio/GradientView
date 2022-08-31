@@ -9,6 +9,7 @@
 #include "SettingsAction.h"
 
 #include <Eigen/Eigen>
+#include <knncpp.h>
 
 using namespace hdps::plugin;
 using namespace hdps::util;
@@ -19,6 +20,38 @@ class Points;
 
 class ScatterplotWidget;
 class ProjectionView;
+
+typedef knncpp::Matrixi Matrixi;
+
+using KdTree = knncpp::KDTreeMinkowskiX<float, knncpp::EuclideanDistance<float>>;
+
+class KnnGraph
+{
+public:
+    void build(const DataMatrix& data, KdTree* kdTree, int k)
+    {
+        numNeighbours = k - 1;
+
+        Matrixi indices;
+        Eigen::MatrixXf distances;
+
+        Eigen::MatrixXf arrayt = data.transpose();
+        kdTree->query(arrayt, k, indices, distances);
+
+        neighbours.resize(data.rows(), std::vector<int>(k));
+
+        for (int i = 0; i < data.rows(); i++)
+        {
+            for (int j = 0; j < k - 1; j++)
+            {
+                neighbours[i][j] = indices(j + 1, i);
+            }
+        }
+    }
+
+    std::vector<std::vector<int>> neighbours;
+    int numNeighbours;
+};
 
 namespace hdps
 {
@@ -62,6 +95,8 @@ protected: // Data loading
 
     /** Invoked when the position points dataset changes */
     void positionDatasetChanged();
+
+    void createKnnGraph(const DataMatrix& highDim);
 
 public: // Point colors
 
@@ -116,6 +151,8 @@ private:
 
     DataMatrix                      _dataMatrix;
     DataMatrix                      _projMatrix;
+    knncpp::KDTreeMinkowskiX<float, knncpp::EuclideanDistance<float>>* _kdtree;
+    KnnGraph                        _knnGraph;
 
 protected:
     ScatterplotWidget*              _scatterPlotWidget;

@@ -158,6 +158,43 @@ namespace
             }
         }
     }
+
+    void doRandomWalksKNN(const DataMatrix& highDim, const DataMatrix& spatialMap, const KnnGraph& knnGraph, int selectedPoint, std::vector<std::vector<int>>& randomWalks)
+    {
+        int numDimensions = highDim.cols();
+
+        int k = knnGraph.numNeighbours;
+        int numWalks = 10;
+
+        randomWalks.resize(numWalks);
+        // Start X number of random walks
+        for (int w = 0; w < numWalks; w++)
+        {
+            int prevNode = -1;
+            // Perform given number of iterations of a random walk
+            auto currentNode = selectedPoint;
+
+            randomWalks[w].resize(10);
+
+            // Iterations
+            for (int i = 0; i < 10; i++)
+            {
+                randomWalks[w][i] = currentNode;// Vector2f(spatialMap(currentNode, 0), spatialMap(currentNode, 1));
+
+                int newNode = -1;
+                do
+                {
+                    float u = distribution(generator);
+                    int knnIndex = (int)(u * k);
+
+                    newNode = knnGraph.neighbours[currentNode][knnIndex];
+                } while (newNode == prevNode);
+
+                prevNode = currentNode;
+                currentNode = newNode;
+            }
+        }
+    }
 }
 
 ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
@@ -418,9 +455,31 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     Vector2f center = _positions[selectionIndex];
 
                     // Random walk
-                    std::vector<std::vector<Vector2f>> randomWalks;
-                    doRandomWalks(_dataMatrix, _projMatrix, selectionIndex, randomWalks);
-                    _scatterPlotWidget->setRandomWalks(randomWalks);
+                    std::vector<std::vector<int>> randomWalks;
+                    doRandomWalksKNN(_dataMatrix, _projMatrix, _knnGraph, selectionIndex, randomWalks);
+
+                    std::vector<std::vector<Vector2f>> randomWalkPoints;
+                    randomWalkPoints.resize(randomWalks.size());
+                    for (int i = 0; i < randomWalks.size(); i++)
+                    {
+                        randomWalkPoints[i].resize(randomWalks[i].size());
+                        for (int j = 0; j < randomWalks[i].size(); j++)
+                        {
+                            int index = randomWalks[i][j];
+                            randomWalkPoints[i][j] = Vector2f(_projMatrix(index, 0), _projMatrix(index, 1));
+                        }
+                    }
+                    
+                    _scatterPlotWidget->setRandomWalks(randomWalkPoints);
+
+                    std::vector<Vector3f> colors(_dataMatrix.rows(), Vector3f(0, 0, 0));
+                    for (int i = 0; i < randomWalks[0].size(); i++)
+                    {
+                        int index = randomWalks[0][i];
+                        colors[index] = Vector3f(1, 0, 0);
+                    }
+
+                    _scatterPlotWidget->setColors(colors);
 
                     // Small and large circle averages
                     std::vector<std::vector<float>> averages(2);
@@ -647,6 +706,18 @@ void ScatterplotPlugin::positionDatasetChanged()
 
     convertToEigenMatrix(_positionSourceDataset, _dataMatrix);
     convertToEigenMatrix(_positionDataset, _projMatrix);
+
+    createKnnGraph(_dataMatrix);
+    _knnGraph.build(_dataMatrix, _kdtree, 5);
+}
+
+void ScatterplotPlugin::createKnnGraph(const DataMatrix& highDim)
+{
+    Eigen::MatrixXf tarray = highDim.transpose();
+    _kdtree = new knncpp::KDTreeMinkowskiX<float, knncpp::EuclideanDistance<float>>(tarray, true);
+    _kdtree->build();
+
+    qDebug() << "Rows:" << tarray.rows() << tarray.cols();
 }
 
 void ScatterplotPlugin::loadColors(const Dataset<Points>& points, const std::uint32_t& dimensionIndex)
