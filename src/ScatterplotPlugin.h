@@ -8,8 +8,12 @@
 
 #include "SettingsAction.h"
 
+#include <Eigen/Eigen>
+
 using namespace hdps::plugin;
 using namespace hdps::util;
+
+using DataMatrix = Eigen::MatrixXf;
 
 class Points;
 
@@ -109,7 +113,10 @@ private:
     Dataset<Points>                 _positionSourceDataset;     /** Smart pointer to source of the points dataset for point position (if any) */
     std::vector<hdps::Vector2f>     _positions;                 /** Point positions */
     unsigned int                    _numPoints;                 /** Number of point positions */
-    
+
+    DataMatrix                      _dataMatrix;
+    DataMatrix                      _projMatrix;
+
 protected:
     ScatterplotWidget*              _scatterPlotWidget;
     std::vector<ProjectionView*>    _projectionViews;

@@ -110,6 +110,8 @@ public:
      */
     void createScreenshot(std::int32_t width, std::int32_t height, const QString& fileName, const QColor& backgroundColor);
 
+    void setRandomWalks(const std::vector<std::vector<Vector2f>>& randomWalks);
+
 protected:
     void initializeGL()         Q_DECL_OVERRIDE;
     void resizeGL(int w, int h) Q_DECL_OVERRIDE;
@@ -169,6 +171,7 @@ private:
     Bounds                  _dataBounds;                        /** Bounds of the loaded data */
     QImage                  _colorMapImage;
     PixelSelectionTool      _pixelSelectionTool;
+    std::vector<std::vector<Vector2f>> _randomWalks;
 
     QPoint                  _currentPoint;
 };

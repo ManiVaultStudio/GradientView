@@ -34,6 +34,8 @@ public:
 
     void setColors(const std::vector<Vector3f>& colors);
 
+    void setProjectionName(QString name);
+
     /////
         /**
      * Set point size scalars
@@ -61,6 +63,8 @@ private:
     PointRenderer _pointRenderer;
     Bounds        _dataBounds;             /** Bounds of the loaded data */
     QSize         _windowSize;             /** Size of the scatterplot widget */
+
+    QString       _projectionName;
 
     bool          _isInitialized = false;
 };

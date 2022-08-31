@@ -34,7 +34,7 @@ ProjectionView::ProjectionView() :
     //setFocusPolicy(Qt::ClickFocus);
 
     _pointRenderer.setPointScaling(Absolute);
-    _pointRenderer.setPointSize(5);
+    _pointRenderer.setPointSize(6);
 
     QSurfaceFormat surfaceFormat;
 
@@ -101,6 +101,11 @@ void ProjectionView::setColors(const std::vector<Vector3f>& colors)
     _pointRenderer.setScalarEffect(None);
 
     update();
+}
+
+void ProjectionView::setProjectionName(QString name)
+{
+    _projectionName = name;
 }
 
 void ProjectionView::setPointSizeScalars(const std::vector<float>& pointSizeScalars)
@@ -182,6 +187,11 @@ void ProjectionView::paintGL()
             qDebug() << "Rendering";
             _pointRenderer.render();
         }
+        QFont font = painter.font();
+        font.setPointSize(font.pointSize() * 2);
+        painter.setFont(font);
+        painter.drawText(30, 30, _projectionName);
+
         painter.endNativePainting();
 
         painter.end();

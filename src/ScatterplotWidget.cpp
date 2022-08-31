@@ -150,6 +150,17 @@ void ScatterplotWidget::computeDensity()
     update();
 }
 
+Matrix3f createProjectionMatrix(Bounds bounds)
+{
+    Matrix3f m;
+    m.setIdentity();
+    m[0] = 2 / bounds.getWidth();
+    m[4] = 2 / bounds.getHeight();
+    m[6] = -((bounds.getRight() + bounds.getLeft()) / bounds.getWidth());
+    m[7] = -((bounds.getTop() + bounds.getBottom()) / bounds.getHeight());
+    return m;
+}
+
 // Positions need to be passed as a pointer as we need to store them locally in order
 // to be able to find the subset of data that's part of a selection. If passed
 // by reference then we can upload the data to the GPU, but not store it in the widget.
@@ -375,6 +386,11 @@ void ScatterplotWidget::createScreenshot(std::int32_t width, std::int32_t height
     }
 }
 
+void ScatterplotWidget::setRandomWalks(const std::vector<std::vector<Vector2f>>& randomWalks)
+{
+    _randomWalks = randomWalks;
+}
+
 void ScatterplotWidget::initializeGL()
 {
     initializeOpenGLFunctions();
@@ -449,7 +465,7 @@ void ScatterplotWidget::paintGL()
             // Reset the blending function
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-               
+
             switch (_renderMode)
             {
                 case SCATTERPLOT:
@@ -462,9 +478,37 @@ void ScatterplotWidget::paintGL()
                     _densityRenderer.render();
                     break;
             }
-                
+
         }
         painter.endNativePainting();
+        
+        // Draw random walks
+        // [Bounds to -1, 1]
+        Matrix3f orthoM = createProjectionMatrix(_dataBounds);
+        
+        int size = std::min(width(), height());
+        Matrix3f toScreen;
+        toScreen.setIdentity();
+        toScreen[0] = size / 2;
+        toScreen[4] = size / 2;
+        toScreen[6] = width() / 2;
+        toScreen[7] = height() / 2;
+
+        Matrix3f invM;
+        invM.setIdentity();
+        invM[0] = 1;
+        invM[4] = -1;
+
+        for (int i = 0; i < _randomWalks.size(); i++)
+        {
+            for (int j = 0; j < _randomWalks[i].size()-1; j++)
+            {
+                const Vector2f& p1 = toScreen * invM * orthoM * _randomWalks[i][j];
+                const Vector2f& p2 = toScreen * invM * orthoM * _randomWalks[i][j+1];
+
+                painter.drawLine(p1.x, p1.y, p2.x, p2.y);
+            }
+        }
         
         // Draw the pixel selection tool overlays if the pixel selection tool is enabled
         if (_pixelSelectionTool.isEnabled()) {

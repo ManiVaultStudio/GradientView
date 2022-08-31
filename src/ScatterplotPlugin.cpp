@@ -14,6 +14,8 @@
 #include "graphics/Vector3f.h"
 #include "widgets/DropWidget.h"
 
+#include <Eigen/Dense>
+
 #include <QtCore>
 #include <QApplication>
 #include <QDebug>
@@ -26,11 +28,137 @@
 #include <limits>
 #include <set>
 #include <vector>
+#include <iostream>
+#include <random>
 
 Q_PLUGIN_METADATA(IID "nl.biovault.GradientExplorerPlugin")
 
 using namespace hdps;
 using namespace hdps::util;
+
+std::default_random_engine generator;
+std::uniform_real_distribution<float> distribution(0, 1);
+
+namespace
+{
+    void convertToEigenMatrix(hdps::Dataset<Points> dataset, DataMatrix& dataMatrix)
+    {
+        int numPoints = dataset->getNumPoints();
+        int numDimensions = dataset->getNumDimensions();
+
+        dataMatrix.resize(numPoints, numDimensions);
+
+        for (int i = 0; i < numPoints; i++)
+        {
+            for (int j = 0; j < numDimensions; j++)
+            {
+                int index = dataset->isFull() ? i * numDimensions + j : dataset->indices[i] * numDimensions + j;
+                dataMatrix(i, j) = dataset->getValueAt(index);
+            }
+        }
+    }
+
+    void findPointsInRadius(Vector2f center, float radius, const std::vector<Vector2f>& points, std::vector<int>& indices)
+    {
+        float radiusSqr = powf(radius, 2);
+        for (int i = 0; i < points.size(); i++)
+        {
+            const Vector2f& pos = points[i];
+
+            Vector2f diff = center - pos;
+            float len = diff.x * diff.x + diff.y * diff.y;
+
+            if (len < radiusSqr)
+            {
+                indices.push_back(i);
+            }
+        }
+    }
+
+    void computeDimensionAverage(Dataset<Points> data, const std::vector<int>& indices, std::vector<float>& averages)
+    {
+        int numDimensions = data->getNumDimensions();
+        averages.resize(numDimensions);
+        for (int d = 0; d < numDimensions; d++)
+        {
+            for (const int& index : indices)
+            {
+                float v = data->getValueAt(index * numDimensions + d);
+                averages[d] += v;
+            }
+            averages[d] /= indices.size();
+        }
+    }
+
+    int BinarySearchCDF(const std::vector<float>& cdf, float u)
+    {
+        // Binary search for u
+        int itemFromLeft = 0;
+        int itemFromRight = cdf.size() - 1;
+        while (itemFromLeft < itemFromRight)
+        {
+            int m = itemFromLeft + (itemFromRight - itemFromLeft) / 2;
+            if (cdf[m] < u)
+                itemFromLeft = m + 1;
+            else
+                itemFromRight = m;
+        }
+        return itemFromLeft;
+    }
+
+    void doRandomWalks(const DataMatrix& highDim, const DataMatrix& spatialMap, int selectedPoint, std::vector<std::vector<Vector2f>>& randomWalks)
+    {
+        int numDimensions = highDim.cols();
+
+        //auto seedPoint = highDim.row(selectedPoint);
+
+        randomWalks.resize(1);
+        // Start X number of random walks
+        for (int w = 0; w < 1; w++)
+        {
+            // Perform given number of iterations of a random walk
+            auto currentNode = selectedPoint;
+
+            std::vector<float> distances(highDim.rows(), std::numeric_limits<float>::max());
+            std::vector<float> probs(highDim.rows());
+            std::vector<float> cdf(highDim.rows(), 0);
+
+            randomWalks[w].resize(10);
+
+            // Iterations
+            for (int i = 0; i < 10; i++)
+            {
+                randomWalks[w][i] = Vector2f(spatialMap(currentNode, 0), spatialMap(currentNode, 1));
+                float probSum = 0;
+                float cdfSum = 0;
+                for (int j = 0; j < highDim.rows(); j++)
+                {
+                    if (currentNode == j) { distances[j] = 1000; continue; }
+                    distances[j] = (highDim.row(currentNode) - highDim.row(j)).lpNorm<1>();
+                    
+                    probs[j] = (distances[j] == 0) ? 1 : 1 / (distances[j] * distances[j]);
+                    probSum += probs[j];
+                }
+
+                // Normalize probabilities
+                for (int j = 0; j < probs.size(); j++)
+                {
+                    probs[j] *= 1 / probSum;
+                    cdfSum += probs[j];
+                    cdf[j] = cdfSum;
+                    //qDebug() << probs[j];
+                }
+
+                float u = distribution(generator);
+
+                int xi = BinarySearchCDF(cdf, u);
+                float weight = probs[xi];
+
+                currentNode = xi;
+            }
+        }
+    }
+}
 
 ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     ViewPlugin(factory),
@@ -265,6 +393,8 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
 
                 int numDimensions = _positionSourceDataset->getNumDimensions();
 
+                Bounds bounds = _scatterPlotWidget->getBounds();
+                
                 // Determine projection bounds
                 float minX = std::numeric_limits<float>::max();
                 float minY = std::numeric_limits<float>::max();
@@ -279,75 +409,34 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                 }
                 float rangeX = maxX - minX;
                 float rangeY = maxY - minY;
-                float size = std::min(rangeX, rangeY);
-
+                float size = std::max(rangeX, rangeY);
+                float size1 = bounds.getWidth();
+                qDebug() << "Size: " << size << size1 << bounds.getHeight();
                 if (selection->indices.size() > 0)
                 {
-                    int index = selection->indices[0];
-                    Vector2f center = _positions[index];
+                    int selectionIndex = selection->indices[0];
+                    Vector2f center = _positions[selectionIndex];
 
-                    std::vector<float> dimAveragesSmall(numDimensions);
-                    std::vector<float> dimAveragesLarge(numDimensions);
+                    // Random walk
+                    std::vector<std::vector<Vector2f>> randomWalks;
+                    doRandomWalks(_dataMatrix, _projMatrix, selectionIndex, randomWalks);
+                    _scatterPlotWidget->setRandomWalks(randomWalks);
 
-                    // Small circle
-                    {
-                        std::vector<int> circleIndices;
-                        float radiusSqr = powf(0.05f * size, 2);
-                        for (int i = 0; i < _positions.size(); i++)
-                        {
-                            Vector2f& pos = _positions[i];
+                    // Small and large circle averages
+                    std::vector<std::vector<float>> averages(2);
+                    std::vector<std::vector<int>> circleIndices(2);
 
-                            Vector2f diff = center - pos;
-                            float len = diff.x * diff.x + diff.y * diff.y;
-
-                            if (len < radiusSqr)
-                            {
-                                circleIndices.push_back(i);
-                            }
-                        }
-
-                        for (int d = 0; d < numDimensions; d++)
-                        {
-                            for (int& index : circleIndices)
-                            {
-                                float v = _positionSourceDataset->getValueAt(index * numDimensions + d);
-                                dimAveragesSmall[d] += v;
-                            }
-                            dimAveragesSmall[d] /= circleIndices.size();
-                        }
-                    }
-                    // Large circle
-                    {
-                        std::vector<int> circleIndices;
-                        float radiusSqr = powf(0.1f * size, 2);
-                        for (int i = 0; i < _positions.size(); i++)
-                        {
-                            Vector2f& pos = _positions[i];
-
-                            Vector2f diff = center - pos;
-                            float len = diff.x * diff.x + diff.y * diff.y;
-                            if (len < radiusSqr)
-                            {
-                                circleIndices.push_back(i);
-                            }
-                        }
-                        for (int d = 0; d < numDimensions; d++)
-                        {
-                            for (int& index : circleIndices)
-                            {
-                                float v = _positionSourceDataset->getValueAt(index * numDimensions + d);
-                                dimAveragesLarge[d] += v;
-                            }
-                            dimAveragesLarge[d] /= circleIndices.size();
-                        }
-                    }
+                    findPointsInRadius(center, 0.05f * size, _positions, circleIndices[0]);
+                    computeDimensionAverage(_positionSourceDataset, circleIndices[0], averages[0]);
+                    findPointsInRadius(center, 0.1f * size, _positions, circleIndices[1]);
+                    computeDimensionAverage(_positionSourceDataset, circleIndices[1], averages[1]);
 
                     std::vector<float> diffAverages(numDimensions);
                     for (int d = 0; d < numDimensions; d++)
                     {
-                        diffAverages[d] = dimAveragesSmall[d] - dimAveragesLarge[d];
+                        diffAverages[d] = fabs(averages[0][d] - averages[1][d]);
                     }
-
+                    
                     // Sort averages from high to low
                     std::vector<size_t> idx(diffAverages.size());
                     std::iota(idx.begin(), idx.end(), 0);
@@ -370,9 +459,15 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                         std::vector<Vector3f> colors(_positions.size());
                         for (int i = 0; i < dimValues.size(); i++)
                         {
-                            colors[i] = Vector3f(dimValues[i], dimValues[i], dimValues[i]);
+                            colors[i] = Vector3f(1-dimValues[i], 1 - dimValues[i], 1 - dimValues[i]);
+                            if (i == selectionIndex)
+                            {
+                                colors[i] = Vector3f(1, 0, 0);
+                            }
                         }
                         _projectionViews[pi]->setColors(colors);
+                        const auto& dimNames = _positionSourceDataset->getDimensionNames();
+                        _projectionViews[pi]->setProjectionName(dimNames[idx[pi]]);
                     }
                 }
             }
@@ -549,6 +644,9 @@ void ScatterplotPlugin::positionDatasetChanged()
 
     // Update the window title to reflect the position dataset change
     updateWindowTitle();
+
+    convertToEigenMatrix(_positionSourceDataset, _dataMatrix);
+    convertToEigenMatrix(_positionDataset, _projMatrix);
 }
 
 void ScatterplotPlugin::loadColors(const Dataset<Points>& points, const std::uint32_t& dimensionIndex)
