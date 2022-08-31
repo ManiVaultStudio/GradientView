@@ -36,43 +36,43 @@ set(UI
 )
 
 set(Actions
-    src/ColoringAction.h
-    src/ColoringAction.cpp
-    src/DensityPlotAction.h
-    src/DensityPlotAction.cpp
-    src/ManualClusteringAction.h
-    src/ManualClusteringAction.cpp
-    src/MiscellaneousAction.h
-    src/MiscellaneousAction.cpp
-    src/PlotAction.h
-    src/PlotAction.cpp
-    src/PluginAction.h
-    src/PluginAction.cpp
-    src/PointPlotAction.h
-    src/PointPlotAction.cpp
-    src/PositionAction.h
-    src/PositionAction.cpp
-    src/RenderModeAction.h
-    src/RenderModeAction.cpp
-    src/ScalarAction.h
-    src/ScalarAction.cpp
-    src/ScalarSourceAction.h
-    src/ScalarSourceAction.cpp
-    src/SelectionAction.h
-    src/SelectionAction.cpp
-    src/SettingsAction.h
-    src/SettingsAction.cpp
-    src/SubsetAction.h
-    src/SubsetAction.cpp
-    src/ExportImageAction.h
-    src/ExportImageAction.cpp
+    src/Actions/ColoringAction.h
+    src/Actions/ColoringAction.cpp
+    src/Actions/DensityPlotAction.h
+    src/Actions/DensityPlotAction.cpp
+    src/Actions/ManualClusteringAction.h
+    src/Actions/ManualClusteringAction.cpp
+    src/Actions/MiscellaneousAction.h
+    src/Actions/MiscellaneousAction.cpp
+    src/Actions/PlotAction.h
+    src/Actions/PlotAction.cpp
+    src/Actions/PluginAction.h
+    src/Actions/PluginAction.cpp
+    src/Actions/PointPlotAction.h
+    src/Actions/PointPlotAction.cpp
+    src/Actions/PositionAction.h
+    src/Actions/PositionAction.cpp
+    src/Actions/RenderModeAction.h
+    src/Actions/RenderModeAction.cpp
+    src/Actions/ScalarAction.h
+    src/Actions/ScalarAction.cpp
+    src/Actions/ScalarSourceAction.h
+    src/Actions/ScalarSourceAction.cpp
+    src/Actions/SelectionAction.h
+    src/Actions/SelectionAction.cpp
+    src/Actions/SettingsAction.h
+    src/Actions/SettingsAction.cpp
+    src/Actions/SubsetAction.h
+    src/Actions/SubsetAction.cpp
+    src/Actions/ExportImageAction.h
+    src/Actions/ExportImageAction.cpp
 )
 
 set(Models
-    src/ColorSourceModel.h
-    src/ColorSourceModel.cpp
-    src/ScalarSourceModel.h
-    src/ScalarSourceModel.cpp
+    src/Models/ColorSourceModel.h
+    src/Models/ColorSourceModel.cpp
+    src/Models/ScalarSourceModel.h
+    src/Models/ScalarSourceModel.cpp
 )
 
 set(SHADERS
@@ -95,6 +95,10 @@ source_group(Shaders FILES ${SHADERS})
 source_group(Aux FILES ${AUX})
 
 include_directories("${INSTALL_DIR}/$<CONFIGURATION>/include/")
+include_directories(${PROJECT_SOURCE_DIR}/thirdparty/Eigen/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Actions)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Models)
 
 add_library(${PROJECT} SHARED ${SOURCES} ${SHADERS} ${AUX})
 
