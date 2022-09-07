@@ -112,6 +112,8 @@ public:
 
     void setRandomWalks(const std::vector<std::vector<Vector2f>>& randomWalks);
 
+    void setDirections(const std::vector<Vector2f>& directions);
+
 protected:
     void initializeGL()         Q_DECL_OVERRIDE;
     void resizeGL(int w, int h) Q_DECL_OVERRIDE;
@@ -157,6 +159,16 @@ signals:
 public slots:
     void computeDensity();
 
+    void showRandomWalk()
+    {
+        _showRandomWalk = !_showRandomWalk;
+    }
+
+    void showDirections()
+    {
+        _showDirections = !_showDirections;
+    }
+
 private:
     const Matrix3f          toClipCoordinates = Matrix3f(2, 0, 0, 2, -1, -1);
     Matrix3f                toNormalisedCoordinates;
@@ -172,6 +184,9 @@ private:
     QImage                  _colorMapImage;
     PixelSelectionTool      _pixelSelectionTool;
     std::vector<std::vector<Vector2f>> _randomWalks;
+    std::vector<Vector2f>   _directions;
+    bool                    _showRandomWalk;
+    bool                    _showDirections;
 
     QPoint                  _currentPoint;
 };

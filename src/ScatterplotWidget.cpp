@@ -36,7 +36,9 @@ ScatterplotWidget::ScatterplotWidget() :
     _densityRenderer(DensityRenderer::RenderMode::DENSITY),
     _backgroundColor(255, 255, 255, 255),
     _pointRenderer(),
-    _pixelSelectionTool(this)
+    _pixelSelectionTool(this),
+    _showRandomWalk(false),
+    _showDirections(false)
 {
     setContextMenuPolicy(Qt::CustomContextMenu);
     setAcceptDrops(true);
@@ -391,6 +393,11 @@ void ScatterplotWidget::setRandomWalks(const std::vector<std::vector<Vector2f>>&
     _randomWalks = randomWalks;
 }
 
+void ScatterplotWidget::setDirections(const std::vector<Vector2f>& directions)
+{
+    _directions = directions;
+}
+
 void ScatterplotWidget::initializeGL()
 {
     initializeOpenGLFunctions();
@@ -499,17 +506,33 @@ void ScatterplotWidget::paintGL()
         invM[0] = 1;
         invM[4] = -1;
 
-        for (int i = 0; i < _randomWalks.size(); i++)
+        if (_showRandomWalk)
         {
-            for (int j = 0; j < _randomWalks[i].size()-1; j++)
+            for (int i = 0; i < _randomWalks.size(); i++)
             {
-                const Vector2f& p1 = toScreen * invM * orthoM * _randomWalks[i][j];
-                const Vector2f& p2 = toScreen * invM * orthoM * _randomWalks[i][j+1];
+                for (int j = 0; j < _randomWalks[i].size() - 1; j++)
+                {
+                    const Vector2f& p1 = toScreen * invM * orthoM * _randomWalks[i][j];
+                    const Vector2f& p2 = toScreen * invM * orthoM * _randomWalks[i][j + 1];
 
-                painter.drawLine(p1.x, p1.y, p2.x, p2.y);
+                    painter.drawLine(p1.x, p1.y, p2.x, p2.y);
+                }
             }
         }
-        
+
+        if (_showDirections)
+        {
+            for (int i = 0; i < _directions.size(); i += 2)
+            {
+                Vector2f p = _directions[i];
+                Vector2f d = _directions[i+1];
+                //const Vector2f& p1 = toScreen * invM * orthoM * p;
+                const Vector2f& pt = toScreen * invM * orthoM * p;
+
+                painter.drawLine(pt.x - d.x * 5, pt.y + d.y * 5, pt.x + d.x * 5, pt.y - d.y * 5);
+            }
+        }
+
         // Draw the pixel selection tool overlays if the pixel selection tool is enabled
         if (_pixelSelectionTool.isEnabled()) {
             painter.drawPixmap(rect(), _pixelSelectionTool.getAreaPixmap());

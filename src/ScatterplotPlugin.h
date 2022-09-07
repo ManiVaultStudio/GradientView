@@ -23,7 +23,7 @@ class ProjectionView;
 
 typedef knncpp::Matrixi Matrixi;
 
-using KdTree = knncpp::KDTreeMinkowskiX<float, knncpp::EuclideanDistance<float>>;
+using KdTree = knncpp::KDTreeMinkowskiX<float, knncpp::ManhattenDistance<float>>;
 
 class KnnGraph
 {
@@ -38,7 +38,7 @@ public:
         Eigen::MatrixXf arrayt = data.transpose();
         kdTree->query(arrayt, k, indices, distances);
 
-        neighbours.resize(data.rows(), std::vector<int>(k));
+        neighbours.resize(data.rows(), std::vector<int>(numNeighbours));
 
         for (int i = 0; i < data.rows(); i++)
         {
@@ -151,7 +151,7 @@ private:
 
     DataMatrix                      _dataMatrix;
     DataMatrix                      _projMatrix;
-    knncpp::KDTreeMinkowskiX<float, knncpp::EuclideanDistance<float>>* _kdtree;
+    knncpp::KDTreeMinkowskiX<float, knncpp::ManhattenDistance<float>>* _kdtree;
     KnnGraph                        _knnGraph;
 
 protected:

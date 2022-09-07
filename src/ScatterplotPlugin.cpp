@@ -164,7 +164,8 @@ namespace
         int numDimensions = highDim.cols();
 
         int k = knnGraph.numNeighbours;
-        int numWalks = 10;
+        int numWalks = 100;
+        int numSteps = 10;
 
         randomWalks.resize(numWalks);
         // Start X number of random walks
@@ -174,17 +175,17 @@ namespace
             // Perform given number of iterations of a random walk
             auto currentNode = selectedPoint;
 
-            randomWalks[w].resize(10);
+            randomWalks[w].resize(numSteps);
 
             // Iterations
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < numSteps; i++)
             {
-                randomWalks[w][i] = currentNode;// Vector2f(spatialMap(currentNode, 0), spatialMap(currentNode, 1));
+                randomWalks[w][i] = currentNode;
 
                 int newNode = -1;
                 do
                 {
-                    float u = distribution(generator);
+                    float u = distribution(generator) * 0.999f;
                     int knnIndex = (int)(u * k);
 
                     newNode = knnGraph.neighbours[currentNode][knnIndex];
@@ -193,6 +194,103 @@ namespace
                 prevNode = currentNode;
                 currentNode = newNode;
             }
+        }
+    }
+
+    void doFloodFill(const DataMatrix& highDim, const DataMatrix& spatialMap, const KnnGraph& knnGraph, int selectedPoint, std::vector<std::vector<int>>& floodFill)
+    {
+        int numDimensions = highDim.cols();
+
+        int numSteps = 10;
+
+        floodFill.resize(numSteps);
+
+        // Set of unique nodes
+        std::set<int> nodes;
+        for (int i = 0; i < highDim.rows(); i++)
+            nodes.insert(nodes.end(), i);
+
+        // Perform given number of iterations of floodfill
+        auto currentNodes = std::vector<int>(1, selectedPoint);
+
+        // Start flooding in N steps
+        for (int s = 0; s < numSteps; s++)
+        {
+            // Copy current nodes to floodfill storage
+            //floodFill[s].reserve(currentNodes.size());
+            for (int i = 0; i < currentNodes.size(); i++)
+            {
+                int node = currentNodes[i];
+                if (nodes.find(node) != nodes.end())
+                {
+                    nodes.erase(node);
+                    floodFill[s].push_back(node);
+                }
+                else
+                {
+                    currentNodes[i] = -1;
+                }
+            }
+            //if (s == 1) qDebug() << "===============";
+            // Add neighbours of current nodes to new nodes
+            std::vector<int> newNodes;
+            for (const int& node : currentNodes)
+            {
+                if (node == -1) continue;
+                newNodes.insert(newNodes.end(), knnGraph.neighbours[node].begin(), knnGraph.neighbours[node].end());
+            }
+
+            // New nodes become the current indices
+            currentNodes = newNodes;
+        }
+    }
+
+    void computeDirection(DataMatrix& dataMatrix, DataMatrix& projMatrix, KnnGraph& knnGraph, std::vector<Vector2f>& directions)
+    {
+        for (int p = 0; p < dataMatrix.rows(); p++)
+        {
+            std::vector<std::vector<int>> floodFill;
+            doFloodFill(dataMatrix, projMatrix, knnGraph, p, floodFill);
+
+            int depth = 3;
+            int numNodes = 0;
+            for (int i = 0; i < depth; i++)
+            {
+                numNodes += floodFill[i].size();
+            }
+
+            Eigen::MatrixXf nodeLocations(numNodes, 2);
+            int n = 0;
+            for (int i = 0; i < depth; i++)
+            {
+                for (int j = 0; j < floodFill[i].size(); j++)
+                {
+                    int index = floodFill[i][j];
+
+                    nodeLocations(n, 0) = projMatrix(index, 0);
+                    nodeLocations(n, 1) = projMatrix(index, 1);
+                    n++;
+                }
+            }
+
+            //
+            // Mean centering data.
+            Eigen::MatrixXf centered = nodeLocations.rowwise() - nodeLocations.row(0);
+            // Compute the covariance matrix.
+            Eigen::MatrixXf cov = centered.adjoint() * centered;
+            cov = cov / (nodeLocations.rows() - 1);
+            Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eig(cov);
+            // Normalize eigenvalues to make them represent percentages.
+            Eigen::MatrixXf evecs = eig.eigenvectors();
+            // Get the two major eigenvectors and omit the others.
+            Vector2f majorEigenVector;
+            if (eig.eigenvalues()(0) > eig.eigenvalues()(1))
+                majorEigenVector.set(evecs(0, 0), evecs(1, 0));
+            else
+                majorEigenVector.set(evecs(0, 1), evecs(1, 1));
+
+            directions.push_back(Vector2f(projMatrix(p, 0), projMatrix(p, 1)));
+            directions.push_back(majorEigenVector);
         }
     }
 }
@@ -356,6 +454,12 @@ void ScatterplotPlugin::init()
     gradientViewLayout->addWidget(_projectionViews[0], 33);
     gradientViewLayout->addWidget(_projectionViews[1], 33);
     gradientViewLayout->addWidget(_projectionViews[2], 33);
+    QPushButton* showRandomWalk = new QPushButton("Show random walks");
+    connect(showRandomWalk, &QPushButton::pressed, &getScatterplotWidget(), &ScatterplotWidget::showRandomWalk);
+    gradientViewLayout->addWidget(showRandomWalk);
+    QPushButton* showDirections = new QPushButton("Show directions");
+    connect(showDirections, &QPushButton::pressed, &getScatterplotWidget(), &ScatterplotWidget::showDirections);
+    gradientViewLayout->addWidget(showDirections);
     plotLayout->addWidget(_scatterPlotWidget, 60);
     plotLayout->addLayout(gradientViewLayout, 30);
     layout->addLayout(plotLayout, 100);
@@ -367,8 +471,8 @@ void ScatterplotPlugin::init()
     bottomToolbarWidget->setLayout(bottomToolbarLayout);
 
     bottomToolbarLayout->setContentsMargins(0, 0, 0, 0);
-    bottomToolbarLayout->addWidget(_settingsAction.getColoringAction().getColorMapAction().createLabelWidget(&getWidget()));
-    bottomToolbarLayout->addWidget(_settingsAction.getColoringAction().getColorMapAction().createWidget(&getWidget()));
+    //bottomToolbarLayout->addWidget(_settingsAction.getColoringAction().getColorMapAction().createLabelWidget(&getWidget()));
+    //bottomToolbarLayout->addWidget(_settingsAction.getColoringAction().getColorMapAction().createWidget(&getWidget()));
     bottomToolbarLayout->addWidget(_settingsAction.getPlotAction().getPointPlotAction().getFocusSelection().createWidget(&getWidget()));
     bottomToolbarLayout->addStretch(1);
     bottomToolbarLayout->addWidget(_settingsAction.getExportAction().createWidget(&getWidget()));
@@ -472,15 +576,96 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     
                     _scatterPlotWidget->setRandomWalks(randomWalkPoints);
 
-                    std::vector<Vector3f> colors(_dataMatrix.rows(), Vector3f(0, 0, 0));
-                    for (int i = 0; i < randomWalks[0].size(); i++)
+                    //std::vector<Vector3f> colors(_dataMatrix.rows(), Vector3f(0, 0, 0));
+                    //for (int i = 0; i < randomWalks.size(); i++)
+                    //{
+                    //    for (int j = 0; j < randomWalks[i].size(); j++)
+                    //    {
+                    //        int index = randomWalks[i][j];
+                    //        colors[index] += Vector3f(0.1f, 0, 0);
+                    //    }
+                    //}
+
+                    //_scatterPlotWidget->setColors(colors);
+
+                    //////////////////
+                    // Do floodfill //
+                    //////////////////
+                    std::vector<std::vector<int>> floodFill;
+                    doFloodFill(_dataMatrix, _projMatrix, _knnGraph, selectionIndex, floodFill);
+
+                    std::vector<float> ccolors(_dataMatrix.rows(), 0);
+                    for (int i = 0; i < floodFill.size(); i++)
                     {
-                        int index = randomWalks[0][i];
-                        colors[index] = Vector3f(1, 0, 0);
+                        for (int j = 0; j < floodFill[i].size(); j++)
+                        {
+                            int index = floodFill[i][j];
+                            ccolors[index] = 1 - 0.1 * i;
+                        }
                     }
 
-                    _scatterPlotWidget->setColors(colors);
+                    int numNodes = 0;
+                    for (int i = 0; i < 3; i++)
+                    {
+                        numNodes += floodFill[i].size();
+                    }
 
+                    Eigen::MatrixXf nodeLocations(numNodes, 2);
+                    int p = 0;
+                    for (int i = 0; i < 3; i++)
+                    {
+                        for (int j = 0; j < floodFill[i].size(); j++)
+                        {
+                            int index = floodFill[i][j];
+
+                            nodeLocations(p, 0) = _projMatrix(index, 0);
+                            nodeLocations(p, 1) = _projMatrix(index, 1);
+                            p++;
+                        }
+                    }
+                    
+                    //
+                    // Mean centering data.
+                    //std::cout << "Node Locs: " << nodeLocations << std::endl;
+                    //Eigen::VectorXf featureMeans = nodeLocations.colwise().mean();
+                    Eigen::MatrixXf centered = nodeLocations.rowwise() - nodeLocations.row(0);
+                    //std::cout << "Means: " << featureMeans << std::endl;
+                    //std::cout << "Centered: " << centered << std::endl;
+                    // Compute the covariance matrix.
+                    Eigen::MatrixXf cov = centered.adjoint() * centered;
+                    cov = cov / (nodeLocations.rows() - 1);
+                    //std::cout << "Cov: " << cov << std::endl;
+
+                    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eig(cov);
+                    // Normalize eigenvalues to make them represent percentages.
+                    Eigen::VectorXf normalizedEigenValues = eig.eigenvalues() / eig.eigenvalues().sum();
+                    //std::cout << "EigenN: " << normalizedEigenValues << std::endl;
+                    //std::cout << "EigenVal: " << eig.eigenvalues() << std::endl;
+                    Eigen::MatrixXf evecs = eig.eigenvectors();
+                    // Get the two major eigenvectors and omit the others.
+                    Vector2f majorEigenVector;
+                    if (eig.eigenvalues()(0) > eig.eigenvalues()(1))
+                        majorEigenVector.set(evecs(0, 0), evecs(1, 0));
+                    else
+                        majorEigenVector.set(evecs(0, 1), evecs(1, 1));
+
+                    Eigen::MatrixXf pcaTransform = evecs.rightCols(2);
+                    //std::cout << "EigenV: " << evecs << std::endl;
+                    //std::cout << "Major: " << majorEigenVector.x << " " << majorEigenVector.y << std::endl;
+                    //std::cout << "PCA Trans: " << pcaTransform << std::endl;
+                    //
+                    std::vector<Vector2f> dir = { majorEigenVector };
+                    //getScatterplotWidget().setDirections(dir);
+
+                    getScatterplotWidget().setColorMap(_settingsAction.getColoringAction().getColorMapAction().getColorMapImage());
+                    _scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
+                    getScatterplotWidget().setScalarEffect(PointEffect::Color);
+                    _scatterPlotWidget->setScalars(ccolors);
+                    _scatterPlotWidget->setColorMapRange(0, 1);
+
+                    /////////////////////
+                    // Gradient picker //
+                    /////////////////////
                     // Small and large circle averages
                     std::vector<std::vector<float>> averages(2);
                     std::vector<std::vector<int>> circleIndices(2);
@@ -544,7 +729,7 @@ void ScatterplotPlugin::loadData(const Datasets& datasets)
     _positionDataset = datasets.first();
 
     // And set the coloring mode to constant
-    _settingsAction.getColoringAction().getColorByAction().setCurrentIndex(0);
+    _settingsAction.getColoringAction().getColorByAction().setCurrentIndex(1);
 }
 
 void ScatterplotPlugin::createSubset(const bool& fromSourceData /*= false*/, const QString& name /*= ""*/)
@@ -708,13 +893,17 @@ void ScatterplotPlugin::positionDatasetChanged()
     convertToEigenMatrix(_positionDataset, _projMatrix);
 
     createKnnGraph(_dataMatrix);
-    _knnGraph.build(_dataMatrix, _kdtree, 5);
+    _knnGraph.build(_dataMatrix, _kdtree, 6);
+
+    std::vector<Vector2f> directions;
+    computeDirection(_dataMatrix, _projMatrix, _knnGraph, directions);
+    getScatterplotWidget().setDirections(directions);
 }
 
 void ScatterplotPlugin::createKnnGraph(const DataMatrix& highDim)
 {
     Eigen::MatrixXf tarray = highDim.transpose();
-    _kdtree = new knncpp::KDTreeMinkowskiX<float, knncpp::EuclideanDistance<float>>(tarray, true);
+    _kdtree = new knncpp::KDTreeMinkowskiX<float, knncpp::ManhattenDistance<float>>(tarray, true);
     _kdtree->build();
 
     qDebug() << "Rows:" << tarray.rows() << tarray.cols();
@@ -740,7 +929,8 @@ void ScatterplotPlugin::loadColors(const Dataset<Points>& points, const std::uin
         points->extractDataForDimension(scalars, dimensionIndex);
 
     // Assign scalars and scalar effect
-    _scatterPlotWidget->setScalars(scalars);
+    std::vector<float> tempScalars(scalars.size(), 0);
+    _scatterPlotWidget->setScalars(tempScalars);
     _scatterPlotWidget->setScalarEffect(PointEffect::Color);
 
     // Render
