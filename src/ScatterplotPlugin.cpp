@@ -1143,9 +1143,9 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
     return QObject::eventFilter(target, event);
 }
 
-QIcon ScatterplotPluginFactory::getIcon() const
+QIcon ScatterplotPluginFactory::getIcon(const QColor& color /*= Qt::black*/) const
 {
-    return Application::getIconFont("FontAwesome").getIcon("braille");
+    return Application::getIconFont("FontAwesome").getIcon("braille", color);
 }
 
 ViewPlugin* ScatterplotPluginFactory::produce()
