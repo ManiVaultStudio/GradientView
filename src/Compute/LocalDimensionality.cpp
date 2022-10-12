@@ -1,25 +1,16 @@
 #include "LocalDimensionality.h"
 
+#include <QDebug>
+
 namespace compute
 {
     float computeProjectionDiameter(const DataMatrix& projection, int xDim, int yDim)
     {
-        float minX = std::numeric_limits<float>::max(), maxX = -std::numeric_limits<float>::max();
-        float minY = std::numeric_limits<float>::max(), maxY = -std::numeric_limits<float>::max();
-        for (int i = 0; i < projection.rows(); i++)
-        {
-            float x = projection(i, xDim);
-            float y = projection(i, yDim);
-
-            if (x < minX) minX = x;
-            if (x > maxX) maxX = x;
-            if (y < minY) minY = y;
-            if (y > maxY) maxY = y;
-        }
-        float rangeX = maxX - minX;
-        float rangeY = maxY - minY;
+        float rangeX = projection.col(xDim).maxCoeff() - projection.col(xDim).minCoeff();
+        float rangeY = projection.col(yDim).maxCoeff() - projection.col(yDim).minCoeff();
 
         float diameter = rangeX > rangeY ? rangeX : rangeY;
+
         return diameter;
     }
 
