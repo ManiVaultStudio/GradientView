@@ -18,7 +18,7 @@ endif(MSVC)
 
 file(TO_CMAKE_PATH $ENV{HDPS_INSTALL_DIR} INSTALL_DIR)
 
-find_package(Qt6 COMPONENTS Widgets WebEngineWidgets OpenGL OpenGLWidgets REQUIRED)
+find_package(Qt6 COMPONENTS Widgets WebEngineWidgets OpenGL OpenGLWidgets Charts REQUIRED)
 
 set(PLUGIN
     src/Common.h
@@ -31,6 +31,8 @@ set(UI
     src/ScatterplotWidget.cpp
     src/ProjectionView.h
     src/ProjectionView.cpp
+    src/GradientGraph.h
+    src/GradientGraph.cpp
     src/ExportImageDialog.h
     src/ExportImageDialog.cpp
 )
@@ -75,6 +77,11 @@ set(Models
     src/Models/ScalarSourceModel.cpp
 )
 
+set(Compute
+    src/Compute/LocalDimensionality.h
+    src/Compute/LocalDimensionality.cpp
+)
+
 set(SHADERS
     res/shaders/SelectionTool.frag
     res/shaders/SelectionTool.vert
@@ -85,12 +92,13 @@ set(AUX
     src/GradientExplorerPlugin.json
 )
 
-set(SOURCES ${PLUGIN} ${UI} ${Actions} ${Models})
+set(SOURCES ${PLUGIN} ${UI} ${Actions} ${Models} ${Compute})
 
 source_group(Plugin FILES ${PLUGIN})
 source_group(UI FILES ${UI})
 source_group(Actions FILES ${Actions})
 source_group(Models FILES ${Models})
+source_group(Compute FILES ${Compute})
 source_group(Shaders FILES ${SHADERS})
 source_group(Aux FILES ${AUX})
 
@@ -99,6 +107,7 @@ include_directories(${PROJECT_SOURCE_DIR}/thirdparty/Eigen/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Actions)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Models)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Compute)
 
 add_library(${PROJECT} SHARED ${SOURCES} ${SHADERS} ${AUX})
 
@@ -119,6 +128,7 @@ target_link_libraries(${PROJECT} Qt6::Widgets)
 target_link_libraries(${PROJECT} Qt6::WebEngineWidgets)
 target_link_libraries(${PROJECT} Qt6::OpenGL)
 target_link_libraries(${PROJECT} Qt6::OpenGLWidgets)
+target_link_libraries(${PROJECT} Qt6::Charts)
 target_link_libraries(${PROJECT} "${HDPS_LINK_LIBRARY}")
 target_link_libraries(${PROJECT} "${POINTDATA_LINK_LIBRARY}")
 target_link_libraries(${PROJECT} "${CLUSTERDATA_LINK_LIBRARY}")

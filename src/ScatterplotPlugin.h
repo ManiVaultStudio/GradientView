@@ -7,6 +7,8 @@
 #include "Common.h"
 
 #include "SettingsAction.h"
+#include "graphics/Vector3f.h"
+#include "GradientGraph.h"
 
 #include <Eigen/Eigen>
 #include <knncpp.h>
@@ -143,6 +145,9 @@ private:
 
     bool eventFilter(QObject* target, QEvent* event);
 
+private slots:
+    void onLineClicked(int dim);
+
 private:
     Dataset<Points>                 _positionDataset;           /** Smart pointer to points dataset for point position */
     Dataset<Points>                 _positionSourceDataset;     /** Smart pointer to source of the points dataset for point position (if any) */
@@ -157,6 +162,10 @@ private:
 protected:
     ScatterplotWidget*              _scatterPlotWidget;
     std::vector<ProjectionView*>    _projectionViews;
+    std::vector<Vector3f> colors;
+    std::vector<float> _colors;
+    GradientGraph*                  _gradientGraph;
+    int                             _selectedDimension;
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;

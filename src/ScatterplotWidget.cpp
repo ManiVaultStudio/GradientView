@@ -508,6 +508,7 @@ void ScatterplotWidget::paintGL()
 
         if (_showRandomWalk)
         {
+            painter.setPen(QPen(QColor(0, 0, 0, 255)));
             for (int i = 0; i < _randomWalks.size(); i++)
             {
                 for (int j = 0; j < _randomWalks[i].size() - 1; j++)
