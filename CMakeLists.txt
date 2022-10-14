@@ -80,6 +80,8 @@ set(Models
 set(Compute
     src/Compute/LocalDimensionality.h
     src/Compute/LocalDimensionality.cpp
+    src/Compute/KnnGraph.h
+    src/Compute/KnnGraph.cpp
 )
 
 set(SHADERS

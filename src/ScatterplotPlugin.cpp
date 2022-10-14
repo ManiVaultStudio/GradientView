@@ -961,11 +961,13 @@ void ScatterplotPlugin::positionDatasetChanged()
     convertToEigenMatrix(_positionSourceDataset, _dataMatrix);
     convertToEigenMatrix(_positionDataset, _projMatrix);
 
-    compute::computeSpatialLocalDimensionality(_dataMatrix, _projMatrix, _colors);
-    getScatterplotWidget().setScalars(_colors);
-
     createKnnGraph(_dataMatrix);
     _knnGraph.build(_dataMatrix, _kdtree, 6);
+    _largeKnnGraph.build(_dataMatrix, _kdtree, 30);
+
+    //compute::computeSpatialLocalDimensionality(_dataMatrix, _projMatrix, _colors);
+    compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _colors);
+    getScatterplotWidget().setScalars(_colors);
 
     std::vector<Vector2f> directions;
     computeDirection(_dataMatrix, _projMatrix, _knnGraph, directions);

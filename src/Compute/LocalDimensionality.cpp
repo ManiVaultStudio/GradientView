@@ -1,5 +1,7 @@
 #include "LocalDimensionality.h"
 
+#include "KnnGraph.h"
+
 #include <QDebug>
 
 namespace compute
@@ -91,6 +93,59 @@ namespace compute
         {
             float p = (dimensionalities[i] - minDim) / (float)range;
             colors[i] = p;
+        }
+    }
+
+    void computeHDLocalDimensionality(DataMatrix& dataMatrix, KnnGraph& knnGraph, std::vector<float>& normLD)
+    {
+        int numPoints = dataMatrix.rows();
+        std::vector<int> dimensionalities(numPoints);
+
+        for (int i = 0; i < numPoints; i++)
+        {
+            //std::vector<int> neighbours;
+
+            auto neighbours = dataMatrix(knnGraph.neighbours[i], Eigen::all);
+
+            // Mean centering data.
+            Eigen::MatrixXf centered = neighbours.rowwise() - neighbours.colwise().mean();
+            // Compute the covariance matrix.
+            Eigen::MatrixXf cov = centered.adjoint() * centered;
+            cov = cov / (neighbours.rows() - 1);
+
+            Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eig(cov);
+            // Normalize eigenvalues to make them represent percentages.
+            Eigen::VectorXf normalizedEigenValues = (eig.eigenvalues() / eig.eigenvalues().sum()).reverse();
+            Eigen::MatrixXf evecs = eig.eigenvectors();
+
+            // Compute how many eigenvectors contribute to 85% of variance
+            float variancePercentage = 0;
+            int j = 0;
+            for (j = 0; j < normalizedEigenValues.size(); j++)
+            {
+                variancePercentage += normalizedEigenValues(j);
+
+                if (variancePercentage > 0.85)
+                {
+                    break;
+                }
+            }
+
+            dimensionalities[i] = j;
+            //qDebug() << "Dimensionality: " << j;
+        }
+
+        // Compute colors
+        normLD.resize(dataMatrix.rows());
+
+        int minDim = *std::min_element(dimensionalities.begin(), dimensionalities.end());
+        int maxDim = *std::max_element(dimensionalities.begin(), dimensionalities.end());
+        int range = maxDim - minDim;
+
+        for (int i = 0; i < dimensionalities.size(); i++)
+        {
+            float p = (dimensionalities[i] - minDim) / (float)range;
+            normLD[i] = p;
         }
     }
 }

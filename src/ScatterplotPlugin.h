@@ -11,7 +11,7 @@
 #include "GradientGraph.h"
 
 #include <Eigen/Eigen>
-#include <knncpp.h>
+#include "KnnGraph.h"
 
 using namespace hdps::plugin;
 using namespace hdps::util;
@@ -22,38 +22,6 @@ class Points;
 
 class ScatterplotWidget;
 class ProjectionView;
-
-typedef knncpp::Matrixi Matrixi;
-
-using KdTree = knncpp::KDTreeMinkowskiX<float, knncpp::ManhattenDistance<float>>;
-
-class KnnGraph
-{
-public:
-    void build(const DataMatrix& data, KdTree* kdTree, int k)
-    {
-        numNeighbours = k - 1;
-
-        Matrixi indices;
-        Eigen::MatrixXf distances;
-
-        Eigen::MatrixXf arrayt = data.transpose();
-        kdTree->query(arrayt, k, indices, distances);
-
-        neighbours.resize(data.rows(), std::vector<int>(numNeighbours));
-
-        for (int i = 0; i < data.rows(); i++)
-        {
-            for (int j = 0; j < k - 1; j++)
-            {
-                neighbours[i][j] = indices(j + 1, i);
-            }
-        }
-    }
-
-    std::vector<std::vector<int>> neighbours;
-    int numNeighbours;
-};
 
 namespace hdps
 {
@@ -158,6 +126,7 @@ private:
     DataMatrix                      _projMatrix;
     knncpp::KDTreeMinkowskiX<float, knncpp::ManhattenDistance<float>>* _kdtree;
     KnnGraph                        _knnGraph;
+    KnnGraph                        _largeKnnGraph;
 
 protected:
     ScatterplotWidget*              _scatterPlotWidget;
