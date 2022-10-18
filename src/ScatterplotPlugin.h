@@ -110,6 +110,7 @@ private:
     void updateData();
     void calculatePositions(const Points& points);
     void updateSelection();
+    void showLocalDimensionality();
 
     bool eventFilter(QObject* target, QEvent* event);
 

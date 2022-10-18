@@ -465,6 +465,9 @@ void ScatterplotPlugin::init()
     QPushButton* showDirections = new QPushButton("Show directions");
     connect(showDirections, &QPushButton::pressed, &getScatterplotWidget(), &ScatterplotWidget::showDirections);
     gradientViewLayout->addWidget(showDirections);
+    QPushButton* showLocalDimensionality = new QPushButton("Show local dimensionality");
+    connect(showLocalDimensionality, &QPushButton::pressed, this, &ScatterplotPlugin ::showLocalDimensionality);
+    gradientViewLayout->addWidget(showLocalDimensionality);
     plotLayout->addWidget(_scatterPlotWidget, 60);
     plotLayout->addLayout(gradientViewLayout, 30);
     layout->addLayout(plotLayout, 100);
@@ -532,32 +535,16 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
         {
             if (_positionDataset->isDerivedData())
             {
-                hdps::Dataset<Points> sourceDataset = _positionDataset->getSourceDataset<Points>();
-                hdps::Dataset<Points> selection = sourceDataset->getSelection();
+                hdps::Dataset<Points> selection = _positionSourceDataset->getSelection();
 
-                std::vector<float> dimRanking(sourceDataset->getNumDimensions());
+                int numDimensions = _dataMatrix.cols();
 
-                int numDimensions = _positionSourceDataset->getNumDimensions();
+                std::vector<float> dimRanking(numDimensions);
 
                 Bounds bounds = _scatterPlotWidget->getBounds();
+
+                float size = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
                 
-                // Determine projection bounds
-                float minX = std::numeric_limits<float>::max();
-                float minY = std::numeric_limits<float>::max();
-                float maxX = -std::numeric_limits<float>::max();
-                float maxY = -std::numeric_limits<float>::max();
-                for (int i = 0; i < _positions.size(); i++)
-                {
-                    if (_positions[i].x < minX) minX = _positions[i].x;
-                    if (_positions[i].y < minY) minY = _positions[i].y;
-                    if (_positions[i].x > maxX) maxX = _positions[i].x;
-                    if (_positions[i].y > maxY) maxY = _positions[i].y;
-                }
-                float rangeX = maxX - minX;
-                float rangeY = maxY - minY;
-                float size = std::max(rangeX, rangeY);
-                float size1 = bounds.getWidth();
-                qDebug() << "Size: " << size << size1 << bounds.getHeight();
                 if (selection->indices.size() > 0)
                 {
                     int selectionIndex = selection->indices[0];
@@ -728,8 +715,6 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     }
                     _scatterPlotWidget->setRandomWalks(lineagePoints);
 
-                    getScatterplotWidget().setScalars(_colors);
-
                     /////////////////////
                     // Gradient picker //
                     /////////////////////
@@ -757,8 +742,7 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     // Set appropriate coloring of gradient view, FIXME use colormap later
                     for (int pi = 0; pi < _projectionViews.size(); pi++)
                     {
-                        std::vector<float> dimValues;
-                        _positionSourceDataset->extractDataForDimension(dimValues, idx[pi]);
+                        auto dimValues = _dataMatrix(Eigen::all, idx[pi]);
 
                         float minV = *std::min_element(dimValues.begin(), dimValues.end());
                         float maxV = *std::max_element(dimValues.begin(), dimValues.end());
@@ -782,6 +766,15 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     }
 
                     //_gradientGraph->setDimension(_dataMatrix, idx[0]);
+
+                    // Show dim values on floodnodes
+                    std::vector<float> dimScalars(_dataMatrix.rows(), 0);
+
+                    for (int i = 0; i < floodNodes.size(); i++)
+                    {
+                        dimScalars[floodNodes[i]] = _dataMatrix(floodNodes[i], idx[0]);
+                    }
+                    getScatterplotWidget().setScalars(dimScalars);
                 }
             }
         }
@@ -958,8 +951,13 @@ void ScatterplotPlugin::positionDatasetChanged()
     // Update the window title to reflect the position dataset change
     updateWindowTitle();
 
-    convertToEigenMatrix(_positionSourceDataset, _dataMatrix);
+    DataMatrix dataMatrix;
+    convertToEigenMatrix(_positionSourceDataset, dataMatrix);
     convertToEigenMatrix(_positionDataset, _projMatrix);
+    if (!_positionDataset->isFull())
+        _dataMatrix = dataMatrix(_positionDataset->indices, Eigen::all);
+    else
+        _dataMatrix = dataMatrix;
 
     createKnnGraph(_dataMatrix);
     _knnGraph.build(_dataMatrix, _kdtree, 6);
@@ -1111,6 +1109,11 @@ void ScatterplotPlugin::updateSelection()
         highlights[i] = selected[i] ? 1 : 0;
 
     _scatterPlotWidget->setHighlights(highlights, static_cast<std::int32_t>(selection->indices.size()));
+}
+
+void ScatterplotPlugin::showLocalDimensionality()
+{
+    getScatterplotWidget().setScalars(_colors);
 }
 
 std::uint32_t ScatterplotPlugin::getNumberOfPoints() const
