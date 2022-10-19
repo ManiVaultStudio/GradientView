@@ -294,6 +294,99 @@ namespace
             directions.push_back(majorEigenVector);
         }
     }
+
+    void traceLineage(const DataMatrix& data, const std::vector<std::vector<int>>& floodFill, std::vector<Vector2f>& positions, int seedIndex, std::vector<int>& lineage)
+    {
+        qDebug() << "Trace lineage";
+        int numFloodNodes = 0;
+        for (int i = 0; i < floodFill.size(); i++)
+        {
+            numFloodNodes += floodFill[i].size();
+        }
+
+        // Store all flood nodes together
+        std::vector<int> floodNodes(numFloodNodes);
+        int n = 0;
+        for (int i = 0; i < floodFill.size(); i++)
+        {
+            for (int j = 0; j < floodFill[i].size(); j++)
+            {
+                floodNodes[n++] = floodFill[i][j];
+            }
+        }
+
+        int currentNode = seedIndex;
+        Vector2f currentNodePos = positions[seedIndex];
+
+        // Determine initial direction
+        Vector2f sumPos(0, 0);
+        for (int i = 0; i < floodNodes.size(); i++)
+        {
+            sumPos += positions[floodNodes[i]];
+        }
+        sumPos = sumPos / floodNodes.size();
+        Vector2f initDir(0, 0);// = (sumPos - currentNodePos) / (sumPos - currentNodePos).length();
+        Vector2f currentDir = initDir;
+
+        // Find neighbours
+        while (lineage.size() < 10)
+        {
+            qDebug() << "Finding neighbours";
+            std::vector<int> neighbours;
+            for (int i = 0; i < floodNodes.size(); i++)
+            {
+                int floodIndex = floodNodes[i];
+
+                if (floodIndex == currentNode) continue;
+
+                Vector2f nodePos = positions[floodIndex];
+                if (abs(nodePos.x - currentNodePos.x) < 1.1f && abs(nodePos.y - currentNodePos.y) < 1.1f)
+                {
+                    neighbours.push_back(floodIndex);
+                }
+            }
+            qDebug() << "Neighbours: " << neighbours.size();
+            if (neighbours.size() < 1) return;
+            
+            // Calculate probabilities based on cosine similarity to current direction
+            std::vector<float> probs(neighbours.size());
+            std::vector<Vector2f> dirs(neighbours.size());
+            float totalProb = 0;
+            for (int i = 0; i < neighbours.size(); i++)
+            {
+                Vector2f loc = positions[neighbours[i]];
+                Vector2f dir = (loc - currentNodePos) / (loc - currentNodePos).length();
+                dirs[i] = dir;
+
+                float sim = (currentDir.x * dir.x + currentDir.y * dir.y) / (dir.length());
+                if (sim <= 0) sim = 0.001;
+                probs[i] = sim;
+                totalProb += sim;
+            }
+            if (totalProb == 0) return;
+            // Normalize probabilities
+            float cdfSum = 0;
+            std::vector<float> cdf(probs.size());
+            for (int i = 0; i < probs.size(); i++)
+            {
+                probs[i] /= totalProb;
+                cdfSum += probs[i];
+                cdf[i] = cdfSum;
+            }
+            qDebug() << "CDF Sum: " << cdfSum;
+            // Pick a neighbour based on probabilities
+            float u = distribution(generator);
+            qDebug() << "u: " << u;
+            int xi = BinarySearchCDF(cdf, u);
+            float weight = probs[xi];
+
+            currentNode = neighbours[xi];
+            currentNodePos = positions[currentNode];
+            currentDir = dirs[xi];
+            qDebug() << "Node: " << currentNode;
+            lineage.push_back(currentNode);
+        }
+    }
 }
 
 ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
@@ -714,6 +807,22 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                         }
                     }
                     _scatterPlotWidget->setRandomWalks(lineagePoints);
+
+                    //////////////////
+                    std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());
+                    for (int w = 0; w < 10; w++)
+                    {
+                        std::vector<int> lineage;
+                        lineage.push_back(selectionIndex);
+                        traceLineage(_dataMatrix, floodFill, _positions, selectionIndex, lineage);
+
+                        for (int i = 0; i < lineage.size(); i++)
+                        {
+                            linPoints[w].push_back(_positions[lineage[i]]);
+                            //qDebug() << linPoints[w][i].x << linPoints[w][i].y;
+                        }
+                    }
+                    _scatterPlotWidget->setRandomWalks(linPoints);
 
                     /////////////////////
                     // Gradient picker //

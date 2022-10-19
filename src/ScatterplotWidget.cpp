@@ -511,6 +511,7 @@ void ScatterplotWidget::paintGL()
             painter.setPen(QPen(QColor(0, 0, 0, 255)));
             for (int i = 0; i < _randomWalks.size(); i++)
             {
+                if (_randomWalks[i].size() < 2) continue;
                 for (int j = 0; j < _randomWalks[i].size() - 1; j++)
                 {
                     const Vector2f& p1 = toScreen * invM * orthoM * _randomWalks[i][j];
