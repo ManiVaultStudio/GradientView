@@ -162,11 +162,13 @@ public slots:
     void showRandomWalk()
     {
         _showRandomWalk = !_showRandomWalk;
+        update();
     }
 
     void showDirections()
     {
         _showDirections = !_showDirections;
+        update();
     }
 
 private:
