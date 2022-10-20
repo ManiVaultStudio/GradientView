@@ -5,6 +5,7 @@
 #include "util/PixelSelectionTool.h"
 
 #include "Common.h"
+#include "DimensionSelectionAction.h"
 
 #include "SettingsAction.h"
 #include "graphics/Vector3f.h"
@@ -44,6 +45,8 @@ public:
     void init() override;
 
     void onDataEvent(hdps::DataEvent* dataEvent);
+
+    void computeStaticData();
 
     /**
      * Load one (or more datasets in the view)
@@ -136,6 +139,7 @@ protected:
     std::vector<float> _colors;
     GradientGraph*                  _gradientGraph;
     int                             _selectedDimension;
+    DimensionSelectionAction        _dimPicker;
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;

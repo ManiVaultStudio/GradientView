@@ -75,16 +75,16 @@ namespace
             }
         }
     }
-
-    void computeDimensionAverage(Dataset<Points> data, const std::vector<int>& indices, std::vector<float>& averages)
+    
+    void computeDimensionAverage(const DataMatrix& data, const std::vector<int>& indices, std::vector<float>& averages)
     {
-        int numDimensions = data->getNumDimensions();
+        int numDimensions = data.cols();
         averages.resize(numDimensions);
         for (int d = 0; d < numDimensions; d++)
         {
             for (const int& index : indices)
             {
-                float v = data->getValueAt(index * numDimensions + d);
+                float v = data(index, d);
                 averages[d] += v;
             }
             averages[d] /= indices.size();
@@ -400,7 +400,8 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _dropWidget(nullptr),
     _settingsAction(this),
     _gradientGraph(new GradientGraph()),
-    _selectedDimension(-1)
+    _selectedDimension(-1),
+    _dimPicker(this)
 {
     setObjectName("GradientExplorer");
 
@@ -561,6 +562,13 @@ void ScatterplotPlugin::init()
     QPushButton* showLocalDimensionality = new QPushButton("Show local dimensionality");
     connect(showLocalDimensionality, &QPushButton::pressed, this, &ScatterplotPlugin ::showLocalDimensionality);
     gradientViewLayout->addWidget(showLocalDimensionality);
+    gradientViewLayout->addWidget(_dimPicker.createWidget(&getWidget()));
+    QPushButton* updateFeatureSet = new QPushButton("Update feature set");
+    connect(updateFeatureSet, &QPushButton::pressed, this, [this]() {
+        computeStaticData();
+    });
+    gradientViewLayout->addWidget(updateFeatureSet);
+
     plotLayout->addWidget(_scatterPlotWidget, 60);
     plotLayout->addLayout(gradientViewLayout, 30);
     layout->addLayout(plotLayout, 100);
@@ -628,6 +636,9 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
         {
             if (_positionDataset->isDerivedData())
             {
+                // Extract the enabled dimensions from the data
+                std::vector<bool> enabledDimensions = _dimPicker.getPickerAction().getEnabledDimensions();
+
                 hdps::Dataset<Points> selection = _positionSourceDataset->getSelection();
 
                 int numDimensions = _dataMatrix.cols();
@@ -832,9 +843,9 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     std::vector<std::vector<int>> circleIndices(2);
 
                     findPointsInRadius(center, 0.05f * size, _positions, circleIndices[0]);
-                    computeDimensionAverage(_positionSourceDataset, circleIndices[0], averages[0]);
+                    computeDimensionAverage(_dataMatrix, circleIndices[0], averages[0]);
                     findPointsInRadius(center, 0.1f * size, _positions, circleIndices[1]);
-                    computeDimensionAverage(_positionSourceDataset, circleIndices[1], averages[1]);
+                    computeDimensionAverage(_dataMatrix, circleIndices[1], averages[1]);
 
                     std::vector<float> diffAverages(numDimensions);
                     for (int d = 0; d < numDimensions; d++)
@@ -871,7 +882,15 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                         }
                         _projectionViews[pi]->setColors(colors);
                         const auto& dimNames = _positionSourceDataset->getDimensionNames();
-                        _projectionViews[pi]->setProjectionName(dimNames[idx[pi]]);
+                        auto enabledDimensions = _dimPicker.getPickerAction().getEnabledDimensions();
+                        std::vector<QString> enabledDimNames;
+                        for (int i = 0; i < enabledDimensions.size(); i++)
+                        {
+                            if (enabledDimensions[i])
+                                enabledDimNames.push_back(dimNames[i]);
+                        }
+
+                        _projectionViews[pi]->setProjectionName(enabledDimNames[idx[pi]]);
                     }
 
                     //_gradientGraph->setDimension(_dataMatrix, idx[0]);
@@ -888,6 +907,43 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
             }
         }
     }
+}
+
+void ScatterplotPlugin::computeStaticData()
+{
+    DataMatrix dataMatrix;
+    convertToEigenMatrix(_positionSourceDataset, dataMatrix);
+    convertToEigenMatrix(_positionDataset, _projMatrix);
+
+    // Subsample based on subset or full data
+    if (!_positionDataset->isFull())
+        _dataMatrix = dataMatrix(_positionDataset->indices, Eigen::all);
+    else
+        _dataMatrix = dataMatrix;
+    qDebug() << "Subsample features...";
+    // Subsample dimensions based on dimension picker
+    std::vector<bool> enabledDimensions = _dimPicker.getPickerAction().getEnabledDimensions();
+    std::vector<int> dimIndices;
+    qDebug() << "Subsample features...1";
+    for (int i = 0; i < enabledDimensions.size(); i++)
+        if (enabledDimensions[i]) dimIndices.push_back(i);
+    qDebug() << "Subsample features...2";
+    DataMatrix featureMatrix = _dataMatrix(Eigen::all, dimIndices);
+    qDebug() << "Subsample features...3";
+    _dataMatrix = featureMatrix;
+    qDebug() << "Subsampled features";
+    createKnnGraph(_dataMatrix);
+    _knnGraph.build(_dataMatrix, _kdtree, 6);
+    _largeKnnGraph.build(_dataMatrix, _kdtree, 30);
+    qDebug() << "Graph built";
+    //compute::computeSpatialLocalDimensionality(_dataMatrix, _projMatrix, _colors);
+    compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _colors);
+    getScatterplotWidget().setScalars(_colors);
+    qDebug() << "HD Local Dims";
+    std::vector<Vector2f> directions;
+    computeDirection(_dataMatrix, _projMatrix, _knnGraph, directions);
+    getScatterplotWidget().setDirections(directions);
+    qDebug() << "Dirs computed";
 }
 
 void ScatterplotPlugin::loadData(const Datasets& datasets)
@@ -1060,25 +1116,10 @@ void ScatterplotPlugin::positionDatasetChanged()
     // Update the window title to reflect the position dataset change
     updateWindowTitle();
 
-    DataMatrix dataMatrix;
-    convertToEigenMatrix(_positionSourceDataset, dataMatrix);
-    convertToEigenMatrix(_positionDataset, _projMatrix);
-    if (!_positionDataset->isFull())
-        _dataMatrix = dataMatrix(_positionDataset->indices, Eigen::all);
-    else
-        _dataMatrix = dataMatrix;
+    _dimPicker.getPickerAction().setPointsDataset(_positionSourceDataset);
+    _positionSourceDataset->addAction(_dimPicker);
 
-    createKnnGraph(_dataMatrix);
-    _knnGraph.build(_dataMatrix, _kdtree, 6);
-    _largeKnnGraph.build(_dataMatrix, _kdtree, 30);
-
-    //compute::computeSpatialLocalDimensionality(_dataMatrix, _projMatrix, _colors);
-    compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _colors);
-    getScatterplotWidget().setScalars(_colors);
-
-    std::vector<Vector2f> directions;
-    computeDirection(_dataMatrix, _projMatrix, _knnGraph, directions);
-    getScatterplotWidget().setDirections(directions);
+    computeStaticData();
 }
 
 void ScatterplotPlugin::createKnnGraph(const DataMatrix& highDim)

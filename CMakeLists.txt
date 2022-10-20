@@ -68,6 +68,8 @@ set(Actions
     src/Actions/SubsetAction.cpp
     src/Actions/ExportImageAction.h
     src/Actions/ExportImageAction.cpp
+    src/Actions/DimensionSelectionAction.h
+    src/Actions/DimensionSelectionAction.cpp
 )
 
 set(Models
