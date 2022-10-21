@@ -16,6 +16,7 @@
 
 #include <Eigen/Dense>
 #include "LocalDimensionality.h"
+#include "RandomWalks.h"
 
 #include <QtCore>
 #include <QApplication>
@@ -37,9 +38,6 @@ Q_PLUGIN_METADATA(IID "nl.biovault.GradientExplorerPlugin")
 using namespace hdps;
 using namespace hdps::util;
 
-std::default_random_engine generator;
-std::uniform_real_distribution<float> distribution(0, 1);
-
 namespace
 {
     void convertToEigenMatrix(hdps::Dataset<Points> dataset, DataMatrix& dataMatrix)
@@ -57,6 +55,11 @@ namespace
                 dataMatrix(i, j) = dataset->getValueAt(index);
             }
         }
+    }
+
+    void indicesToVectors(const std::vector<int>& indices, std::vector<Vector2f>& vec)
+    {
+
     }
 
     void findPointsInRadius(Vector2f center, float radius, const std::vector<Vector2f>& points, std::vector<int>& indices)
@@ -91,167 +94,12 @@ namespace
         }
     }
 
-    int BinarySearchCDF(const std::vector<float>& cdf, float u)
-    {
-        // Binary search for u
-        int itemFromLeft = 0;
-        int itemFromRight = cdf.size() - 1;
-        while (itemFromLeft < itemFromRight)
-        {
-            int m = itemFromLeft + (itemFromRight - itemFromLeft) / 2;
-            if (cdf[m] < u)
-                itemFromLeft = m + 1;
-            else
-                itemFromRight = m;
-        }
-        return itemFromLeft;
-    }
-
-    void doRandomWalks(const DataMatrix& highDim, const DataMatrix& spatialMap, int selectedPoint, std::vector<std::vector<Vector2f>>& randomWalks)
-    {
-        int numDimensions = highDim.cols();
-
-        //auto seedPoint = highDim.row(selectedPoint);
-
-        randomWalks.resize(1);
-        // Start X number of random walks
-        for (int w = 0; w < 1; w++)
-        {
-            // Perform given number of iterations of a random walk
-            auto currentNode = selectedPoint;
-
-            std::vector<float> distances(highDim.rows(), std::numeric_limits<float>::max());
-            std::vector<float> probs(highDim.rows());
-            std::vector<float> cdf(highDim.rows(), 0);
-
-            randomWalks[w].resize(10);
-
-            // Iterations
-            for (int i = 0; i < 10; i++)
-            {
-                randomWalks[w][i] = Vector2f(spatialMap(currentNode, 0), spatialMap(currentNode, 1));
-                float probSum = 0;
-                float cdfSum = 0;
-                for (int j = 0; j < highDim.rows(); j++)
-                {
-                    if (currentNode == j) { distances[j] = 1000; continue; }
-                    distances[j] = (highDim.row(currentNode) - highDim.row(j)).lpNorm<1>();
-                    
-                    probs[j] = (distances[j] == 0) ? 1 : 1 / (distances[j] * distances[j]);
-                    probSum += probs[j];
-                }
-
-                // Normalize probabilities
-                for (int j = 0; j < probs.size(); j++)
-                {
-                    probs[j] *= 1 / probSum;
-                    cdfSum += probs[j];
-                    cdf[j] = cdfSum;
-                    //qDebug() << probs[j];
-                }
-
-                float u = distribution(generator);
-
-                int xi = BinarySearchCDF(cdf, u);
-                float weight = probs[xi];
-
-                currentNode = xi;
-            }
-        }
-    }
-
-    void doRandomWalksKNN(const DataMatrix& highDim, const DataMatrix& spatialMap, const KnnGraph& knnGraph, int selectedPoint, std::vector<std::vector<int>>& randomWalks)
-    {
-        int numDimensions = highDim.cols();
-
-        int k = knnGraph.numNeighbours;
-        int numWalks = 100;
-        int numSteps = 10;
-
-        randomWalks.resize(numWalks);
-        // Start X number of random walks
-        for (int w = 0; w < numWalks; w++)
-        {
-            int prevNode = -1;
-            // Perform given number of iterations of a random walk
-            auto currentNode = selectedPoint;
-
-            randomWalks[w].resize(numSteps);
-
-            // Iterations
-            for (int i = 0; i < numSteps; i++)
-            {
-                randomWalks[w][i] = currentNode;
-
-                int newNode = -1;
-                do
-                {
-                    float u = distribution(generator) * 0.999f;
-                    int knnIndex = (int)(u * k);
-
-                    newNode = knnGraph.neighbours[currentNode][knnIndex];
-                } while (newNode == prevNode);
-
-                prevNode = currentNode;
-                currentNode = newNode;
-            }
-        }
-    }
-
-    void doFloodFill(const DataMatrix& highDim, const DataMatrix& spatialMap, const KnnGraph& knnGraph, int selectedPoint, std::vector<std::vector<int>>& floodFill)
-    {
-        int numDimensions = highDim.cols();
-
-        int numSteps = 10;
-
-        floodFill.resize(numSteps);
-
-        // Set of unique nodes
-        std::set<int> nodes;
-        for (int i = 0; i < highDim.rows(); i++)
-            nodes.insert(nodes.end(), i);
-
-        // Perform given number of iterations of floodfill
-        auto currentNodes = std::vector<int>(1, selectedPoint);
-
-        // Start flooding in N steps
-        for (int s = 0; s < numSteps; s++)
-        {
-            // Copy current nodes to floodfill storage
-            //floodFill[s].reserve(currentNodes.size());
-            for (int i = 0; i < currentNodes.size(); i++)
-            {
-                int node = currentNodes[i];
-                if (nodes.find(node) != nodes.end())
-                {
-                    nodes.erase(node);
-                    floodFill[s].push_back(node);
-                }
-                else
-                {
-                    currentNodes[i] = -1;
-                }
-            }
-            //if (s == 1) qDebug() << "===============";
-            // Add neighbours of current nodes to new nodes
-            std::vector<int> newNodes;
-            for (const int& node : currentNodes)
-            {
-                if (node == -1) continue;
-                newNodes.insert(newNodes.end(), knnGraph.neighbours[node].begin(), knnGraph.neighbours[node].end());
-            }
-
-            // New nodes become the current indices
-            currentNodes = newNodes;
-        }
-    }
-
     void computeDirection(DataMatrix& dataMatrix, DataMatrix& projMatrix, KnnGraph& knnGraph, std::vector<Vector2f>& directions)
     {
         for (int p = 0; p < dataMatrix.rows(); p++)
         {
             std::vector<std::vector<int>> floodFill;
-            doFloodFill(dataMatrix, projMatrix, knnGraph, p, floodFill);
+            compute::doFloodFill(dataMatrix, projMatrix, knnGraph, p, floodFill);
 
             int depth = 3;
             int numNodes = 0;
@@ -292,99 +140,6 @@ namespace
 
             directions.push_back(Vector2f(projMatrix(p, 0), projMatrix(p, 1)));
             directions.push_back(majorEigenVector);
-        }
-    }
-
-    void traceLineage(const DataMatrix& data, const std::vector<std::vector<int>>& floodFill, std::vector<Vector2f>& positions, int seedIndex, std::vector<int>& lineage)
-    {
-        qDebug() << "Trace lineage";
-        int numFloodNodes = 0;
-        for (int i = 0; i < floodFill.size(); i++)
-        {
-            numFloodNodes += floodFill[i].size();
-        }
-
-        // Store all flood nodes together
-        std::vector<int> floodNodes(numFloodNodes);
-        int n = 0;
-        for (int i = 0; i < floodFill.size(); i++)
-        {
-            for (int j = 0; j < floodFill[i].size(); j++)
-            {
-                floodNodes[n++] = floodFill[i][j];
-            }
-        }
-
-        int currentNode = seedIndex;
-        Vector2f currentNodePos = positions[seedIndex];
-
-        // Determine initial direction
-        Vector2f sumPos(0, 0);
-        for (int i = 0; i < floodNodes.size(); i++)
-        {
-            sumPos += positions[floodNodes[i]];
-        }
-        sumPos = sumPos / floodNodes.size();
-        Vector2f initDir(0, 0);// = (sumPos - currentNodePos) / (sumPos - currentNodePos).length();
-        Vector2f currentDir = initDir;
-
-        // Find neighbours
-        while (lineage.size() < 10)
-        {
-            qDebug() << "Finding neighbours";
-            std::vector<int> neighbours;
-            for (int i = 0; i < floodNodes.size(); i++)
-            {
-                int floodIndex = floodNodes[i];
-
-                if (floodIndex == currentNode) continue;
-
-                Vector2f nodePos = positions[floodIndex];
-                if (abs(nodePos.x - currentNodePos.x) < 1.1f && abs(nodePos.y - currentNodePos.y) < 1.1f)
-                {
-                    neighbours.push_back(floodIndex);
-                }
-            }
-            qDebug() << "Neighbours: " << neighbours.size();
-            if (neighbours.size() < 1) return;
-            
-            // Calculate probabilities based on cosine similarity to current direction
-            std::vector<float> probs(neighbours.size());
-            std::vector<Vector2f> dirs(neighbours.size());
-            float totalProb = 0;
-            for (int i = 0; i < neighbours.size(); i++)
-            {
-                Vector2f loc = positions[neighbours[i]];
-                Vector2f dir = (loc - currentNodePos) / (loc - currentNodePos).length();
-                dirs[i] = dir;
-
-                float sim = (currentDir.x * dir.x + currentDir.y * dir.y) / (dir.length());
-                if (sim <= 0) sim = 0.001;
-                probs[i] = sim;
-                totalProb += sim;
-            }
-            if (totalProb == 0) return;
-            // Normalize probabilities
-            float cdfSum = 0;
-            std::vector<float> cdf(probs.size());
-            for (int i = 0; i < probs.size(); i++)
-            {
-                probs[i] /= totalProb;
-                cdfSum += probs[i];
-                cdf[i] = cdfSum;
-            }
-            qDebug() << "CDF Sum: " << cdfSum;
-            // Pick a neighbour based on probabilities
-            float u = distribution(generator);
-            qDebug() << "u: " << u;
-            int xi = BinarySearchCDF(cdf, u);
-            float weight = probs[xi];
-
-            currentNode = neighbours[xi];
-            currentNodePos = positions[currentNode];
-            currentDir = dirs[xi];
-            qDebug() << "Node: " << currentNode;
-            lineage.push_back(currentNode);
         }
     }
 }
@@ -643,8 +398,6 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
 
                 int numDimensions = _dataMatrix.cols();
 
-                std::vector<float> dimRanking(numDimensions);
-
                 Bounds bounds = _scatterPlotWidget->getBounds();
 
                 float size = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
@@ -657,36 +410,36 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     ///////////////////////
                     // Do random walking //
                     ///////////////////////
-                    {
-                        std::vector<std::vector<int>> randomWalks;
-                        doRandomWalksKNN(_dataMatrix, _projMatrix, _knnGraph, selectionIndex, randomWalks);
+                    //{
+                    //    std::vector<std::vector<int>> randomWalks;
+                    //    compute::doRandomWalksKNN(_dataMatrix, _projMatrix, _knnGraph, selectionIndex, randomWalks);
 
-                        std::vector<std::vector<Vector2f>> randomWalkPoints;
-                        randomWalkPoints.resize(randomWalks.size());
-                        for (int i = 0; i < randomWalks.size(); i++)
-                        {
-                            randomWalkPoints[i].resize(randomWalks[i].size());
-                            for (int j = 0; j < randomWalks[i].size(); j++)
-                            {
-                                int index = randomWalks[i][j];
-                                randomWalkPoints[i][j] = Vector2f(_projMatrix(index, 0), _projMatrix(index, 1));
-                            }
-                        }
+                    //    std::vector<std::vector<Vector2f>> randomWalkPoints;
+                    //    randomWalkPoints.resize(randomWalks.size());
+                    //    for (int i = 0; i < randomWalks.size(); i++)
+                    //    {
+                    //        randomWalkPoints[i].resize(randomWalks[i].size());
+                    //        for (int j = 0; j < randomWalks[i].size(); j++)
+                    //        {
+                    //            int index = randomWalks[i][j];
+                    //            randomWalkPoints[i][j] = Vector2f(_projMatrix(index, 0), _projMatrix(index, 1));
+                    //        }
+                    //    }
 
-                        _scatterPlotWidget->setRandomWalks(randomWalkPoints);
+                    //    _scatterPlotWidget->setRandomWalks(randomWalkPoints);
 
-                        //std::vector<Vector3f> colors(_dataMatrix.rows(), Vector3f(0, 0, 0));
-                        //for (int i = 0; i < randomWalks.size(); i++)
-                        //{
-                        //    for (int j = 0; j < randomWalks[i].size(); j++)
-                        //    {
-                        //        int index = randomWalks[i][j];
-                        //        colors[index] += Vector3f(0.1f, 0, 0);
-                        //    }
-                        //}
+                    //    //std::vector<Vector3f> colors(_dataMatrix.rows(), Vector3f(0, 0, 0));
+                    //    //for (int i = 0; i < randomWalks.size(); i++)
+                    //    //{
+                    //    //    for (int j = 0; j < randomWalks[i].size(); j++)
+                    //    //    {
+                    //    //        int index = randomWalks[i][j];
+                    //    //        colors[index] += Vector3f(0.1f, 0, 0);
+                    //    //    }
+                    //    //}
 
-                        //_scatterPlotWidget->setColors(colors);
-                    }
+                    //    //_scatterPlotWidget->setColors(colors);
+                    //}
 
                     //////////////////
                     // Do floodfill //
@@ -694,7 +447,7 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     std::vector<std::vector<int>> floodFill;
 
                     {
-                        doFloodFill(_dataMatrix, _projMatrix, _knnGraph, selectionIndex, floodFill);
+                        compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, selectionIndex, floodFill);
 
                         std::vector<float> ccolors(_dataMatrix.rows(), 0);
                         for (int i = 0; i < floodFill.size(); i++)
@@ -759,65 +512,65 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                         }
                     }
 
-                    int currentNode = selectionIndex;
-                    Vector2f currentNodePos = center;
+                    //int currentNode = selectionIndex;
+                    //Vector2f currentNodePos = center;
 
-                    // Find neighbours
-                    std::vector<int> neighbours;
-                    for (int i = 0; i < floodNodes.size(); i++)
-                    {
-                        int floodIndex = floodNodes[i];
-                        Vector2f nodePos = _positions[floodIndex];
-                        if (abs(nodePos.x - currentNodePos.x) < 1.1f && abs(nodePos.y - currentNodePos.y) < 1.1f)
-                        {
-                            neighbours.push_back(floodIndex);
-                        }
-                    }
-                    
-                    auto nodeValues = _dataMatrix.row(currentNode);
+                    //// Find neighbours
+                    //std::vector<int> neighbours;
+                    //for (int i = 0; i < floodNodes.size(); i++)
+                    //{
+                    //    int floodIndex = floodNodes[i];
+                    //    Vector2f nodePos = _positions[floodIndex];
+                    //    if (abs(nodePos.x - currentNodePos.x) < 1.1f && abs(nodePos.y - currentNodePos.y) < 1.1f)
+                    //    {
+                    //        neighbours.push_back(floodIndex);
+                    //    }
+                    //}
+                    //
+                    //auto nodeValues = _dataMatrix.row(currentNode);
 
-                    for (int i = 0; i < neighbours.size(); i++)
-                    {
-                        auto neighbourValues = _dataMatrix.row(neighbours[i]);
+                    //for (int i = 0; i < neighbours.size(); i++)
+                    //{
+                    //    auto neighbourValues = _dataMatrix.row(neighbours[i]);
 
 
-                    }
+                    //}
 
-                    // Store dimension values for every flood node
-                    std::vector<std::vector<float>> dimValues(_dataMatrix.cols(), std::vector<float>(floodNodes.size()));
-                    for (int i = 0; i < floodNodes.size(); i++)
-                    {
-                        int floodNode = floodNodes[i];
-                        auto floodValues = _dataMatrix.row(floodNode);
-                        for (int d = 0; d < floodValues.size(); d++)
-                        {
-                            dimValues[d][i] = floodValues(d);
-                        }
-                    }
+                    //// Store dimension values for every flood node
+                    //std::vector<std::vector<float>> dimValues(_dataMatrix.cols(), std::vector<float>(floodNodes.size()));
+                    //for (int i = 0; i < floodNodes.size(); i++)
+                    //{
+                    //    int floodNode = floodNodes[i];
+                    //    auto floodValues = _dataMatrix.row(floodNode);
+                    //    for (int d = 0; d < floodValues.size(); d++)
+                    //    {
+                    //        dimValues[d][i] = floodValues(d);
+                    //    }
+                    //}
 
-                    for (int d = 0; d < dimValues.size(); d++)
-                    {
-                        sort(dimValues[d].begin(), dimValues[d].end());
-                    }
+                    //for (int d = 0; d < dimValues.size(); d++)
+                    //{
+                    //    sort(dimValues[d].begin(), dimValues[d].end());
+                    //}
 
-                    _gradientGraph->setValues(dimValues);
+                    //_gradientGraph->setValues(dimValues);
 
-                    std::vector<std::vector<Vector2f>> lineagePoints;
+                    //std::vector<std::vector<Vector2f>> lineagePoints;
 
-                    auto centerValues = _dataMatrix.row(selectionIndex);
-                    for (int i = 1; i < 2; i++)
-                    {
-                        for (int j = 0; j < floodFill[i].size(); j++)
-                        {
-                            int node = floodFill[i][j];
-                            auto nodeValues = _dataMatrix.row(node);
-                            std::vector<Vector2f> linPoints;
-                            linPoints.push_back(Vector2f(_projMatrix(selectionIndex, 0), _projMatrix(selectionIndex, 1)));
-                            linPoints.push_back(Vector2f(_projMatrix(node, 0), _projMatrix(node, 1)));
-                            lineagePoints.push_back(linPoints);
-                        }
-                    }
-                    _scatterPlotWidget->setRandomWalks(lineagePoints);
+                    //auto centerValues = _dataMatrix.row(selectionIndex);
+                    //for (int i = 1; i < 2; i++)
+                    //{
+                    //    for (int j = 0; j < floodFill[i].size(); j++)
+                    //    {
+                    //        int node = floodFill[i][j];
+                    //        auto nodeValues = _dataMatrix.row(node);
+                    //        std::vector<Vector2f> linPoints;
+                    //        linPoints.push_back(Vector2f(_projMatrix(selectionIndex, 0), _projMatrix(selectionIndex, 1)));
+                    //        linPoints.push_back(Vector2f(_projMatrix(node, 0), _projMatrix(node, 1)));
+                    //        lineagePoints.push_back(linPoints);
+                    //    }
+                    //}
+                    //_scatterPlotWidget->setRandomWalks(lineagePoints);
 
                     //////////////////
                     std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());
@@ -825,7 +578,7 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     {
                         std::vector<int> lineage;
                         lineage.push_back(selectionIndex);
-                        traceLineage(_dataMatrix, floodFill, _positions, selectionIndex, lineage);
+                        compute::traceLineage(_dataMatrix, floodFill, _positions, selectionIndex, lineage);
 
                         for (int i = 0; i < lineage.size(); i++)
                         {
@@ -920,30 +673,26 @@ void ScatterplotPlugin::computeStaticData()
         _dataMatrix = dataMatrix(_positionDataset->indices, Eigen::all);
     else
         _dataMatrix = dataMatrix;
-    qDebug() << "Subsample features...";
+
     // Subsample dimensions based on dimension picker
     std::vector<bool> enabledDimensions = _dimPicker.getPickerAction().getEnabledDimensions();
     std::vector<int> dimIndices;
-    qDebug() << "Subsample features...1";
     for (int i = 0; i < enabledDimensions.size(); i++)
         if (enabledDimensions[i]) dimIndices.push_back(i);
-    qDebug() << "Subsample features...2";
     DataMatrix featureMatrix = _dataMatrix(Eigen::all, dimIndices);
-    qDebug() << "Subsample features...3";
     _dataMatrix = featureMatrix;
-    qDebug() << "Subsampled features";
+
     createKnnGraph(_dataMatrix);
     _knnGraph.build(_dataMatrix, _kdtree, 6);
     _largeKnnGraph.build(_dataMatrix, _kdtree, 30);
-    qDebug() << "Graph built";
+
     //compute::computeSpatialLocalDimensionality(_dataMatrix, _projMatrix, _colors);
     compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _colors);
     getScatterplotWidget().setScalars(_colors);
-    qDebug() << "HD Local Dims";
+
     std::vector<Vector2f> directions;
     computeDirection(_dataMatrix, _projMatrix, _knnGraph, directions);
     getScatterplotWidget().setDirections(directions);
-    qDebug() << "Dirs computed";
 }
 
 void ScatterplotPlugin::loadData(const Datasets& datasets)
