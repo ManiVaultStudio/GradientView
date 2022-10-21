@@ -7,13 +7,16 @@ using DataMatrix = Eigen::MatrixXf;
 
 class KnnGraph;
 
-namespace compute
+namespace hdps
 {
-    float computeProjectionDiameter(const DataMatrix& projection, int xDim, int yDim);
+    namespace compute
+    {
+        float computeProjectionDiameter(const DataMatrix& projection, int xDim, int yDim);
 
-    void findNeighbourhood(const DataMatrix& projection, int centerId, float radius, std::vector<int>& neighbourhood, int xDim, int yDim);
+        void findNeighbourhood(const DataMatrix& projection, int centerId, float radius, std::vector<int>& neighbourhood, int xDim, int yDim);
 
-    void computeSpatialLocalDimensionality(DataMatrix& dataMatrix, DataMatrix& projMatrix, std::vector<float>& colors);
+        void computeSpatialLocalDimensionality(DataMatrix& dataMatrix, DataMatrix& projMatrix, std::vector<float>& colors);
 
-    void computeHDLocalDimensionality(DataMatrix& dataMatrix, KnnGraph& knnGraph, std::vector<float>& normLD);
+        void computeHDLocalDimensionality(DataMatrix& dataMatrix, KnnGraph& knnGraph, std::vector<float>& normLD);
+    }
 }
