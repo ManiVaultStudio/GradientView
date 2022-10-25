@@ -199,7 +199,7 @@ void ScatterplotWidget::setData(const std::vector<Vector2f>* points)
             break;
     }
 
-    _pointRenderer.setOutlineColor(Vector3f(1, 0, 0));
+    _pointRenderer.setSelectionOutlineColor(Vector3f(1, 0, 0));
 
     update();
 }

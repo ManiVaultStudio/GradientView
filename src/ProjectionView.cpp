@@ -88,7 +88,7 @@ void ProjectionView::setData(const std::vector<Vector2f>* points)
     _pointRenderer.setBounds(_dataBounds);
     _pointRenderer.setData(*points);
 
-    _pointRenderer.setOutlineColor(Vector3f(1, 0, 0));
+    _pointRenderer.setSelectionOutlineColor(Vector3f(1, 0, 0));
     _pointRenderer.setAlpha(0.5f);
     //_pointRenderer.setPointScaling(PointScaling::Relative);
 

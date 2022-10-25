@@ -17,6 +17,7 @@
 #include <Eigen/Dense>
 #include "LocalDimensionality.h"
 #include "RandomWalks.h"
+#include "Filters.h"
 
 #include <QtCore>
 #include <QApplication>
@@ -60,38 +61,6 @@ namespace
     void indicesToVectors(const std::vector<int>& indices, std::vector<Vector2f>& vec)
     {
 
-    }
-
-    void findPointsInRadius(Vector2f center, float radius, const std::vector<Vector2f>& points, std::vector<int>& indices)
-    {
-        float radiusSqr = powf(radius, 2);
-        for (int i = 0; i < points.size(); i++)
-        {
-            const Vector2f& pos = points[i];
-
-            Vector2f diff = center - pos;
-            float len = diff.x * diff.x + diff.y * diff.y;
-
-            if (len < radiusSqr)
-            {
-                indices.push_back(i);
-            }
-        }
-    }
-    
-    void computeDimensionAverage(const DataMatrix& data, const std::vector<int>& indices, std::vector<float>& averages)
-    {
-        int numDimensions = data.cols();
-        averages.resize(numDimensions);
-        for (int d = 0; d < numDimensions; d++)
-        {
-            for (const int& index : indices)
-            {
-                float v = data(index, d);
-                averages[d] += v;
-            }
-            averages[d] /= indices.size();
-        }
     }
 
     void computeDirection(DataMatrix& dataMatrix, DataMatrix& projMatrix, KnnGraph& knnGraph, std::vector<Vector2f>& directions)
@@ -591,31 +560,13 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     /////////////////////
                     // Gradient picker //
                     /////////////////////
-                    // Small and large circle averages
-                    std::vector<std::vector<float>> averages(2);
-                    std::vector<std::vector<int>> circleIndices(2);
-
-                    findPointsInRadius(center, 0.05f * size, _positions, circleIndices[0]);
-                    computeDimensionAverage(_dataMatrix, circleIndices[0], averages[0]);
-                    findPointsInRadius(center, 0.1f * size, _positions, circleIndices[1]);
-                    computeDimensionAverage(_dataMatrix, circleIndices[1], averages[1]);
-
-                    std::vector<float> diffAverages(numDimensions);
-                    for (int d = 0; d < numDimensions; d++)
-                    {
-                        diffAverages[d] = fabs(averages[0][d] - averages[1][d]);
-                    }
-                    
-                    // Sort averages from high to low
-                    std::vector<size_t> idx(diffAverages.size());
-                    std::iota(idx.begin(), idx.end(), 0);
-
-                    std::stable_sort(idx.begin(), idx.end(), [&diffAverages](size_t i1, size_t i2) {return diffAverages[i1] > diffAverages[i2]; });
+                    std::vector<int> dimRanking;
+                    filters::spatialCircleFilter(selectionIndex, size, _dataMatrix, _projMatrix, dimRanking);
 
                     // Set appropriate coloring of gradient view, FIXME use colormap later
                     for (int pi = 0; pi < _projectionViews.size(); pi++)
                     {
-                        auto dimValues = _dataMatrix(Eigen::all, idx[pi]);
+                        auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
 
                         float minV = *std::min_element(dimValues.begin(), dimValues.end());
                         float maxV = *std::max_element(dimValues.begin(), dimValues.end());
@@ -643,7 +594,7 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                                 enabledDimNames.push_back(dimNames[i]);
                         }
 
-                        _projectionViews[pi]->setProjectionName(enabledDimNames[idx[pi]]);
+                        _projectionViews[pi]->setProjectionName(enabledDimNames[dimRanking[pi]]);
                     }
 
                     //_gradientGraph->setDimension(_dataMatrix, idx[0]);
@@ -653,7 +604,7 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
 
                     for (int i = 0; i < floodNodes.size(); i++)
                     {
-                        dimScalars[floodNodes[i]] = _dataMatrix(floodNodes[i], idx[0]);
+                        dimScalars[floodNodes[i]] = _dataMatrix(floodNodes[i], dimRanking[0]);
                     }
                     getScatterplotWidget().setScalars(dimScalars);
                 }

@@ -86,6 +86,8 @@ set(Compute
     src/Compute/RandomWalks.cpp
     src/Compute/KnnGraph.h
     src/Compute/KnnGraph.cpp
+    src/Compute/Filters.h
+    src/Compute/Filters.cpp
 )
 
 set(SHADERS
