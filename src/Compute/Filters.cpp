@@ -4,6 +4,7 @@
 #include "graphics/Vector3f.h"
 
 #include <numeric>
+#include <iostream>
 
 using namespace hdps;
 
@@ -67,5 +68,40 @@ namespace filters
         std::iota(dimRanking.begin(), dimRanking.end(), 0);
 
         std::stable_sort(dimRanking.begin(), dimRanking.end(), [&diffAverages](size_t i1, size_t i2) {return diffAverages[i1] > diffAverages[i2]; });
+    }
+
+    void radiusPeakFilterHD(int seedPoint, const DataMatrix& dataMatrix, std::vector<std::vector<int>> floodPoints, std::vector<int>& dimRanking)
+    {
+        int numDimensions = dataMatrix.cols();
+
+        std::vector<int> nearIndices;
+        std::vector<int> farIndices;
+
+        for (int wave = 0; wave < floodPoints.size()/2; wave++)
+        {
+            nearIndices.insert(nearIndices.end(), floodPoints[wave].begin(), floodPoints[wave].end());
+        }
+        for (int wave = floodPoints.size() / 2; wave < floodPoints.size(); wave++)
+        {
+            farIndices.insert(farIndices.end(), floodPoints[wave].begin(), floodPoints[wave].end());
+        }
+
+        std::vector<float> nearAverages;
+        std::vector<float> farAverages;
+
+        computeDimensionAverage(dataMatrix, nearIndices, nearAverages);
+        computeDimensionAverage(dataMatrix, farIndices, farAverages);
+
+        std::vector<float> diffAverages(numDimensions);
+        for (int d = 0; d < numDimensions; d++)
+            diffAverages[d] = nearAverages[d] - farAverages[d];
+
+        // Sort averages from high to low
+        dimRanking.resize(numDimensions);
+        std::iota(dimRanking.begin(), dimRanking.end(), 0);
+
+        std::stable_sort(dimRanking.begin(), dimRanking.end(), [&diffAverages](size_t i1, size_t i2) {return diffAverages[i1] > diffAverages[i2]; });
+
+        std::cout << diffAverages[dimRanking[0]] << " " << diffAverages[dimRanking[2]] << std::endl;
     }
 }

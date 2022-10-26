@@ -43,17 +43,27 @@ namespace
 {
     void convertToEigenMatrix(hdps::Dataset<Points> dataset, DataMatrix& dataMatrix)
     {
+        // Compute num points
+        std::vector<bool> enabledDims = dataset->getDimensionPicker().getEnabledDimensions();
         int numPoints = dataset->getNumPoints();
         int numDimensions = dataset->getNumDimensions();
+        int numEnabledDims =  std::count(enabledDims.begin(), enabledDims.end(), true);
 
-        dataMatrix.resize(numPoints, numDimensions);
+        dataMatrix.resize(numPoints, numEnabledDims);
 
-        for (int i = 0; i < numPoints; i++)
+        if (dataset->isFull())
         {
-            for (int j = 0; j < numDimensions; j++)
+            int col = 0;
+            for (int d = 0; d < numDimensions; d++)
             {
-                int index = dataset->isFull() ? i * numDimensions + j : dataset->indices[i] * numDimensions + j;
-                dataMatrix(i, j) = dataset->getValueAt(index);
+                if (!enabledDims[d]) continue;
+
+                std::vector<float> dimData;
+                dataset->extractDataForDimension(dimData, d);
+                for (int i = 0; i < numPoints; i++)
+                    dataMatrix(i, col) = dimData[i];
+
+                col++;
             }
         }
     }
@@ -124,8 +134,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _dropWidget(nullptr),
     _settingsAction(this),
     _gradientGraph(new GradientGraph()),
-    _selectedDimension(-1),
-    _dimPicker(this)
+    _selectedDimension(-1)
 {
     setObjectName("GradientExplorer");
 
@@ -286,12 +295,12 @@ void ScatterplotPlugin::init()
     QPushButton* showLocalDimensionality = new QPushButton("Show local dimensionality");
     connect(showLocalDimensionality, &QPushButton::pressed, this, &ScatterplotPlugin ::showLocalDimensionality);
     gradientViewLayout->addWidget(showLocalDimensionality);
-    gradientViewLayout->addWidget(_dimPicker.createWidget(&getWidget()));
-    QPushButton* updateFeatureSet = new QPushButton("Update feature set");
-    connect(updateFeatureSet, &QPushButton::pressed, this, [this]() {
-        computeStaticData();
-    });
-    gradientViewLayout->addWidget(updateFeatureSet);
+    //gradientViewLayout->addWidget(_dimPicker.createWidget(&getWidget()));
+    //QPushButton* updateFeatureSet = new QPushButton("Update feature set");
+    //connect(updateFeatureSet, &QPushButton::pressed, this, [this]() {
+    //    computeStaticData();
+    //});
+    //gradientViewLayout->addWidget(updateFeatureSet);
 
     plotLayout->addWidget(_scatterPlotWidget, 60);
     plotLayout->addLayout(gradientViewLayout, 30);
@@ -360,9 +369,6 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
         {
             if (_positionDataset->isDerivedData())
             {
-                // Extract the enabled dimensions from the data
-                std::vector<bool> enabledDimensions = _dimPicker.getPickerAction().getEnabledDimensions();
-
                 hdps::Dataset<Points> selection = _positionSourceDataset->getSelection();
 
                 int numDimensions = _dataMatrix.cols();
@@ -561,7 +567,8 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     // Gradient picker //
                     /////////////////////
                     std::vector<int> dimRanking;
-                    filters::spatialCircleFilter(selectionIndex, size, _dataMatrix, _projMatrix, dimRanking);
+                    //filters::spatialCircleFilter(selectionIndex, size, _dataMatrix, _projMatrix, dimRanking);
+                    filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
 
                     // Set appropriate coloring of gradient view, FIXME use colormap later
                     for (int pi = 0; pi < _projectionViews.size(); pi++)
@@ -586,7 +593,7 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                         }
                         _projectionViews[pi]->setColors(colors);
                         const auto& dimNames = _positionSourceDataset->getDimensionNames();
-                        auto enabledDimensions = _dimPicker.getPickerAction().getEnabledDimensions();
+                        auto enabledDimensions = _positionSourceDataset->getDimensionPicker().getEnabledDimensions();
                         std::vector<QString> enabledDimNames;
                         for (int i = 0; i < enabledDimensions.size(); i++)
                         {
@@ -625,13 +632,6 @@ void ScatterplotPlugin::computeStaticData()
     else
         _dataMatrix = dataMatrix;
 
-    // Subsample dimensions based on dimension picker
-    std::vector<bool> enabledDimensions = _dimPicker.getPickerAction().getEnabledDimensions();
-    std::vector<int> dimIndices;
-    for (int i = 0; i < enabledDimensions.size(); i++)
-        if (enabledDimensions[i]) dimIndices.push_back(i);
-    DataMatrix featureMatrix = _dataMatrix(Eigen::all, dimIndices);
-    _dataMatrix = featureMatrix;
 
     createKnnGraph(_dataMatrix);
     _knnGraph.build(_dataMatrix, _kdtree, 6);
@@ -815,9 +815,6 @@ void ScatterplotPlugin::positionDatasetChanged()
 
     // Update the window title to reflect the position dataset change
     updateWindowTitle();
-
-    _dimPicker.getPickerAction().setPointsDataset(_positionSourceDataset);
-    _positionSourceDataset->addAction(_dimPicker);
 
     computeStaticData();
 }
