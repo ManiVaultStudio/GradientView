@@ -44,7 +44,7 @@ namespace
     void convertToEigenMatrix(hdps::Dataset<Points> dataset, DataMatrix& dataMatrix)
     {
         // Compute num points
-        std::vector<bool> enabledDims = dataset->getDimensionPicker().getEnabledDimensions();
+        std::vector<bool> enabledDims = dataset->getDimensionsPickerAction().getEnabledDimensions();
         int numPoints = dataset->getNumPoints();
         int numDimensions = dataset->getNumDimensions();
         int numEnabledDims =  std::count(enabledDims.begin(), enabledDims.end(), true);
@@ -593,7 +593,7 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                         }
                         _projectionViews[pi]->setColors(colors);
                         const auto& dimNames = _positionSourceDataset->getDimensionNames();
-                        auto enabledDimensions = _positionSourceDataset->getDimensionPicker().getEnabledDimensions();
+                        auto enabledDimensions = _positionSourceDataset->getDimensionsPickerAction().getEnabledDimensions();
                         std::vector<QString> enabledDimNames;
                         for (int i = 0; i < enabledDimensions.size(); i++)
                         {
