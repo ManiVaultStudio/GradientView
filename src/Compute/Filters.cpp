@@ -28,7 +28,7 @@ void findPointsInRadius(Vector2f center, float radius, const DataMatrix& projMat
 void computeDimensionAverage(const DataMatrix& data, const std::vector<int>& indices, std::vector<float>& averages)
 {
     int numDimensions = data.cols();
-    averages.resize(numDimensions);
+    averages.resize(numDimensions, 0);
     for (int d = 0; d < numDimensions; d++)
     {
         for (const int& index : indices)
