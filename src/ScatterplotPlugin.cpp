@@ -372,10 +372,6 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                 hdps::Dataset<Points> selection = _positionSourceDataset->getSelection();
 
                 int numDimensions = _dataMatrix.cols();
-
-                Bounds bounds = _scatterPlotWidget->getBounds();
-
-                float size = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
                 
                 if (selection->indices.size() > 0)
                 {
@@ -633,6 +629,9 @@ void ScatterplotPlugin::computeStaticData()
         _dataMatrix = dataMatrix;
 
 
+    Bounds bounds = _scatterPlotWidget->getBounds();
+    _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
+    std::cout << "Projection size: " << _projectionSize << std::endl;
     createKnnGraph(_dataMatrix);
     _knnGraph.build(_dataMatrix, _kdtree, 6);
     _largeKnnGraph.build(_dataMatrix, _kdtree, 30);

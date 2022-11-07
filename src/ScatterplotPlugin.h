@@ -139,6 +139,7 @@ protected:
     std::vector<float> _colors;
     GradientGraph*                  _gradientGraph;
     int                             _selectedDimension;
+    float                           _projectionSize;
     //DimensionSelectionAction        _dimPicker;
 
     hdps::gui::DropWidget*      _dropWidget;
