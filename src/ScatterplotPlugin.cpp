@@ -304,8 +304,8 @@ void ScatterplotPlugin::init()
         {
             filters::spatialCircleFilter(i, _projectionSize, _dataMatrix, _projMatrix, perPointDimRankings[i]);
         }
-
-        writeDimensionRanking(perPointDimRankings);
+        
+        writeDimensionRanking(perPointDimRankings, _positionSourceDataset->getDimensionNames());
         //filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
     });
     gradientViewLayout->addWidget(saveRanking);

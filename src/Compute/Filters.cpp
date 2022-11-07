@@ -10,6 +10,8 @@
 #include <iomanip>
 #include <ctime>
 
+#include <QString>
+
 using namespace hdps;
 
 void findPointsInRadius(Vector2f center, float radius, const DataMatrix& projMatrix, std::vector<int>& indices)
@@ -44,7 +46,7 @@ void computeDimensionAverage(const DataMatrix& data, const std::vector<int>& ind
     }
 }
 
-void writeDimensionRanking(const std::vector<std::vector<int>>& ranking)
+void writeDimensionRanking(const std::vector<std::vector<int>>& ranking, const std::vector<QString>& names)
 {
     auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
@@ -61,7 +63,7 @@ void writeDimensionRanking(const std::vector<std::vector<int>>& ranking)
         for (int d = 0; d < ranking[i].size(); d++)
         {
             if (d != 0) myfile << ',';
-            myfile << ranking[i][d];
+            myfile << names[ranking[i][d]].toStdString();
         }
         myfile << std::endl;
     }

@@ -3,10 +3,11 @@
 #include <Eigen/Eigen>
 
 #include <vector>
+#include <QString>
 
 using DataMatrix = Eigen::MatrixXf;
 
-void writeDimensionRanking(const std::vector<std::vector<int>>& ranking);
+void writeDimensionRanking(const std::vector<std::vector<int>>& ranking, const std::vector<QString>& names);
 
 namespace filters
 {
