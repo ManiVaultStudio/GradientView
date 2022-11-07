@@ -6,6 +6,8 @@
 
 using DataMatrix = Eigen::MatrixXf;
 
+void writeDimensionRanking(const std::vector<std::vector<int>>& ranking);
+
 namespace filters
 {
     void spatialCircleFilter(int seedPoint, float projSize, const DataMatrix& dataMatrix, const DataMatrix& projMatrix, std::vector<int>& dimRanking);

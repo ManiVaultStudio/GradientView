@@ -5,6 +5,10 @@
 
 #include <numeric>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <ctime>
 
 using namespace hdps;
 
@@ -38,6 +42,32 @@ void computeDimensionAverage(const DataMatrix& data, const std::vector<int>& ind
         }
         averages[d] /= indices.size();
     }
+}
+
+void writeDimensionRanking(const std::vector<std::vector<int>>& ranking)
+{
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+
+    std::ostringstream fileName;
+    fileName << "rankings";
+    fileName << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
+    fileName << ".csv";
+
+    std::ofstream myfile;
+    myfile.open(fileName.str());
+    for (int i = 0; i < ranking.size(); i++)
+    {
+        for (int d = 0; d < ranking[i].size(); d++)
+        {
+            if (d != 0) myfile << ',';
+            myfile << ranking[i][d];
+        }
+        myfile << std::endl;
+    }
+
+    myfile.close();
+    std::cout << "Rankings written to file" << std::endl;
 }
 
 namespace filters
