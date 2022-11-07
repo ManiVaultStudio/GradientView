@@ -295,6 +295,21 @@ void ScatterplotPlugin::init()
     QPushButton* showLocalDimensionality = new QPushButton("Show local dimensionality");
     connect(showLocalDimensionality, &QPushButton::pressed, this, &ScatterplotPlugin ::showLocalDimensionality);
     gradientViewLayout->addWidget(showLocalDimensionality);
+
+    QPushButton* saveRanking = new QPushButton("Save rankings");
+    connect(saveRanking, &QPushButton::pressed, this, [this]()
+    {
+        std::vector<std::vector<int>> perPointDimRankings(_dataMatrix.rows());
+        for (int i = 0; i < _dataMatrix.rows(); i++)
+        {
+            filters::spatialCircleFilter(i, _projectionSize, _dataMatrix, _projMatrix, perPointDimRankings[i]);
+        }
+
+        writeDimensionRanking(perPointDimRankings);
+        //filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
+    });
+    gradientViewLayout->addWidget(saveRanking);
+
     //gradientViewLayout->addWidget(_dimPicker.createWidget(&getWidget()));
     //QPushButton* updateFeatureSet = new QPushButton("Update feature set");
     //connect(updateFeatureSet, &QPushButton::pressed, this, [this]() {
