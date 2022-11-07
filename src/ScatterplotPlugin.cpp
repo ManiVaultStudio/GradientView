@@ -584,19 +584,21 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     // Set appropriate coloring of gradient view, FIXME use colormap later
                     for (int pi = 0; pi < _projectionViews.size(); pi++)
                     {
-                        auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
+                        const auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
 
                         float minV = *std::min_element(dimValues.begin(), dimValues.end());
                         float maxV = *std::max_element(dimValues.begin(), dimValues.end());
+
+                        std::vector<float> dimValuesCopy(dimValues.size());
                         for (int i = 0; i < dimValues.size(); i++)
                         {
-                            dimValues[i] /= maxV - minV;
+                            dimValuesCopy[i] = dimValues[i] / (maxV - minV);
                         }
 
                         std::vector<Vector3f> colors(_positions.size());
-                        for (int i = 0; i < dimValues.size(); i++)
+                        for (int i = 0; i < dimValuesCopy.size(); i++)
                         {
-                            colors[i] = Vector3f(1-dimValues[i], 1 - dimValues[i], 1 - dimValues[i]);
+                            colors[i] = Vector3f(1- dimValuesCopy[i], 1 - dimValuesCopy[i], 1 - dimValuesCopy[i]);
                             if (i == selectionIndex)
                             {
                                 colors[i] = Vector3f(1, 0, 0);
