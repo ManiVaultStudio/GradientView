@@ -81,7 +81,7 @@ namespace filters
         std::vector<std::vector<int>> circleIndices(2);
 
         Vector2f center = Vector2f(projMatrix(seedPoint, 0), projMatrix(seedPoint, 1));
-
+        
         findPointsInRadius(center, 0.05f * projSize, projMatrix, circleIndices[0]);
         computeDimensionAverage(dataMatrix, circleIndices[0], averages[0]);
         findPointsInRadius(center, 0.1f * projSize, projMatrix, circleIndices[1]);
@@ -90,7 +90,7 @@ namespace filters
         std::vector<float> diffAverages(numDimensions);
         for (int d = 0; d < numDimensions; d++)
         {
-            diffAverages[d] = fabs(averages[0][d] - averages[1][d]);
+            diffAverages[d] = averages[0][d] - averages[1][d];
         }
 
         // Sort averages from high to low
@@ -131,7 +131,5 @@ namespace filters
         std::iota(dimRanking.begin(), dimRanking.end(), 0);
 
         std::stable_sort(dimRanking.begin(), dimRanking.end(), [&diffAverages](size_t i1, size_t i2) {return diffAverages[i1] > diffAverages[i2]; });
-
-        std::cout << diffAverages[dimRanking[0]] << " " << diffAverages[dimRanking[2]] << std::endl;
     }
 }
