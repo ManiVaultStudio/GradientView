@@ -578,8 +578,8 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
                     // Gradient picker //
                     /////////////////////
                     std::vector<int> dimRanking;
-                    //filters::spatialCircleFilter(selectionIndex, size, _dataMatrix, _projMatrix, dimRanking);
-                    filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
+                    filters::spatialCircleFilter(selectionIndex, _projectionSize, _dataMatrix, _projMatrix, dimRanking);
+                    //filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
 
                     // Set appropriate coloring of gradient view, FIXME use colormap later
                     for (int pi = 0; pi < _projectionViews.size(); pi++)
