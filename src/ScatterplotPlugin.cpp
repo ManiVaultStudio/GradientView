@@ -635,6 +635,7 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
 
 void ScatterplotPlugin::computeStaticData()
 {
+    std::cout << "Start conversion" << std::endl;
     DataMatrix dataMatrix;
     convertToEigenMatrix(_positionSourceDataset, dataMatrix);
     convertToEigenMatrix(_positionDataset, _projMatrix);
@@ -645,6 +646,7 @@ void ScatterplotPlugin::computeStaticData()
     else
         _dataMatrix = dataMatrix;
 
+    std::cout << "Number of enabled dimensions in the dataset : " << _dataMatrix.cols() << std::endl;
 
     Bounds bounds = _scatterPlotWidget->getBounds();
     _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
