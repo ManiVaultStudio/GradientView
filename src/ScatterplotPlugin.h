@@ -5,7 +5,6 @@
 #include "util/PixelSelectionTool.h"
 
 #include "Common.h"
-#include "DimensionSelectionAction.h"
 
 #include "SettingsAction.h"
 #include "graphics/Vector3f.h"
@@ -142,7 +141,6 @@ protected:
     GradientGraph*                  _gradientGraph;
     int                             _selectedDimension;
     float                           _projectionSize;
-    //DimensionSelectionAction        _dimPicker;
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;

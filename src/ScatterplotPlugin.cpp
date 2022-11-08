@@ -5,13 +5,14 @@
 #include "Application.h"
 
 #include "util/PixelSelectionTool.h"
+#include "DimensionsPickerAction.h"
 
 #include "PointData.h"
 #include "ClusterData.h"
 #include "ColorData.h"
 
 #include "graphics/Vector2f.h"
-//#include "graphics/Vector3f.h"
+#include "graphics/Vector3f.h"
 #include "widgets/DropWidget.h"
 
 #include <Eigen/Dense>
