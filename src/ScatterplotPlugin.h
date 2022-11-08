@@ -45,6 +45,7 @@ public:
     void init() override;
 
     void onDataEvent(hdps::DataEvent* dataEvent);
+    void onPointSelection();
 
     void computeStaticData();
 
@@ -131,6 +132,7 @@ private:
     knncpp::KDTreeMinkowskiX<float, knncpp::ManhattenDistance<float>>* _kdtree;
     KnnGraph                        _knnGraph;
     KnnGraph                        _largeKnnGraph;
+    std::vector<QString>            _enabledDimNames;
 
 protected:
     ScatterplotWidget*              _scatterPlotWidget;

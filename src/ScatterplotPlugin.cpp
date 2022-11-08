@@ -384,252 +384,197 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
         {
             if (_positionDataset->isDerivedData())
             {
-                hdps::Dataset<Points> selection = _positionSourceDataset->getSelection();
-
-                int numDimensions = _dataMatrix.cols();
-                
-                if (selection->indices.size() > 0)
-                {
-                    int selectionIndex = selection->indices[0];
-                    Vector2f center = _positions[selectionIndex];
-
-                    ///////////////////////
-                    // Do random walking //
-                    ///////////////////////
-                    //{
-                    //    std::vector<std::vector<int>> randomWalks;
-                    //    compute::doRandomWalksKNN(_dataMatrix, _projMatrix, _knnGraph, selectionIndex, randomWalks);
-
-                    //    std::vector<std::vector<Vector2f>> randomWalkPoints;
-                    //    randomWalkPoints.resize(randomWalks.size());
-                    //    for (int i = 0; i < randomWalks.size(); i++)
-                    //    {
-                    //        randomWalkPoints[i].resize(randomWalks[i].size());
-                    //        for (int j = 0; j < randomWalks[i].size(); j++)
-                    //        {
-                    //            int index = randomWalks[i][j];
-                    //            randomWalkPoints[i][j] = Vector2f(_projMatrix(index, 0), _projMatrix(index, 1));
-                    //        }
-                    //    }
-
-                    //    _scatterPlotWidget->setRandomWalks(randomWalkPoints);
-
-                    //    //std::vector<Vector3f> colors(_dataMatrix.rows(), Vector3f(0, 0, 0));
-                    //    //for (int i = 0; i < randomWalks.size(); i++)
-                    //    //{
-                    //    //    for (int j = 0; j < randomWalks[i].size(); j++)
-                    //    //    {
-                    //    //        int index = randomWalks[i][j];
-                    //    //        colors[index] += Vector3f(0.1f, 0, 0);
-                    //    //    }
-                    //    //}
-
-                    //    //_scatterPlotWidget->setColors(colors);
-                    //}
-
-                    //////////////////
-                    // Do floodfill //
-                    //////////////////
-                    std::vector<std::vector<int>> floodFill;
-
-                    {
-                        compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, selectionIndex, floodFill);
-
-                        std::vector<float> ccolors(_dataMatrix.rows(), 0);
-                        for (int i = 0; i < floodFill.size(); i++)
-                        {
-                            for (int j = 0; j < floodFill[i].size(); j++)
-                            {
-                                int index = floodFill[i][j];
-                                ccolors[index] = 1 - 0.1 * i;
-                            }
-                        }
-
-                        int numNodes = 0;
-                        for (int i = 0; i < 3; i++)
-                        {
-                            numNodes += floodFill[i].size();
-                        }
-
-                        Eigen::MatrixXf nodeLocations(numNodes, 2);
-                        int p = 0;
-                        for (int i = 0; i < 3; i++)
-                        {
-                            for (int j = 0; j < floodFill[i].size(); j++)
-                            {
-                                int index = floodFill[i][j];
-
-                                nodeLocations(p, 0) = _projMatrix(index, 0);
-                                nodeLocations(p, 1) = _projMatrix(index, 1);
-                                p++;
-                            }
-                        }
-                        
-                        getScatterplotWidget().setColorMap(_settingsAction.getColoringAction().getColorMapAction().getColorMapImage());
-                        _scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
-                        getScatterplotWidget().setScalarEffect(PointEffect::Color);
-                        _scatterPlotWidget->setScalars(ccolors);
-                        _scatterPlotWidget->setColorMapRange(0, 1);
-
-                        //getScatterplotWidget().setColorMap(_settingsAction.getColoringAction().getColorMapAction().getColorMapImage());
-                        //_scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
-                        //getScatterplotWidget().setScalarEffect(PointEffect::Color);
-                        //_scatterPlotWidget->setScalars(_colors);
-                        //_scatterPlotWidget->setColorMapRange(0, 1);
-                    }
-
-                    /////////////////////
-                    // Trace lineage   //
-                    /////////////////////
-                    int numFloodNodes = 0;
-                    for (int i = 0; i < floodFill.size(); i++)
-                    {
-                        numFloodNodes += floodFill[i].size();
-                    }
-
-                    // Store all flood nodes together
-                    std::vector<int> floodNodes(numFloodNodes);
-                    int n = 0;
-                    for (int i = 0; i < floodFill.size(); i++)
-                    {
-                        for (int j = 0; j < floodFill[i].size(); j++)
-                        {
-                            floodNodes[n++] = floodFill[i][j];
-                        }
-                    }
-
-                    //int currentNode = selectionIndex;
-                    //Vector2f currentNodePos = center;
-
-                    //// Find neighbours
-                    //std::vector<int> neighbours;
-                    //for (int i = 0; i < floodNodes.size(); i++)
-                    //{
-                    //    int floodIndex = floodNodes[i];
-                    //    Vector2f nodePos = _positions[floodIndex];
-                    //    if (abs(nodePos.x - currentNodePos.x) < 1.1f && abs(nodePos.y - currentNodePos.y) < 1.1f)
-                    //    {
-                    //        neighbours.push_back(floodIndex);
-                    //    }
-                    //}
-                    //
-                    //auto nodeValues = _dataMatrix.row(currentNode);
-
-                    //for (int i = 0; i < neighbours.size(); i++)
-                    //{
-                    //    auto neighbourValues = _dataMatrix.row(neighbours[i]);
-
-
-                    //}
-
-                    //// Store dimension values for every flood node
-                    //std::vector<std::vector<float>> dimValues(_dataMatrix.cols(), std::vector<float>(floodNodes.size()));
-                    //for (int i = 0; i < floodNodes.size(); i++)
-                    //{
-                    //    int floodNode = floodNodes[i];
-                    //    auto floodValues = _dataMatrix.row(floodNode);
-                    //    for (int d = 0; d < floodValues.size(); d++)
-                    //    {
-                    //        dimValues[d][i] = floodValues(d);
-                    //    }
-                    //}
-
-                    //for (int d = 0; d < dimValues.size(); d++)
-                    //{
-                    //    sort(dimValues[d].begin(), dimValues[d].end());
-                    //}
-
-                    //_gradientGraph->setValues(dimValues);
-
-                    //std::vector<std::vector<Vector2f>> lineagePoints;
-
-                    //auto centerValues = _dataMatrix.row(selectionIndex);
-                    //for (int i = 1; i < 2; i++)
-                    //{
-                    //    for (int j = 0; j < floodFill[i].size(); j++)
-                    //    {
-                    //        int node = floodFill[i][j];
-                    //        auto nodeValues = _dataMatrix.row(node);
-                    //        std::vector<Vector2f> linPoints;
-                    //        linPoints.push_back(Vector2f(_projMatrix(selectionIndex, 0), _projMatrix(selectionIndex, 1)));
-                    //        linPoints.push_back(Vector2f(_projMatrix(node, 0), _projMatrix(node, 1)));
-                    //        lineagePoints.push_back(linPoints);
-                    //    }
-                    //}
-                    //_scatterPlotWidget->setRandomWalks(lineagePoints);
-
-                    //////////////////
-                    std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());
-                    for (int w = 0; w < 10; w++)
-                    {
-                        std::vector<int> lineage;
-                        lineage.push_back(selectionIndex);
-                        compute::traceLineage(_dataMatrix, floodFill, _positions, selectionIndex, lineage);
-
-                        for (int i = 0; i < lineage.size(); i++)
-                        {
-                            linPoints[w].push_back(_positions[lineage[i]]);
-                            //qDebug() << linPoints[w][i].x << linPoints[w][i].y;
-                        }
-                    }
-                    _scatterPlotWidget->setRandomWalks(linPoints);
-
-                    /////////////////////
-                    // Gradient picker //
-                    /////////////////////
-                    std::vector<int> dimRanking;
-                    filters::spatialCircleFilter(selectionIndex, _projectionSize, _dataMatrix, _projMatrix, dimRanking);
-                    //filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
-
-                    // Set appropriate coloring of gradient view, FIXME use colormap later
-                    for (int pi = 0; pi < _projectionViews.size(); pi++)
-                    {
-                        const auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
-
-                        float minV = *std::min_element(dimValues.begin(), dimValues.end());
-                        float maxV = *std::max_element(dimValues.begin(), dimValues.end());
-
-                        std::vector<float> dimValuesCopy(dimValues.size());
-                        for (int i = 0; i < dimValues.size(); i++)
-                        {
-                            dimValuesCopy[i] = dimValues[i] / (maxV - minV);
-                        }
-
-                        std::vector<Vector3f> colors(_positions.size());
-                        for (int i = 0; i < dimValuesCopy.size(); i++)
-                        {
-                            colors[i] = Vector3f(1- dimValuesCopy[i], 1 - dimValuesCopy[i], 1 - dimValuesCopy[i]);
-                            if (i == selectionIndex)
-                            {
-                                colors[i] = Vector3f(1, 0, 0);
-                            }
-                        }
-                        _projectionViews[pi]->setColors(colors);
-                        const auto& dimNames = _positionSourceDataset->getDimensionNames();
-                        auto enabledDimensions = _positionSourceDataset->getDimensionsPickerAction().getEnabledDimensions();
-                        std::vector<QString> enabledDimNames;
-                        for (int i = 0; i < enabledDimensions.size(); i++)
-                        {
-                            if (enabledDimensions[i])
-                                enabledDimNames.push_back(dimNames[i]);
-                        }
-
-                        _projectionViews[pi]->setProjectionName(enabledDimNames[dimRanking[pi]]);
-                    }
-
-                    //_gradientGraph->setDimension(_dataMatrix, idx[0]);
-
-                    // Show dim values on floodnodes
-                    std::vector<float> dimScalars(_dataMatrix.rows(), 0);
-
-                    for (int i = 0; i < floodNodes.size(); i++)
-                    {
-                        dimScalars[floodNodes[i]] = _dataMatrix(floodNodes[i], dimRanking[0]);
-                    }
-                    getScatterplotWidget().setScalars(dimScalars);
-                }
+                onPointSelection();
             }
         }
+    }
+}
+
+void ScatterplotPlugin::onPointSelection()
+{
+    hdps::Dataset<Points> selection = _positionSourceDataset->getSelection();
+
+    int numDimensions = _dataMatrix.cols();
+
+    if (selection->indices.size() > 0)
+    {
+        int selectionIndex = selection->indices[0];
+        Vector2f center = _positions[selectionIndex];
+
+        //////////////////
+        // Do floodfill //
+        //////////////////
+        std::vector<std::vector<int>> floodFill;
+
+        {
+            compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, selectionIndex, floodFill);
+
+            std::vector<float> ccolors(_dataMatrix.rows(), 0);
+            for (int i = 0; i < floodFill.size(); i++)
+            {
+                for (int j = 0; j < floodFill[i].size(); j++)
+                {
+                    int index = floodFill[i][j];
+                    ccolors[index] = 1 - 0.1 * i;
+                }
+            }
+
+            int numNodes = 0;
+            for (int i = 0; i < 3; i++)
+            {
+                numNodes += floodFill[i].size();
+            }
+
+            Eigen::MatrixXf nodeLocations(numNodes, 2);
+            int p = 0;
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < floodFill[i].size(); j++)
+                {
+                    int index = floodFill[i][j];
+
+                    nodeLocations(p, 0) = _projMatrix(index, 0);
+                    nodeLocations(p, 1) = _projMatrix(index, 1);
+                    p++;
+                }
+            }
+
+            getScatterplotWidget().setColorMap(_settingsAction.getColoringAction().getColorMapAction().getColorMapImage());
+            _scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
+            getScatterplotWidget().setScalarEffect(PointEffect::Color);
+            _scatterPlotWidget->setScalars(ccolors);
+            _scatterPlotWidget->setColorMapRange(0, 1);
+        }
+
+        /////////////////////
+        // Trace lineage   //
+        /////////////////////
+        int numFloodNodes = 0;
+        for (int i = 0; i < floodFill.size(); i++)
+        {
+            numFloodNodes += floodFill[i].size();
+        }
+
+        // Store all flood nodes together
+        std::vector<int> floodNodes(numFloodNodes);
+        int n = 0;
+        for (int i = 0; i < floodFill.size(); i++)
+        {
+            for (int j = 0; j < floodFill[i].size(); j++)
+            {
+                floodNodes[n++] = floodFill[i][j];
+            }
+        }
+
+        //int currentNode = selectionIndex;
+        //Vector2f currentNodePos = center;
+
+        //// Find neighbours
+        //std::vector<int> neighbours;
+        //for (int i = 0; i < floodNodes.size(); i++)
+        //{
+        //    int floodIndex = floodNodes[i];
+        //    Vector2f nodePos = _positions[floodIndex];
+        //    if (abs(nodePos.x - currentNodePos.x) < 1.1f && abs(nodePos.y - currentNodePos.y) < 1.1f)
+        //    {
+        //        neighbours.push_back(floodIndex);
+        //    }
+        //}
+        //
+        //auto nodeValues = _dataMatrix.row(currentNode);
+
+        //for (int i = 0; i < neighbours.size(); i++)
+        //{
+        //    auto neighbourValues = _dataMatrix.row(neighbours[i]);
+        //}
+
+        //// Store dimension values for every flood node
+        //std::vector<std::vector<float>> dimValues(_dataMatrix.cols(), std::vector<float>(floodNodes.size()));
+        //for (int i = 0; i < floodNodes.size(); i++)
+        //{
+        //    int floodNode = floodNodes[i];
+        //    auto floodValues = _dataMatrix.row(floodNode);
+        //    for (int d = 0; d < floodValues.size(); d++)
+        //    {
+        //        dimValues[d][i] = floodValues(d);
+        //    }
+        //}
+
+        //for (int d = 0; d < dimValues.size(); d++)
+        //{
+        //    sort(dimValues[d].begin(), dimValues[d].end());
+        //}
+
+        //_gradientGraph->setValues(dimValues);
+
+        //std::vector<std::vector<Vector2f>> lineagePoints;
+
+        //auto centerValues = _dataMatrix.row(selectionIndex);
+        //for (int i = 1; i < 2; i++)
+        //{
+        //    for (int j = 0; j < floodFill[i].size(); j++)
+        //    {
+        //        int node = floodFill[i][j];
+        //        auto nodeValues = _dataMatrix.row(node);
+        //        std::vector<Vector2f> linPoints;
+        //        linPoints.push_back(Vector2f(_projMatrix(selectionIndex, 0), _projMatrix(selectionIndex, 1)));
+        //        linPoints.push_back(Vector2f(_projMatrix(node, 0), _projMatrix(node, 1)));
+        //        lineagePoints.push_back(linPoints);
+        //    }
+        //}
+        //_scatterPlotWidget->setRandomWalks(lineagePoints);
+
+        //////////////////
+        std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());
+        for (int w = 0; w < 10; w++)
+        {
+            std::vector<int> lineage;
+            lineage.push_back(selectionIndex);
+            compute::traceLineage(_dataMatrix, floodFill, _positions, selectionIndex, lineage);
+
+            for (int i = 0; i < lineage.size(); i++)
+            {
+                linPoints[w].push_back(_positions[lineage[i]]);
+                //qDebug() << linPoints[w][i].x << linPoints[w][i].y;
+            }
+        }
+        _scatterPlotWidget->setRandomWalks(linPoints);
+
+        /////////////////////
+        // Gradient picker //
+        /////////////////////
+        std::vector<int> dimRanking;
+        filters::spatialCircleFilter(selectionIndex, _projectionSize, _dataMatrix, _projMatrix, dimRanking);
+        //filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
+
+        // Set appropriate coloring of gradient view, FIXME use colormap later
+        for (int pi = 0; pi < _projectionViews.size(); pi++)
+        {
+            const auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
+
+            float minV = *std::min_element(dimValues.begin(), dimValues.end());
+            float maxV = *std::max_element(dimValues.begin(), dimValues.end());
+
+            std::vector<Vector3f> colors(_positions.size());
+            for (int i = 0; i < dimValues.size(); i++)
+            {
+                float dimValue = dimValues[i] / (maxV - minV);
+
+                colors[i] = (i == selectionIndex) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
+            }
+            _projectionViews[pi]->setColors(colors);
+
+            _projectionViews[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
+        }
+
+        // Show dim values on floodnodes
+        std::vector<float> dimScalars(_dataMatrix.rows(), 0);
+
+        for (int i = 0; i < floodNodes.size(); i++)
+        {
+            dimScalars[floodNodes[i]] = _dataMatrix(floodNodes[i], dimRanking[0]);
+        }
+        getScatterplotWidget().setScalars(dimScalars);
     }
 }
 
@@ -662,6 +607,17 @@ void ScatterplotPlugin::computeStaticData()
     std::vector<Vector2f> directions;
     computeDirection(_dataMatrix, _projMatrix, _knnGraph, directions);
     getScatterplotWidget().setDirections(directions);
+
+    // Get enabled dimension names
+    const auto& dimNames = _positionSourceDataset->getDimensionNames();
+    auto enabledDimensions = _positionSourceDataset->getDimensionsPickerAction().getEnabledDimensions();
+
+    _enabledDimNames.clear();
+    for (int i = 0; i < enabledDimensions.size(); i++)
+    {
+        if (enabledDimensions[i])
+            _enabledDimNames.push_back(dimNames[i]);
+    }
 }
 
 void ScatterplotPlugin::loadData(const Datasets& datasets)

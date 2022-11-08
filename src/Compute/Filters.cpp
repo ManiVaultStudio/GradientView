@@ -10,8 +10,6 @@
 #include <iomanip>
 #include <ctime>
 
-#include <QString>
-
 using namespace hdps;
 
 void findPointsInRadius(Vector2f center, float radius, const DataMatrix& projMatrix, std::vector<int>& indices)
