@@ -294,16 +294,6 @@ void ScatterplotPlugin::init()
 
     gradientViewLayout->addWidget(_projectionViews[0], 33);
     gradientViewLayout->addWidget(_projectionViews[1], 33);
-    gradientViewLayout->addWidget(_gradientGraph, 33);
-    QPushButton* showRandomWalk = new QPushButton("Show random walks");
-    connect(showRandomWalk, &QPushButton::pressed, &getScatterplotWidget(), &ScatterplotWidget::showRandomWalk);
-    gradientViewLayout->addWidget(showRandomWalk);
-    QPushButton* showDirections = new QPushButton("Show directions");
-    connect(showDirections, &QPushButton::pressed, &getScatterplotWidget(), &ScatterplotWidget::showDirections);
-    gradientViewLayout->addWidget(showDirections);
-    QPushButton* showLocalDimensionality = new QPushButton("Show local dimensionality");
-    connect(showLocalDimensionality, &QPushButton::pressed, this, &ScatterplotPlugin ::showLocalDimensionality);
-    gradientViewLayout->addWidget(showLocalDimensionality);
 
     // Filter layout
     QHBoxLayout* filterLayout = new QHBoxLayout();
@@ -323,6 +313,7 @@ void ScatterplotPlugin::init()
     filterLayout->addWidget(hdPeakFilter);
     gradientViewLayout->addLayout(filterLayout);
 
+    // Rankings save
     QPushButton* saveRanking = new QPushButton("Save rankings");
     connect(saveRanking, &QPushButton::pressed, this, [this]()
     {
@@ -341,11 +332,23 @@ void ScatterplotPlugin::init()
                 break;
             }
         }
-        
+
         writeDimensionRanking(perPointDimRankings, _positionSourceDataset->getDimensionNames());
         //filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
     });
     gradientViewLayout->addWidget(saveRanking);
+
+    // Graph
+    gradientViewLayout->addWidget(_gradientGraph, 33);
+    QPushButton* showRandomWalk = new QPushButton("Show random walks");
+    connect(showRandomWalk, &QPushButton::pressed, &getScatterplotWidget(), &ScatterplotWidget::showRandomWalk);
+    gradientViewLayout->addWidget(showRandomWalk);
+    QPushButton* showDirections = new QPushButton("Show directions");
+    connect(showDirections, &QPushButton::pressed, &getScatterplotWidget(), &ScatterplotWidget::showDirections);
+    gradientViewLayout->addWidget(showDirections);
+    QPushButton* showLocalDimensionality = new QPushButton("Show local dimensionality");
+    connect(showLocalDimensionality, &QPushButton::pressed, this, &ScatterplotPlugin ::showLocalDimensionality);
+    gradientViewLayout->addWidget(showLocalDimensionality);
 
     //gradientViewLayout->addWidget(_dimPicker.createWidget(&getWidget()));
     //QPushButton* updateFeatureSet = new QPushButton("Update feature set");
