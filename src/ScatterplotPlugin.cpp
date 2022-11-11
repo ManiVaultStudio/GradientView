@@ -630,7 +630,8 @@ void ScatterplotPlugin::computeStaticData()
     std::cout << "Start conversion" << std::endl;
     DataMatrix dataMatrix;
     convertToEigenMatrix(_positionSourceDataset, dataMatrix);
-    convertToEigenMatrix(_positionDataset, _projMatrix);
+    convertToEigenMatrix(_positionDataset, _fullProjMatrix);
+    _projMatrix = _fullProjMatrix(Eigen::all, std::vector<int> { 0, 1 });
 
     // Subsample based on subset or full data
     if (!_positionDataset->isFull())
@@ -946,7 +947,16 @@ void ScatterplotPlugin::updateData()
 
         updateSelection();
 
-        //getScatterplotWidget().setColors(colors);
+        // Update proj matrix
+        _projMatrix = _fullProjMatrix(Eigen::all, std::vector<int> { xDim, yDim });
+
+        Bounds bounds = _scatterPlotWidget->getBounds();
+        _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
+        std::cout << "Projection size: " << _projectionSize << std::endl;
+
+        std::vector<Vector2f> directions;
+        computeDirection(_dataMatrix, _projMatrix, _knnGraph, directions);
+        getScatterplotWidget().setDirections(directions);
     }
     else {
         _positions.clear();

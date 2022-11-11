@@ -129,6 +129,7 @@ private:
     unsigned int                    _numPoints;                 /** Number of point positions */
 
     DataMatrix                      _dataMatrix;
+    DataMatrix                      _fullProjMatrix;
     DataMatrix                      _projMatrix;
     knncpp::KDTreeMinkowskiX<float, knncpp::ManhattenDistance<float>>* _kdtree;
     KnnGraph                        _knnGraph;

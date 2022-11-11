@@ -105,8 +105,6 @@ namespace hdps
 
             for (int i = 0; i < numPoints; i++)
             {
-                //std::vector<int> neighbours;
-
                 auto neighbours = dataMatrix(knnGraph.neighbours[i], Eigen::all);
 
                 // Mean centering data.
