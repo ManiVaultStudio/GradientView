@@ -18,7 +18,6 @@
 #include <Eigen/Dense>
 #include "LocalDimensionality.h"
 #include "RandomWalks.h"
-#include "Filters.h"
 
 #include <QtCore>
 #include <QApplication>
@@ -135,7 +134,8 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _dropWidget(nullptr),
     _settingsAction(this),
     _gradientGraph(new GradientGraph()),
-    _selectedDimension(-1)
+    _selectedDimension(-1),
+    _filterType(filters::FilterType::SPATIAL_PEAK)
 {
     setObjectName("GradientExplorer");
 
@@ -284,6 +284,14 @@ void ScatterplotPlugin::init()
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->addWidget(_settingsAction.createWidget(&getWidget()));
+
+    QLabel* filterLabel = new QLabel();
+    filterLabel->setText("Spatial Peak Ranking");
+    QFont font = filterLabel->font();
+    font.setPointSize(font.pointSize() * 2);
+    filterLabel->setFont(font);
+    gradientViewLayout->addWidget(filterLabel);
+
     gradientViewLayout->addWidget(_projectionViews[0], 33);
     gradientViewLayout->addWidget(_projectionViews[1], 33);
     gradientViewLayout->addWidget(_gradientGraph, 33);
@@ -297,13 +305,41 @@ void ScatterplotPlugin::init()
     connect(showLocalDimensionality, &QPushButton::pressed, this, &ScatterplotPlugin ::showLocalDimensionality);
     gradientViewLayout->addWidget(showLocalDimensionality);
 
+    // Filter layout
+    QHBoxLayout* filterLayout = new QHBoxLayout();
+    QPushButton* spatialPeakFilter = new QPushButton("Spatial Peak Filter");
+    QPushButton* hdPeakFilter = new QPushButton("HD Peak Filter");
+
+    connect(spatialPeakFilter, &QPushButton::pressed, this, [this, filterLabel]() {
+        setFilterType(filters::FilterType::SPATIAL_PEAK);
+        filterLabel->setText("Spatial Peak Ranking");
+    });
+    connect(hdPeakFilter, &QPushButton::pressed, this, [this, filterLabel]() {
+        setFilterType(filters::FilterType::HD_PEAK);
+        filterLabel->setText("HD Peak Ranking");
+    });
+
+    filterLayout->addWidget(spatialPeakFilter);
+    filterLayout->addWidget(hdPeakFilter);
+    gradientViewLayout->addLayout(filterLayout);
+
     QPushButton* saveRanking = new QPushButton("Save rankings");
     connect(saveRanking, &QPushButton::pressed, this, [this]()
     {
         std::vector<std::vector<int>> perPointDimRankings(_dataMatrix.rows());
         for (int i = 0; i < _dataMatrix.rows(); i++)
         {
-            filters::spatialCircleFilter(i, _projectionSize, _dataMatrix, _projMatrix, perPointDimRankings[i]);
+            switch (_filterType)
+            {
+            case filters::FilterType::SPATIAL_PEAK:
+                filters::spatialCircleFilter(i, _projectionSize, _dataMatrix, _projMatrix, perPointDimRankings[i]);
+                break;
+            case filters::FilterType::HD_PEAK:
+                std::vector<std::vector<int>> floodFill;
+                compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, floodFill);
+                filters::radiusPeakFilterHD(i, _dataMatrix, floodFill, perPointDimRankings[i]);
+                break;
+            }
         }
         
         writeDimensionRanking(perPointDimRankings, _positionSourceDataset->getDimensionNames());
@@ -545,8 +581,15 @@ void ScatterplotPlugin::onPointSelection()
         // Gradient picker //
         /////////////////////
         std::vector<int> dimRanking;
-        filters::spatialCircleFilter(selectionIndex, _projectionSize, _dataMatrix, _projMatrix, dimRanking);
-        //filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
+        switch (_filterType)
+        {
+        case filters::FilterType::SPATIAL_PEAK:
+            filters::spatialCircleFilter(selectionIndex, _projectionSize, _dataMatrix, _projMatrix, dimRanking);
+            break;
+        case filters::FilterType::HD_PEAK:
+            filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
+            break;
+        }
 
         // Set appropriate coloring of gradient view, FIXME use colormap later
         for (int pi = 0; pi < _projectionViews.size(); pi++)
@@ -936,6 +979,11 @@ void ScatterplotPlugin::updateSelection()
 void ScatterplotPlugin::showLocalDimensionality()
 {
     getScatterplotWidget().setScalars(_colors);
+}
+
+void ScatterplotPlugin::setFilterType(filters::FilterType type)
+{
+    _filterType = type;
 }
 
 std::uint32_t ScatterplotPlugin::getNumberOfPoints() const

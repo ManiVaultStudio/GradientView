@@ -12,6 +12,7 @@
 
 #include <Eigen/Eigen>
 #include "KnnGraph.h"
+#include "Filters.h"
 
 using namespace hdps::plugin;
 using namespace hdps::util;
@@ -114,6 +115,7 @@ private:
     void calculatePositions(const Points& points);
     void updateSelection();
     void showLocalDimensionality();
+    void setFilterType(filters::FilterType type);
 
     bool eventFilter(QObject* target, QEvent* event);
 
@@ -141,6 +143,7 @@ protected:
     GradientGraph*                  _gradientGraph;
     int                             _selectedDimension;
     float                           _projectionSize;
+    filters::FilterType             _filterType;
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;
