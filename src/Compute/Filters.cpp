@@ -72,7 +72,24 @@ void writeDimensionRanking(const std::vector<std::vector<int>>& ranking, const s
 
 namespace filters
 {
-    void spatialCircleFilter(int seedPoint, float projSize, const DataMatrix& dataMatrix, const DataMatrix& projMatrix, std::vector<int>& dimRanking)
+    SpatialPeakFilter::SpatialPeakFilter() :
+        _innerFilterRadius(0.05),
+        _outerFilterRadius(0.1)
+    {
+
+    }
+
+    void SpatialPeakFilter::setInnerFilterRadius(float radius)
+    {
+        _innerFilterRadius = radius;
+    }
+
+    void SpatialPeakFilter::setOuterFilterRadius(float radius)
+    {
+        _outerFilterRadius = radius;
+    }
+
+    void SpatialPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const DataMatrix& projMatrix, float projSize, std::vector<int>& dimRanking)
     {
         int numDimensions = dataMatrix.cols();
 
@@ -80,11 +97,11 @@ namespace filters
         std::vector<std::vector<float>> averages(2);
         std::vector<std::vector<int>> circleIndices(2);
 
-        Vector2f center = Vector2f(projMatrix(seedPoint, 0), projMatrix(seedPoint, 1));
-        
-        findPointsInRadius(center, 0.05f * projSize, projMatrix, circleIndices[0]);
+        Vector2f center = Vector2f(projMatrix(pointId, 0), projMatrix(pointId, 1));
+
+        findPointsInRadius(center, _innerFilterRadius * projSize, projMatrix, circleIndices[0]);
         computeDimensionAverage(dataMatrix, circleIndices[0], averages[0]);
-        findPointsInRadius(center, 0.1f * projSize, projMatrix, circleIndices[1]);
+        findPointsInRadius(center, _outerFilterRadius * projSize, projMatrix, circleIndices[1]);
         computeDimensionAverage(dataMatrix, circleIndices[1], averages[1]);
 
         std::vector<float> diffAverages(numDimensions);

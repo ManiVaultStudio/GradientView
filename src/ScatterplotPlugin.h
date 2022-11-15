@@ -9,6 +9,7 @@
 #include "SettingsAction.h"
 #include "graphics/Vector3f.h"
 #include "GradientGraph.h"
+#include "Filters.h"
 
 #include <Eigen/Eigen>
 #include "KnnGraph.h"
@@ -145,6 +146,7 @@ protected:
     int                             _selectedDimension;
     float                           _projectionSize;
     filters::FilterType             _filterType;
+    filters::SpatialPeakFilter      _spatialPeakFilter;
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;

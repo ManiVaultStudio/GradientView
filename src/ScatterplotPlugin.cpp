@@ -313,6 +313,18 @@ void ScatterplotPlugin::init()
     filterLayout->addWidget(hdPeakFilter);
     gradientViewLayout->addLayout(filterLayout);
 
+    // Filter parameters
+    auto groupAction = new GroupAction(&getWidget());
+
+    auto innerFilterRadius = new ScalarAction(this, "Inner Filter Radius", 1, 10, 5, 5);
+    auto outerFilterRadius = new ScalarAction(this, "Outer Filter Radius", 2, 20, 10, 10);
+    connect(innerFilterRadius, &ScalarAction::magnitudeChanged, [this](float mag) { _spatialPeakFilter.setInnerFilterRadius(mag * 0.01f); });
+    connect(outerFilterRadius, &ScalarAction::magnitudeChanged, [this](float mag) { _spatialPeakFilter.setOuterFilterRadius(mag * 0.01f); });
+    *groupAction << *innerFilterRadius;
+    *groupAction << *outerFilterRadius;
+
+    gradientViewLayout->addWidget(groupAction->createWidget(&this->getWidget()), Qt::AlignLeft);
+
     // Rankings save
     QPushButton* saveRanking = new QPushButton("Save rankings");
     connect(saveRanking, &QPushButton::pressed, this, [this]()
@@ -323,7 +335,7 @@ void ScatterplotPlugin::init()
             switch (_filterType)
             {
             case filters::FilterType::SPATIAL_PEAK:
-                filters::spatialCircleFilter(i, _projectionSize, _dataMatrix, _projMatrix, perPointDimRankings[i]);
+                _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _projMatrix, _projectionSize, perPointDimRankings[i]);
                 break;
             case filters::FilterType::HD_PEAK:
                 std::vector<std::vector<int>> floodFill;
@@ -587,7 +599,7 @@ void ScatterplotPlugin::onPointSelection()
         switch (_filterType)
         {
         case filters::FilterType::SPATIAL_PEAK:
-            filters::spatialCircleFilter(selectionIndex, _projectionSize, _dataMatrix, _projMatrix, dimRanking);
+            _spatialPeakFilter.computeDimensionRanking(selectionIndex, _dataMatrix, _projMatrix, _projectionSize, dimRanking);
             break;
         case filters::FilterType::HD_PEAK:
             filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
