@@ -147,6 +147,7 @@ protected:
     float                           _projectionSize;
     filters::FilterType             _filterType;
     filters::SpatialPeakFilter      _spatialPeakFilter;
+    filters::HDFloodPeakFilter      _hdFloodPeakFilter;
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;

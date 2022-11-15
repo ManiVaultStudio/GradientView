@@ -32,5 +32,17 @@ namespace filters
         float _outerFilterRadius;
     };
 
-    void radiusPeakFilterHD(int seedPoint, const DataMatrix& dataMatrix, std::vector<std::vector<int>> floodPoints, std::vector<int>& dimRanking);
+    class HDFloodPeakFilter
+    {
+    public:
+        HDFloodPeakFilter();
+
+        void setInnerFilterSize(int size);
+        void setOuterFilterSize(int size);
+
+        void computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<std::vector<int>>& floodPoints, std::vector<int>& dimRanking);
+    private:
+        int _innerFilterSize;
+        int _outerFilterSize;
+    };
 }

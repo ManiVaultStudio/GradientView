@@ -117,18 +117,35 @@ namespace filters
         std::stable_sort(dimRanking.begin(), dimRanking.end(), [&diffAverages](size_t i1, size_t i2) {return diffAverages[i1] > diffAverages[i2]; });
     }
 
-    void radiusPeakFilterHD(int seedPoint, const DataMatrix& dataMatrix, std::vector<std::vector<int>> floodPoints, std::vector<int>& dimRanking)
+    HDFloodPeakFilter::HDFloodPeakFilter() :
+        _innerFilterSize(5),
+        _outerFilterSize(10)
+    {
+
+    }
+
+    void HDFloodPeakFilter::setInnerFilterSize(int size)
+    {
+        _innerFilterSize = size;
+    }
+
+    void HDFloodPeakFilter::setOuterFilterSize(int size)
+    {
+        _outerFilterSize = size;
+    }
+
+    void HDFloodPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<std::vector<int>>& floodPoints, std::vector<int>& dimRanking)
     {
         int numDimensions = dataMatrix.cols();
 
         std::vector<int> nearIndices;
         std::vector<int> farIndices;
 
-        for (int wave = 0; wave < floodPoints.size()/2; wave++)
+        for (int wave = 0; wave < _innerFilterSize; wave++)
         {
             nearIndices.insert(nearIndices.end(), floodPoints[wave].begin(), floodPoints[wave].end());
         }
-        for (int wave = floodPoints.size() / 2; wave < floodPoints.size(); wave++)
+        for (int wave = _innerFilterSize; wave < _outerFilterSize; wave++)
         {
             farIndices.insert(farIndices.end(), floodPoints[wave].begin(), floodPoints[wave].end());
         }
@@ -149,4 +166,5 @@ namespace filters
 
         std::stable_sort(dimRanking.begin(), dimRanking.end(), [&diffAverages](size_t i1, size_t i2) {return diffAverages[i1] > diffAverages[i2]; });
     }
+
 }

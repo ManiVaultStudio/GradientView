@@ -316,12 +316,19 @@ void ScatterplotPlugin::init()
     // Filter parameters
     auto groupAction = new GroupAction(&getWidget());
 
-    auto innerFilterRadius = new ScalarAction(this, "Inner Filter Radius", 1, 10, 5, 5);
-    auto outerFilterRadius = new ScalarAction(this, "Outer Filter Radius", 2, 20, 10, 10);
+    auto innerFilterRadius = new ScalarAction(this, "Spatial Inner Filter Radius", 1, 10, 5, 5);
+    auto outerFilterRadius = new ScalarAction(this, "Spatial Outer Filter Radius", 2, 20, 10, 10);
     connect(innerFilterRadius, &ScalarAction::magnitudeChanged, [this](float mag) { _spatialPeakFilter.setInnerFilterRadius(mag * 0.01f); });
     connect(outerFilterRadius, &ScalarAction::magnitudeChanged, [this](float mag) { _spatialPeakFilter.setOuterFilterRadius(mag * 0.01f); });
     *groupAction << *innerFilterRadius;
     *groupAction << *outerFilterRadius;
+
+    auto innerFilterSize = new IntegralAction(this, "HD Inner Filter Size", 1, 10, 5, 5);
+    auto outerFilterSize = new IntegralAction(this, "HD Outer Filter Size", 2, 10, 10, 10);
+    connect(innerFilterSize, &IntegralAction::valueChanged, [this](int value) { _hdFloodPeakFilter.setInnerFilterSize(value); });
+    connect(outerFilterSize, &IntegralAction::valueChanged, [this](int value) { _hdFloodPeakFilter.setOuterFilterSize(value); });
+    *groupAction << *innerFilterSize;
+    *groupAction << *outerFilterSize;
 
     gradientViewLayout->addWidget(groupAction->createWidget(&this->getWidget()), Qt::AlignLeft);
 
@@ -340,7 +347,7 @@ void ScatterplotPlugin::init()
             case filters::FilterType::HD_PEAK:
                 std::vector<std::vector<int>> floodFill;
                 compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, floodFill);
-                filters::radiusPeakFilterHD(i, _dataMatrix, floodFill, perPointDimRankings[i]);
+                _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, floodFill, perPointDimRankings[i]);
                 break;
             }
         }
@@ -602,7 +609,7 @@ void ScatterplotPlugin::onPointSelection()
             _spatialPeakFilter.computeDimensionRanking(selectionIndex, _dataMatrix, _projMatrix, _projectionSize, dimRanking);
             break;
         case filters::FilterType::HD_PEAK:
-            filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
+            _hdFloodPeakFilter.computeDimensionRanking(selectionIndex, _dataMatrix, floodFill, dimRanking);
             break;
         }
 
