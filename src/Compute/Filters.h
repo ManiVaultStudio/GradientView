@@ -22,6 +22,8 @@ namespace filters
     public:
         SpatialPeakFilter();
 
+        float getInnerFilterRadius() { return _innerFilterRadius; }
+        float getOuterFilterRadius() { return _outerFilterRadius; }
         void setInnerFilterRadius(float size);
         void setOuterFilterRadius(float size);
 

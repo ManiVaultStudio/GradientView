@@ -506,6 +506,13 @@ void ScatterplotWidget::paintGL()
         invM[0] = 1;
         invM[4] = -1;
 
+        // Render peak filter circles
+        Vector2f cp = toScreen * invM * orthoM * _currentPoint;
+        float inner_r = ((toScreen * invM * orthoM * (_currentPoint + Vector2f(_radii.x, 0))) - cp).x;
+        float outer_r = ((toScreen * invM * orthoM * (_currentPoint + Vector2f(_radii.y, 0))) - cp).x;
+        painter.drawEllipse(QPointF(cp.x, cp.y), inner_r, inner_r);
+        painter.drawEllipse(QPointF(cp.x, cp.y), outer_r, outer_r);
+
         if (_showRandomWalk)
         {
             painter.setPen(QPen(QColor(0, 0, 0, 255)));

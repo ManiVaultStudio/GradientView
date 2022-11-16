@@ -88,6 +88,7 @@ public:
     void setPointScaling(hdps::gui::PointScaling scalingMode);
 
     void setCurrentPosition(Vector2f pos) { _currentPoint = pos; update(); }
+    void setFilterRadii(Vector2f radii) { _radii = radii; update(); }
 
     /**
      * Set sigma value for kernel density esitmation.
@@ -191,4 +192,5 @@ private:
     bool                    _showDirections;
 
     Vector2f                _currentPoint;
+    Vector2f                _radii;
 };

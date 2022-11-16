@@ -73,8 +73,8 @@ void writeDimensionRanking(const std::vector<std::vector<int>>& ranking, const s
 namespace filters
 {
     SpatialPeakFilter::SpatialPeakFilter() :
-        _innerFilterRadius(0.05),
-        _outerFilterRadius(0.1)
+        _innerFilterRadius(0.025),
+        _outerFilterRadius(0.05)
     {
 
     }

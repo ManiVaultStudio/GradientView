@@ -316,8 +316,8 @@ void ScatterplotPlugin::init()
     // Filter parameters
     auto groupAction = new GroupAction(&getWidget());
 
-    auto innerFilterRadius = new ScalarAction(this, "Spatial Inner Filter Radius", 1, 10, 5, 5);
-    auto outerFilterRadius = new ScalarAction(this, "Spatial Outer Filter Radius", 2, 20, 10, 10);
+    auto innerFilterRadius = new ScalarAction(this, "Spatial Inner Filter Radius", 1, 10, 2.5f, 2.5f);
+    auto outerFilterRadius = new ScalarAction(this, "Spatial Outer Filter Radius", 2, 20, 5, 5);
     connect(innerFilterRadius, &ScalarAction::magnitudeChanged, [this](float mag) { _spatialPeakFilter.setInnerFilterRadius(mag * 0.01f); });
     connect(outerFilterRadius, &ScalarAction::magnitudeChanged, [this](float mag) { _spatialPeakFilter.setOuterFilterRadius(mag * 0.01f); });
     *groupAction << *innerFilterRadius;
@@ -461,6 +461,8 @@ void ScatterplotPlugin::onPointSelection()
         Vector2f center = _positions[selectionIndex];
 
         getScatterplotWidget().setCurrentPosition(center);
+        getScatterplotWidget().setFilterRadii(Vector2f(_spatialPeakFilter.getInnerFilterRadius() * _projectionSize, _spatialPeakFilter.getOuterFilterRadius() * _projectionSize));
+        
         //////////////////
         // Do floodfill //
         //////////////////

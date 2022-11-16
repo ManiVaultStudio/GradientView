@@ -148,6 +148,7 @@ protected:
     filters::SpatialPeakFilter      _spatialPeakFilter;
     filters::HDFloodPeakFilter      _hdFloodPeakFilter;
     QPoint                          _mousePos;
+    bool                            _mousePressed = false;
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;
