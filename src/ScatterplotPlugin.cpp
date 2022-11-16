@@ -460,6 +460,7 @@ void ScatterplotPlugin::onPointSelection()
         int selectionIndex = selection->indices[0];
         Vector2f center = _positions[selectionIndex];
 
+        getScatterplotWidget().setCurrentPosition(center);
         //////////////////
         // Do floodfill //
         //////////////////
@@ -919,7 +920,7 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
 
         qDebug() << "Mouse button press";
 
-        //_mousePressed = true;
+        _mousePressed = true;
 
         break;
     }
@@ -928,7 +929,7 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
     {
         auto mouseEvent = static_cast<QMouseEvent*>(event);
 
-        //_mousePressed = false;
+        _mousePressed = false;
 
         break;
     }
@@ -937,9 +938,11 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
     {
         auto mouseEvent = static_cast<QMouseEvent*>(event);
 
-        QPoint mousePos = QPoint(mouseEvent->x(), mouseEvent->y());
+        if (!_mousePressed)
+            break;
 
-        _scatterPlotWidget->setCurrentPosition(mousePos);
+        _mousePos = QPoint(mouseEvent->x(), mouseEvent->y());
+
         hdps::Bounds bounds = _scatterPlotWidget->getBounds();
 
         if (!_positionDataset.isValid())
@@ -957,7 +960,7 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
             const auto uvOffset = Vector2f((w - size) / 2.0f, (h - size) / 2.0f);
             const auto uv = uvOffset + Vector2f(pointUV.x * size, pointUV.y * size);
 
-            Vector2f diff = uv - Vector2f(mousePos.x(), mousePos.y());
+            Vector2f diff = uv - Vector2f(_mousePos.x(), _mousePos.y());
             float sqrDist = diff.x * diff.x + diff.y * diff.y;
             if (sqrDist < minDist)
             {

@@ -87,7 +87,7 @@ public:
     void setScalarEffect(PointEffect effect);
     void setPointScaling(hdps::gui::PointScaling scalingMode);
 
-    void setCurrentPosition(QPoint pos) { _currentPoint = pos; update(); }
+    void setCurrentPosition(Vector2f pos) { _currentPoint = pos; update(); }
 
     /**
      * Set sigma value for kernel density esitmation.
@@ -190,5 +190,5 @@ private:
     bool                    _showRandomWalk;
     bool                    _showDirections;
 
-    QPoint                  _currentPoint;
+    Vector2f                _currentPoint;
 };

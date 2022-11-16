@@ -15,6 +15,8 @@
 #include "KnnGraph.h"
 #include "Filters.h"
 
+#include <QPoint>
+
 using namespace hdps::plugin;
 using namespace hdps::util;
 
@@ -145,6 +147,7 @@ protected:
     filters::FilterType             _filterType;
     filters::SpatialPeakFilter      _spatialPeakFilter;
     filters::HDFloodPeakFilter      _hdFloodPeakFilter;
+    QPoint                          _mousePos;
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;
