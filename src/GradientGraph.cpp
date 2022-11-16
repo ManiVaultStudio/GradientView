@@ -48,7 +48,7 @@ GradientGraph::GradientGraph() :
     _chart->setTitle("Gradient Graph");
 
     _chartView = new QChartView(_chart);
-    //_chartView->setRenderHint(QPainter::Antialiasing);
+    _chartView->setRenderHint(QPainter::Antialiasing);
 
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(_chartView);
