@@ -56,8 +56,8 @@ public:
     ColoringMode getColoringMode() const;
     void setColoringMode(const ColoringMode& coloringMode);
 
-    /** Get reference to the pixel selection tool */
-    PixelSelectionTool& getPixelSelectionTool();
+    ///** Get reference to the pixel selection tool */
+    //PixelSelectionTool& getPixelSelectionTool();
 
     /**
      * Feed 2-dimensional data to the scatterplot.
@@ -184,7 +184,7 @@ private:
     QSize                   _windowSize;                        /** Size of the scatterplot widget */
     Bounds                  _dataBounds;                        /** Bounds of the loaded data */
     QImage                  _colorMapImage;
-    PixelSelectionTool      _pixelSelectionTool;
+    //PixelSelectionTool      _pixelSelectionTool;
     std::vector<std::vector<Vector2f>> _randomWalks;
     std::vector<Vector2f>   _directions;
     bool                    _showRandomWalk;

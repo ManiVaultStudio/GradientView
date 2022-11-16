@@ -7,7 +7,6 @@
 #include "PositionAction.h"
 #include "ColoringAction.h"
 #include "SubsetAction.h"
-#include "SelectionAction.h"
 #include "ManualClusteringAction.h"
 #include "MiscellaneousAction.h"
 
@@ -79,7 +78,6 @@ public:
     PositionAction& getPositionAction() { return _positionAction; }
     ColoringAction& getColoringAction() { return _coloringAction; }
     SubsetAction& getSubsetAction() { return _subsetAction; }
-    SelectionAction& getSelectionAction() { return _selectionAction; }
     PlotAction& getPlotAction() { return _plotAction; }
     TriggerAction& getExportAction() { return _exportAction; }
     MiscellaneousAction& getMiscellaneousAction() { return _miscellaneousAction; }
@@ -90,7 +88,6 @@ protected:
     ColoringAction              _coloringAction;
     SubsetAction                _subsetAction;
     ManualClusteringAction      _manualClusteringAction;
-    SelectionAction             _selectionAction;
     PlotAction                  _plotAction;
     TriggerAction               _exportAction;
     MiscellaneousAction         _miscellaneousAction;

@@ -401,19 +401,19 @@ void ScatterplotPlugin::init()
     // Update the data when the scatter plot widget is initialized
     connect(_scatterPlotWidget, &ScatterplotWidget::initialized, this, &ScatterplotPlugin::updateData);
 
-    // Update the selection when the pixel selection tool selected area changed
-    connect(&_scatterPlotWidget->getPixelSelectionTool(), &PixelSelectionTool::areaChanged, [this]() {
-        if (_scatterPlotWidget->getPixelSelectionTool().isNotifyDuringSelection())
-            selectPoints();
-    });
+    //// Update the selection when the pixel selection tool selected area changed
+    //connect(&_scatterPlotWidget->getPixelSelectionTool(), &PixelSelectionTool::areaChanged, [this]() {
+    //    if (_scatterPlotWidget->getPixelSelectionTool().isNotifyDuringSelection())
+    //        selectPoints();
+    //});
 
-    // Update the selection when the pixel selection process ended
-    connect(&_scatterPlotWidget->getPixelSelectionTool(), &PixelSelectionTool::ended, [this]() {
-        if (_scatterPlotWidget->getPixelSelectionTool().isNotifyDuringSelection())
-            return;
+    //// Update the selection when the pixel selection process ended
+    //connect(&_scatterPlotWidget->getPixelSelectionTool(), &PixelSelectionTool::ended, [this]() {
+    //    if (_scatterPlotWidget->getPixelSelectionTool().isNotifyDuringSelection())
+    //        return;
 
-        selectPoints();
-    });
+    //    selectPoints();
+    //});
 
     _eventListener.setEventCore(Application::core());
     _eventListener.addSupportedEventType(static_cast<std::uint32_t>(EventType::DataSelectionChanged));
@@ -681,106 +681,6 @@ void ScatterplotPlugin::createSubset(const bool& fromSourceData /*= false*/, con
     subset->getDataHierarchyItem().select();
 }
 
-void ScatterplotPlugin::selectPoints()
-{
-    // Only proceed with a valid points position dataset and when the pixel selection tool is active
-    if (!_positionDataset.isValid() || !_scatterPlotWidget->getPixelSelectionTool().isActive())
-        return;
-
-    // Get binary selection area image from the pixel selection tool
-    auto selectionAreaImage = _scatterPlotWidget->getPixelSelectionTool().getAreaPixmap().toImage();
-
-    // Get smart pointer to the position selection dataset
-    auto selectionSet = _positionDataset->getSelection<Points>();
-
-    // Create vector for target selection indices
-    std::vector<std::uint32_t> targetSelectionIndices;
-
-    // Reserve space for the indices
-    targetSelectionIndices.reserve(_positionDataset->getNumPoints());
-
-    // Mapping from local to global indices
-    std::vector<std::uint32_t> localGlobalIndices;
-
-    // Get global indices from the position dataset
-    _positionDataset->getGlobalIndices(localGlobalIndices);
-
-    const auto dataBounds   = _scatterPlotWidget->getBounds();
-    const auto width        = selectionAreaImage.width();
-    const auto height       = selectionAreaImage.height();
-    const auto size         = width < height ? width : height;
-
-    // Loop over all points and establish whether they are selected or not
-    for (std::uint32_t i = 0; i < _positions.size(); i++) {
-        const auto uvNormalized     = QPointF((_positions[i].x - dataBounds.getLeft()) / dataBounds.getWidth(), (dataBounds.getTop() - _positions[i].y) / dataBounds.getHeight());
-        const auto uvOffset         = QPoint((selectionAreaImage.width() - size) / 2.0f, (selectionAreaImage.height() - size) / 2.0f);
-        const auto uv               = uvOffset + QPoint(uvNormalized.x() * size, uvNormalized.y() * size);
-
-        // Add point if the corresponding pixel selection is on
-        if (selectionAreaImage.pixelColor(uv).alpha() > 0)
-            targetSelectionIndices.push_back(localGlobalIndices[i]);
-    }
-
-    // Selection should be subtracted when the selection process was aborted by the user (e.g. by pressing the escape key)
-    const auto selectionModifier = _scatterPlotWidget->getPixelSelectionTool().isAborted() ? PixelSelectionModifierType::Remove : _scatterPlotWidget->getPixelSelectionTool().getModifier();
-
-    switch (selectionModifier)
-    {
-        case PixelSelectionModifierType::Replace:
-            break;
-
-        case PixelSelectionModifierType::Add:
-        case PixelSelectionModifierType::Remove:
-        {
-            // Get reference to the indices of the selection set
-            auto& selectionSetIndices = selectionSet->indices;
-
-            // Create a set from the selection set indices
-            QSet<std::uint32_t> set(selectionSetIndices.begin(), selectionSetIndices.end());
-
-            switch (selectionModifier)
-            {
-                // Add points to the current selection
-                case PixelSelectionModifierType::Add:
-                {
-                    // Add indices to the set 
-                    for (const auto& targetIndex : targetSelectionIndices)
-                        set.insert(targetIndex);
-
-                    break;
-                }
-
-                // Remove points from the current selection
-                case PixelSelectionModifierType::Remove:
-                {
-                    // Remove indices from the set 
-                    for (const auto& targetIndex : targetSelectionIndices)
-                        set.remove(targetIndex);
-
-                    break;
-                }
-
-                default:
-                    break;
-            }
-
-            // Convert set back to vector
-            targetSelectionIndices = std::vector<std::uint32_t>(set.begin(), set.end());
-
-            break;
-        }
-
-        default:
-            break;
-    }
-
-    // Apply the selection indices
-    _positionDataset->setSelectionIndices(targetSelectionIndices);
-
-    // Notify others that the selection changed
-    _core->notifyDatasetSelectionChanged(_positionDataset);
-}
-
 void ScatterplotPlugin::updateWindowTitle()
 {
     if (!_positionDataset.isValid())
@@ -812,9 +712,6 @@ void ScatterplotPlugin::positionDatasetChanged()
     if (_positionDataset->isDerivedData())
         _positionSourceDataset = _positionDataset->getSourceDataset<Points>();
 
-    // Enable pixel selection if the point positions dataset is valid
-    _scatterPlotWidget->getPixelSelectionTool().setEnabled(_positionDataset.isValid());
-    
     // Do not show the drop indicator if there is a valid point positions dataset
     _dropWidget->setShowDropIndicator(!_positionDataset.isValid());
 

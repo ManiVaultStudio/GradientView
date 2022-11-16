@@ -18,7 +18,7 @@ const auto allowedPixelSelectionTypes = PixelSelectionTypes({
 });
 
 SelectionAction::SelectionAction(ScatterplotPlugin& scatterplotPlugin) :
-    PixelSelectionAction(&scatterplotPlugin, &scatterplotPlugin.getScatterplotWidget(), scatterplotPlugin.getScatterplotWidget().getPixelSelectionTool(), allowedPixelSelectionTypes),
+    //PixelSelectionAction(&scatterplotPlugin, &scatterplotPlugin.getScatterplotWidget(), scatterplotPlugin.getScatterplotWidget().getPixelSelectionTool(), allowedPixelSelectionTypes),
     _scatterplotPlugin(scatterplotPlugin)
 {
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("mouse-pointer"));

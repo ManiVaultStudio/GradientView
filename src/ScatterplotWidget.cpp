@@ -36,7 +36,7 @@ ScatterplotWidget::ScatterplotWidget() :
     _densityRenderer(DensityRenderer::RenderMode::DENSITY),
     _backgroundColor(255, 255, 255, 255),
     _pointRenderer(),
-    _pixelSelectionTool(this),
+    //_pixelSelectionTool(this),
     _showRandomWalk(false),
     _showDirections(false)
 {
@@ -47,14 +47,14 @@ ScatterplotWidget::ScatterplotWidget() :
 
     _pointRenderer.setPointScaling(Absolute);
 
-    // Configure pixel selection tool
-    _pixelSelectionTool.setEnabled(true);
-    _pixelSelectionTool.setMainColor(QColor(Qt::black));
+    //// Configure pixel selection tool
+    //_pixelSelectionTool.setEnabled(true);
+    //_pixelSelectionTool.setMainColor(QColor(Qt::black));
     
-    QObject::connect(&_pixelSelectionTool, &PixelSelectionTool::shapeChanged, [this]() {
-        if (isInitialized())
-            update();
-    });
+    //QObject::connect(&_pixelSelectionTool, &PixelSelectionTool::shapeChanged, [this]() {
+    //    if (isInitialized())
+    //        update();
+    //});
 
     QSurfaceFormat surfaceFormat;
 
@@ -136,10 +136,10 @@ void ScatterplotWidget::setColoringMode(const ColoringMode& coloringMode)
     emit coloringModeChanged(_coloringMode);
 }
 
-PixelSelectionTool& ScatterplotWidget::getPixelSelectionTool()
-{
-    return _pixelSelectionTool;
-}
+//PixelSelectionTool& ScatterplotWidget::getPixelSelectionTool()
+//{
+//    return _pixelSelectionTool;
+//}
 
 void ScatterplotWidget::computeDensity()
 {
@@ -535,11 +535,11 @@ void ScatterplotWidget::paintGL()
             }
         }
 
-        // Draw the pixel selection tool overlays if the pixel selection tool is enabled
-        if (_pixelSelectionTool.isEnabled()) {
-            painter.drawPixmap(rect(), _pixelSelectionTool.getAreaPixmap());
-            painter.drawPixmap(rect(), _pixelSelectionTool.getShapePixmap());
-        }
+        //// Draw the pixel selection tool overlays if the pixel selection tool is enabled
+        //if (_pixelSelectionTool.isEnabled()) {
+        //    painter.drawPixmap(rect(), _pixelSelectionTool.getAreaPixmap());
+        //    painter.drawPixmap(rect(), _pixelSelectionTool.getShapePixmap());
+        //}
         
         painter.end();
     }

@@ -96,9 +96,6 @@ public: // Miscellaneous
     /** Get smart pointer to source of the points dataset for point position (if any) */
     Dataset<Points>& getPositionSourceDataset();
 
-    /** Use the pixel selection tool to select data points */
-    void selectPoints();
-
 protected:
 
     /** Updates the window title (displays the name of the view and the GUI name of the loaded points dataset) */

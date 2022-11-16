@@ -60,8 +60,8 @@ set(Actions
     src/Actions/ScalarAction.cpp
     src/Actions/ScalarSourceAction.h
     src/Actions/ScalarSourceAction.cpp
-    src/Actions/SelectionAction.h
-    src/Actions/SelectionAction.cpp
+    #src/Actions/SelectionAction.h
+    #src/Actions/SelectionAction.cpp
     src/Actions/SettingsAction.h
     src/Actions/SettingsAction.cpp
     src/Actions/SubsetAction.h
