@@ -2,6 +2,9 @@
 
 #include <QVBoxLayout>
 
+#include <iostream>
+#include <algorithm>
+
 LineSeries::LineSeries(QObject* parent, int dim) :
     QLineSeries(parent),
     _penWidth(2),
@@ -24,64 +27,83 @@ void LineSeries::onClicked(const QPointF& point)
 }
 
 GradientGraph::GradientGraph() :
-    _series(new QLineSeries()),
+    _numDimensions(0),
     _chart(new QChart()),
     _chartView(nullptr)
 {
-    _series->append(0, 6);
-    _series->append(2, 4);
-    _series->append(3, 8);
-    _series->append(7, 4);
-    _series->append(10, 5);
-    *_series << QPointF(11, 1) << QPointF(13, 3) << QPointF(17, 6) << QPointF(18, 3) << QPointF(20, 2);
-
     _chart->legend()->hide();
-    _chart->addSeries(_series);
-    _chart->createDefaultAxes();
+
+    _xAxis = new QValueAxis();
+    _xAxis->setRange(0, 1);
+    _xAxis->setTickCount(10);
+    _xAxis->setLabelFormat("%d");
+    _chart->addAxis(_xAxis, Qt::AlignBottom);
+
+    _yAxis = new QValueAxis();
+    _yAxis->setRange(0, 1);
+    _yAxis->setTickCount(10);
+    _yAxis->setLabelFormat("%d");
+    _chart->addAxis(_yAxis, Qt::AlignLeft);
+
     _chart->setTitle("Gradient Graph");
 
     _chartView = new QChartView(_chart);
-    _chartView->setRenderHint(QPainter::Antialiasing);
+    //_chartView->setRenderHint(QPainter::Antialiasing);
 
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(_chartView);
     setLayout(layout);
 }
 
-void GradientGraph::setDimension(const DataMatrix& data, int dim)
+void GradientGraph::setNumDimensions(int numDimensions)
 {
-    auto dimValues = data.col(dim);
+    _numDimensions = numDimensions;
 
+    _seriesArray.resize(numDimensions);
+
+    // Add numDimensions lineseries to the chart
     _chart->removeAllSeries();
-    _series = new QLineSeries();
-    for (int i = 0; i < dimValues.size(); i++)
+    for (int d = 0; d < _numDimensions; d++)
     {
-        _series->append(i, dimValues(i));
-    }
-    _chart->addSeries(_series);
-    _chart->axisX()->setRange(0, dimValues.size());
+        // Create series
+        _seriesArray[d] = new LineSeries(nullptr, d);
+        _seriesArray[d]->setUseOpenGL(); // Speed up rendering
 
-    _chartView->update();
+        connect(_seriesArray[d], &LineSeries::lineClicked, this, &GradientGraph::onLineClicked);
+
+        // Add series to chart
+        _chart->addSeries(_seriesArray[d]);
+
+        // Attach chart axes to each series
+        _seriesArray[d]->attachAxis(_xAxis);
+        _seriesArray[d]->attachAxis(_yAxis);
+    }
 }
 
 void GradientGraph::setValues(const std::vector<std::vector<float>>& values)
 {
-    _chart->removeAllSeries();
-
+    // Compute the maximum value in the data and store values in a QList<QPointF>
+    float maxValue = 0;
+    std::vector<QList<QPointF>> pointLists(values.size());
     for (int d = 0; d < values.size(); d++)
     {
-        LineSeries* series = new LineSeries(nullptr, d);
+        float maxVal = *std::max_element(values[d].begin(), values[d].end());
+        maxValue = maxVal > maxValue ? maxVal : maxValue;
+
         for (int i = 0; i < values[d].size(); i++)
         {
-            series->append(i, values[d][i]);
+            pointLists[d].append(QPointF(i, values[d][i]));
         }
-        connect(series, &LineSeries::lineClicked, this, &GradientGraph::onLineClicked);
-        _chart->addSeries(series);
     }
 
-    _chart->axisX()->setRange(0, values[0].size());
-    _chart->axisY()->setRange(0, 100);
+    // Replace series values with new values
+    for (int d = 0; d < values.size(); d++)
+        _seriesArray[d]->replace(pointLists[d]);
 
+    // Update axes to proper values
+    _xAxis->setRange(0, values[0].size());
+    _yAxis->setRange(0, maxValue);
+    
     _chartView->update();
 }
 

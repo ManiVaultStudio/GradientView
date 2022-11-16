@@ -525,63 +525,27 @@ void ScatterplotPlugin::onPointSelection()
             }
         }
 
-        //int currentNode = selectionIndex;
-        //Vector2f currentNodePos = center;
+        int currentNode = selectionIndex;
+        Vector2f currentNodePos = center;
 
-        //// Find neighbours
-        //std::vector<int> neighbours;
-        //for (int i = 0; i < floodNodes.size(); i++)
-        //{
-        //    int floodIndex = floodNodes[i];
-        //    Vector2f nodePos = _positions[floodIndex];
-        //    if (abs(nodePos.x - currentNodePos.x) < 1.1f && abs(nodePos.y - currentNodePos.y) < 1.1f)
-        //    {
-        //        neighbours.push_back(floodIndex);
-        //    }
-        //}
-        //
-        //auto nodeValues = _dataMatrix.row(currentNode);
+        // Store dimension values for every flood node
+        std::vector<std::vector<float>> dimValues(_dataMatrix.cols(), std::vector<float>(floodNodes.size()));
+        for (int i = 0; i < floodNodes.size(); i++)
+        {
+            int floodNode = floodNodes[i];
+            auto floodValues = _dataMatrix.row(floodNode);
+            for (int d = 0; d < floodValues.size(); d++)
+            {
+                dimValues[d][i] = floodValues(d);
+            }
+        }
 
-        //for (int i = 0; i < neighbours.size(); i++)
-        //{
-        //    auto neighbourValues = _dataMatrix.row(neighbours[i]);
-        //}
+        for (int d = 0; d < dimValues.size(); d++)
+        {
+            sort(dimValues[d].begin(), dimValues[d].end());
+        }
 
-        //// Store dimension values for every flood node
-        //std::vector<std::vector<float>> dimValues(_dataMatrix.cols(), std::vector<float>(floodNodes.size()));
-        //for (int i = 0; i < floodNodes.size(); i++)
-        //{
-        //    int floodNode = floodNodes[i];
-        //    auto floodValues = _dataMatrix.row(floodNode);
-        //    for (int d = 0; d < floodValues.size(); d++)
-        //    {
-        //        dimValues[d][i] = floodValues(d);
-        //    }
-        //}
-
-        //for (int d = 0; d < dimValues.size(); d++)
-        //{
-        //    sort(dimValues[d].begin(), dimValues[d].end());
-        //}
-
-        //_gradientGraph->setValues(dimValues);
-
-        //std::vector<std::vector<Vector2f>> lineagePoints;
-
-        //auto centerValues = _dataMatrix.row(selectionIndex);
-        //for (int i = 1; i < 2; i++)
-        //{
-        //    for (int j = 0; j < floodFill[i].size(); j++)
-        //    {
-        //        int node = floodFill[i][j];
-        //        auto nodeValues = _dataMatrix.row(node);
-        //        std::vector<Vector2f> linPoints;
-        //        linPoints.push_back(Vector2f(_projMatrix(selectionIndex, 0), _projMatrix(selectionIndex, 1)));
-        //        linPoints.push_back(Vector2f(_projMatrix(node, 0), _projMatrix(node, 1)));
-        //        lineagePoints.push_back(linPoints);
-        //    }
-        //}
-        //_scatterPlotWidget->setRandomWalks(lineagePoints);
+        _gradientGraph->setValues(dimValues);
 
         //////////////////
         std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());
@@ -685,6 +649,9 @@ void ScatterplotPlugin::computeStaticData()
         if (enabledDimensions[i])
             _enabledDimNames.push_back(dimNames[i]);
     }
+
+    // Set up chart
+    _gradientGraph->setNumDimensions(enabledDimensions.size());
 }
 
 void ScatterplotPlugin::loadData(const Datasets& datasets)

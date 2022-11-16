@@ -5,8 +5,11 @@
 #include <Eigen/Eigen>
 
 #include <QtCharts/QLineSeries>
+#include <QtCharts/QValueAxis>
 #include <QtCharts/QChartView>
 #include <QChart>
+
+#include <vector>
 
 using DataMatrix = Eigen::MatrixXf;
 
@@ -34,7 +37,7 @@ class GradientGraph : public QWidget
 public:
     GradientGraph();
 
-    void setDimension(const DataMatrix& data, int dim);
+    void setNumDimensions(int numDimensions);
     void setValues(const std::vector<std::vector<float>>& values);
 
 signals:
@@ -44,7 +47,10 @@ private slots:
     void onLineClicked(int dim);
 
 private:
-    QLineSeries* _series;
+    int _numDimensions;
+    std::vector<LineSeries*> _seriesArray;
     QChart* _chart;
     QChartView* _chartView;
+    QValueAxis* _xAxis;
+    QValueAxis* _yAxis;
 };
