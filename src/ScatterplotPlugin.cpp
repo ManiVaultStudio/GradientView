@@ -617,7 +617,10 @@ void ScatterplotPlugin::computeStaticData()
     DataMatrix dataMatrix;
     convertToEigenMatrix(_positionSourceDataset, dataMatrix);
     convertToEigenMatrix(_positionDataset, _fullProjMatrix);
-    _projMatrix = _fullProjMatrix(Eigen::all, std::vector<int> { 0, 1 });
+
+    int xDim = _settingsAction.getPositionAction().getDimensionX();
+    int yDim = _settingsAction.getPositionAction().getDimensionY();
+    _projMatrix = _fullProjMatrix(Eigen::all, std::vector<int> { xDim, yDim });
 
     // Subsample based on subset or full data
     if (!_positionDataset->isFull())
