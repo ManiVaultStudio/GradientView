@@ -352,7 +352,7 @@ void ScatterplotPlugin::init()
             }
         }
 
-        writeDimensionRanking(perPointDimRankings, _positionSourceDataset->getDimensionNames());
+        writeDimensionRanking(perPointDimRankings, _enabledDimNames);
         //filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
     });
     gradientViewLayout->addWidget(saveRanking);
