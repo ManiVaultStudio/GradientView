@@ -357,6 +357,39 @@ void ScatterplotPlugin::init()
     });
     gradientViewLayout->addWidget(saveRanking);
 
+    // Floodnodes save
+    QPushButton* saveNodes = new QPushButton("Save flood nodes");
+    connect(saveNodes, &QPushButton::pressed, this, [this]()
+    {
+        std::vector<std::vector<int>> perPointFloodNodes(_dataMatrix.rows());
+        for (int p = 0; p < _dataMatrix.rows(); p++)
+        {
+            std::vector<std::vector<int>> floodFill;
+            compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, p, floodFill);
+
+            int numFloodNodes = 0;
+            for (int i = 0; i < floodFill.size(); i++)
+            {
+                numFloodNodes += floodFill[i].size();
+            }
+
+            // Store all flood nodes together
+            perPointFloodNodes[p].resize(numFloodNodes);
+            int n = 0;
+            for (int i = 0; i < floodFill.size(); i++)
+            {
+                for (int j = 0; j < floodFill[i].size(); j++)
+                {
+                    perPointFloodNodes[p][n++] = floodFill[i][j];
+                }
+            }
+        }
+
+        writeFloodNodes(perPointFloodNodes);
+        //filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
+    });
+    gradientViewLayout->addWidget(saveNodes);
+
     // Graph
     gradientViewLayout->addWidget(_gradientGraph, 33);
     QPushButton* showRandomWalk = new QPushButton("Show random walks");

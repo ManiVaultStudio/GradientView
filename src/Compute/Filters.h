@@ -7,6 +7,7 @@
 
 using DataMatrix = Eigen::MatrixXf;
 
+void writeFloodNodes(const std::vector<std::vector<int>>& floodNodes);
 void writeDimensionRanking(const std::vector<std::vector<int>>& ranking, const std::vector<QString>& names);
 
 namespace filters

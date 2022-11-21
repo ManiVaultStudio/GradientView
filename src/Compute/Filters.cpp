@@ -44,6 +44,32 @@ void computeDimensionAverage(const DataMatrix& data, const std::vector<int>& ind
     }
 }
 
+void writeFloodNodes(const std::vector<std::vector<int>>& floodNodes)
+{
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+
+    std::ostringstream fileName;
+    fileName << "flood_nodes";
+    fileName << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
+    fileName << ".csv";
+
+    std::ofstream myfile;
+    myfile.open(fileName.str());
+    for (int i = 0; i < floodNodes.size(); i++)
+    {
+        for (int d = 0; d < floodNodes[i].size(); d++)
+        {
+            if (d != 0) myfile << ',';
+            myfile << floodNodes[i][d];
+        }
+        myfile << std::endl;
+    }
+
+    myfile.close();
+    std::cout << "Flood nodes written to file" << std::endl;
+}
+
 void writeDimensionRanking(const std::vector<std::vector<int>>& ranking, const std::vector<QString>& names)
 {
     auto t = std::time(nullptr);
