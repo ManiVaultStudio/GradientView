@@ -122,7 +122,6 @@ private:
     void updateData();
     void calculatePositions(const Points& points);
     void updateSelection();
-    void showLocalDimensionality();
     void setFilterType(filters::FilterType type);
 
     bool eventFilter(QObject* target, QEvent* event);
@@ -148,7 +147,8 @@ protected:
     ScatterplotWidget*              _scatterPlotWidget;
     std::vector<ProjectionView*>    _projectionViews;
     std::vector<Vector3f> colors;
-    std::vector<float>              _dimensionality;
+    std::vector<float>              _localSpatialDimensionality;
+    std::vector<float>              _localHighDimensionality;
     std::vector<Vector2f>           _directions;
     GradientGraph*                  _gradientGraph;
     int                             _selectedDimension;

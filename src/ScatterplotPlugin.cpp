@@ -433,9 +433,16 @@ void ScatterplotPlugin::init()
     QPushButton* showDirections = new QPushButton("Show directions");
     connect(showDirections, &QPushButton::pressed, [this]() { getScatterplotWidget().showDirections(true); });
     gradientViewLayout->addWidget(showDirections);
-    QPushButton* showLocalDimensionality = new QPushButton("Show local dimensionality");
-    connect(showLocalDimensionality, &QPushButton::pressed, this, &ScatterplotPlugin ::showLocalDimensionality);
-    gradientViewLayout->addWidget(showLocalDimensionality);
+    QPushButton* showSpatialLocalDimensionality = new QPushButton("Show Spatial Local Dimensionality");
+    connect(showSpatialLocalDimensionality, &QPushButton::pressed, this, [this]() {
+        getScatterplotWidget().setScalars(_localSpatialDimensionality);
+    });
+    gradientViewLayout->addWidget(showSpatialLocalDimensionality);
+    QPushButton* showHDLocalDimensionality = new QPushButton("Show HD Local Dimensionality");
+    connect(showHDLocalDimensionality, &QPushButton::pressed, this, [this]() {
+        getScatterplotWidget().setScalars(_localHighDimensionality);
+    });
+    gradientViewLayout->addWidget(showHDLocalDimensionality);
 
     //gradientViewLayout->addWidget(_dimPicker.createWidget(&getWidget()));
     //QPushButton* updateFeatureSet = new QPushButton("Update feature set");
@@ -562,20 +569,6 @@ void ScatterplotPlugin::onPointSelection()
             getScatterplotWidget().setColorMap(_settingsAction.getColoringAction().getColorMapAction().getColorMapImage());
             _scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
             getScatterplotWidget().setScalarEffect(PointEffect::Color);
-
-
-            // Show dim values on floodnodes
-            //std::vector<float> dimScalars(_dataMatrix.rows(), 0);
-
-            //for (int i = 0; i < floodNodes.size(); i++)
-            //{
-            //    dimScalars[floodNodes[i]] = _dataMatrix(floodNodes[i], dimRanking[0]);
-            //}
-            //for (int i = 0; i < _dataMatrix.rows(); i++)
-            //{
-            //    dimScalars[i] = _dataMatrix(i, dimRanking[0]);
-            //}
-            //getScatterplotWidget().setScalars(dimScalars);
         }
 
         /////////////////////
@@ -706,7 +699,7 @@ void ScatterplotPlugin::onPointSelection()
 
             for (int i = 0; i < floodNodes.size(); i++)
             {
-                scalars[floodNodes[i]] = _dimensionality[floodNodes[i]];
+                scalars[floodNodes[i]] = _localHighDimensionality[floodNodes[i]];
             }
             getScatterplotWidget().setScalars(scalars);
             break;
@@ -758,9 +751,8 @@ void ScatterplotPlugin::computeStaticData()
     _knnGraph.build(_dataMatrix, _kdtree, 6);
     _largeKnnGraph.build(_dataMatrix, _kdtree, 30);
 
-    //compute::computeSpatialLocalDimensionality(_dataMatrix, _projMatrix, _colors);
-    compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _dimensionality);
-    getScatterplotWidget().setScalars(_dimensionality);
+    compute::computeSpatialLocalDimensionality(_dataMatrix, _projMatrix, _localSpatialDimensionality);
+    compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _localHighDimensionality);
 
     computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
     getScatterplotWidget().setDirections(_directions);
@@ -996,11 +988,6 @@ void ScatterplotPlugin::updateSelection()
         highlights[i] = selected[i] ? 1 : 0;
 
     _scatterPlotWidget->setHighlights(highlights, static_cast<std::int32_t>(selection->indices.size()));
-}
-
-void ScatterplotPlugin::showLocalDimensionality()
-{
-    getScatterplotWidget().setScalars(_dimensionality);
 }
 
 void ScatterplotPlugin::setFilterType(filters::FilterType type)
