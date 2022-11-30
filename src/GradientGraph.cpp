@@ -67,7 +67,7 @@ void GradientGraph::setNumDimensions(int numDimensions)
     {
         // Create series
         _seriesArray[d] = new LineSeries(nullptr, d);
-        _seriesArray[d]->setUseOpenGL(); // Speed up rendering
+        //_seriesArray[d]->setUseOpenGL(); // Speed up rendering
 
         connect(_seriesArray[d], &LineSeries::lineClicked, this, &GradientGraph::onLineClicked);
 
@@ -98,13 +98,21 @@ void GradientGraph::setValues(const std::vector<std::vector<float>>& values)
 
     // Replace series values with new values
     for (int d = 0; d < values.size(); d++)
+    {
+        _seriesArray[d]->setOpacity(d == _topDimension ? 1.0f : 0.1f);
         _seriesArray[d]->replace(pointLists[d]);
+    }
 
     // Update axes to proper values
     _xAxis->setRange(0, values[0].size());
     _yAxis->setRange(0, maxValue);
     
     _chartView->update();
+}
+
+void GradientGraph::setTopDimension(int dimension)
+{
+    _topDimension = dimension;
 }
 
 void GradientGraph::onLineClicked(int dim)

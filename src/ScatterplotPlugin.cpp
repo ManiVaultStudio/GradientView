@@ -572,6 +572,42 @@ void ScatterplotPlugin::onPointSelection()
         }
 
         /////////////////////
+        // Gradient picker //
+        /////////////////////
+        std::vector<int> dimRanking;
+        switch (_filterType)
+        {
+        case filters::FilterType::SPATIAL_PEAK:
+            _spatialPeakFilter.computeDimensionRanking(selectionIndex, _dataMatrix, _projMatrix, _projectionSize, dimRanking);
+            break;
+        case filters::FilterType::HD_PEAK:
+            _hdFloodPeakFilter.computeDimensionRanking(selectionIndex, _dataMatrix, floodFill, dimRanking);
+            break;
+        }
+
+        // Set appropriate coloring of gradient view, FIXME use colormap later
+        for (int pi = 0; pi < _projectionViews.size(); pi++)
+        {
+            const auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
+
+            float minV = *std::min_element(dimValues.begin(), dimValues.end());
+            float maxV = *std::max_element(dimValues.begin(), dimValues.end());
+
+            std::vector<Vector3f> colors(_positions.size());
+            for (int i = 0; i < dimValues.size(); i++)
+            {
+                float dimValue = dimValues[i] / (maxV - minV);
+
+                colors[i] = (i == selectionIndex) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
+            }
+            _projectionViews[pi]->setColors(colors);
+
+            _projectionViews[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
+        }
+
+        _gradientGraph->setTopDimension(dimRanking[0]);
+
+        /////////////////////
         // Trace lineage   //
         /////////////////////
         int numFloodNodes = 0;
@@ -628,40 +664,6 @@ void ScatterplotPlugin::onPointSelection()
             }
         }
         _scatterPlotWidget->setRandomWalks(linPoints);
-
-        /////////////////////
-        // Gradient picker //
-        /////////////////////
-        std::vector<int> dimRanking;
-        switch (_filterType)
-        {
-        case filters::FilterType::SPATIAL_PEAK:
-            _spatialPeakFilter.computeDimensionRanking(selectionIndex, _dataMatrix, _projMatrix, _projectionSize, dimRanking);
-            break;
-        case filters::FilterType::HD_PEAK:
-            _hdFloodPeakFilter.computeDimensionRanking(selectionIndex, _dataMatrix, floodFill, dimRanking);
-            break;
-        }
-
-        // Set appropriate coloring of gradient view, FIXME use colormap later
-        for (int pi = 0; pi < _projectionViews.size(); pi++)
-        {
-            const auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
-
-            float minV = *std::min_element(dimValues.begin(), dimValues.end());
-            float maxV = *std::max_element(dimValues.begin(), dimValues.end());
-
-            std::vector<Vector3f> colors(_positions.size());
-            for (int i = 0; i < dimValues.size(); i++)
-            {
-                float dimValue = dimValues[i] / (maxV - minV);
-
-                colors[i] = (i == selectionIndex) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
-            }
-            _projectionViews[pi]->setColors(colors);
-
-            _projectionViews[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
-        }
 
         // Coloring
         switch (_overlayType)

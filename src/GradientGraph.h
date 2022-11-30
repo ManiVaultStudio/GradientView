@@ -39,6 +39,7 @@ public:
 
     void setNumDimensions(int numDimensions);
     void setValues(const std::vector<std::vector<float>>& values);
+    void setTopDimension(int dimension);
 
 signals:
     void lineClicked(int dim);
@@ -53,4 +54,5 @@ private:
     QChartView* _chartView;
     QValueAxis* _xAxis;
     QValueAxis* _yAxis;
+    int _topDimension;
 };
