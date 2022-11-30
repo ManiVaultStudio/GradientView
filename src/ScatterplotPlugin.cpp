@@ -135,7 +135,8 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _settingsAction(this),
     _gradientGraph(new GradientGraph()),
     _selectedDimension(-1),
-    _filterType(filters::FilterType::SPATIAL_PEAK)
+    _filterType(filters::FilterType::SPATIAL_PEAK),
+    _overlayType(OverlayType::NONE)
 {
     setObjectName("GradientExplorer");
 
@@ -314,23 +315,57 @@ void ScatterplotPlugin::init()
     gradientViewLayout->addLayout(filterLayout);
 
     // Filter parameters
-    auto groupAction = new GroupAction(&getWidget());
+    auto filterGroupAction = new GroupAction(&getWidget());
 
     auto innerFilterRadius = new ScalarAction(this, "Spatial Inner Filter Radius", 1, 10, 2.5f, 2.5f);
     auto outerFilterRadius = new ScalarAction(this, "Spatial Outer Filter Radius", 2, 20, 5, 5);
     connect(innerFilterRadius, &ScalarAction::magnitudeChanged, [this](float mag) { _spatialPeakFilter.setInnerFilterRadius(mag * 0.01f); });
     connect(outerFilterRadius, &ScalarAction::magnitudeChanged, [this](float mag) { _spatialPeakFilter.setOuterFilterRadius(mag * 0.01f); });
-    *groupAction << *innerFilterRadius;
-    *groupAction << *outerFilterRadius;
+    *filterGroupAction << *innerFilterRadius;
+    *filterGroupAction << *outerFilterRadius;
 
     auto innerFilterSize = new IntegralAction(this, "HD Inner Filter Size", 1, 10, 5, 5);
     auto outerFilterSize = new IntegralAction(this, "HD Outer Filter Size", 2, 10, 10, 10);
     connect(innerFilterSize, &IntegralAction::valueChanged, [this](int value) { _hdFloodPeakFilter.setInnerFilterSize(value); });
     connect(outerFilterSize, &IntegralAction::valueChanged, [this](int value) { _hdFloodPeakFilter.setOuterFilterSize(value); });
-    *groupAction << *innerFilterSize;
-    *groupAction << *outerFilterSize;
+    *filterGroupAction << *innerFilterSize;
+    *filterGroupAction << *outerFilterSize;
 
-    gradientViewLayout->addWidget(groupAction->createWidget(&this->getWidget()), Qt::AlignLeft);
+    gradientViewLayout->addWidget(filterGroupAction->createWidget(&this->getWidget()), Qt::AlignLeft);
+
+    // Overlay options
+    auto overlayGroupAction = new GroupAction(&getWidget());
+
+    TriggerAction* floodStepsOverlay = new TriggerAction(this, "Flood Steps");
+    connect(floodStepsOverlay, &TriggerAction::triggered, this, [this]()
+    {
+        _overlayType = OverlayType::NONE;
+        getScatterplotWidget().showDirections(false);
+    });
+    TriggerAction* dimValueOverlay = new TriggerAction(this, "Top Dimension Values");
+    connect(dimValueOverlay, &TriggerAction::triggered, this, [this]()
+    {
+        _overlayType = OverlayType::DIM_VALUES;
+        getScatterplotWidget().showDirections(false);
+    });
+    TriggerAction* localDimensionalityOverlay = new TriggerAction(this, "Local Dimensionality");
+    connect(localDimensionalityOverlay, &TriggerAction::triggered, this, [this]()
+    {
+        _overlayType = OverlayType::LOCAL_DIMENSIONALITY;
+        getScatterplotWidget().showDirections(false);
+    });
+    TriggerAction* directionsOverlay = new TriggerAction(this, "Directions");
+    connect(directionsOverlay, &TriggerAction::triggered, this, [this]()
+    {
+        _overlayType = OverlayType::DIRECTIONS;
+        getScatterplotWidget().showDirections(true);
+    });
+    
+    *overlayGroupAction << *floodStepsOverlay;
+    *overlayGroupAction << *dimValueOverlay;
+    *overlayGroupAction << *localDimensionalityOverlay;
+    *overlayGroupAction << *directionsOverlay;
+    gradientViewLayout->addWidget(overlayGroupAction->createWidget(&this->getWidget()), Qt::AlignLeft);
 
     // Rankings save
     QPushButton* saveRanking = new QPushButton("Save rankings");
@@ -396,7 +431,7 @@ void ScatterplotPlugin::init()
     connect(showRandomWalk, &QPushButton::pressed, &getScatterplotWidget(), &ScatterplotWidget::showRandomWalk);
     gradientViewLayout->addWidget(showRandomWalk);
     QPushButton* showDirections = new QPushButton("Show directions");
-    connect(showDirections, &QPushButton::pressed, &getScatterplotWidget(), &ScatterplotWidget::showDirections);
+    connect(showDirections, &QPushButton::pressed, [this]() { getScatterplotWidget().showDirections(true); });
     gradientViewLayout->addWidget(showDirections);
     QPushButton* showLocalDimensionality = new QPushButton("Show local dimensionality");
     connect(showLocalDimensionality, &QPushButton::pressed, this, &ScatterplotPlugin ::showLocalDimensionality);
@@ -495,7 +530,7 @@ void ScatterplotPlugin::onPointSelection()
 
         getScatterplotWidget().setCurrentPosition(center);
         getScatterplotWidget().setFilterRadii(Vector2f(_spatialPeakFilter.getInnerFilterRadius() * _projectionSize, _spatialPeakFilter.getOuterFilterRadius() * _projectionSize));
-        
+
         //////////////////
         // Do floodfill //
         //////////////////
@@ -503,16 +538,6 @@ void ScatterplotPlugin::onPointSelection()
 
         {
             compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, selectionIndex, floodFill);
-
-            std::vector<float> ccolors(_dataMatrix.rows(), 0);
-            for (int i = 0; i < floodFill.size(); i++)
-            {
-                for (int j = 0; j < floodFill[i].size(); j++)
-                {
-                    int index = floodFill[i][j];
-                    ccolors[index] = 1 - 0.1 * i;
-                }
-            }
 
             int numNodes = 0;
             for (int i = 0; i < 3; i++)
@@ -537,8 +562,20 @@ void ScatterplotPlugin::onPointSelection()
             getScatterplotWidget().setColorMap(_settingsAction.getColoringAction().getColorMapAction().getColorMapImage());
             _scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
             getScatterplotWidget().setScalarEffect(PointEffect::Color);
-            _scatterPlotWidget->setScalars(ccolors);
-            _scatterPlotWidget->setColorMapRange(0, 1);
+
+
+            // Show dim values on floodnodes
+            //std::vector<float> dimScalars(_dataMatrix.rows(), 0);
+
+            //for (int i = 0; i < floodNodes.size(); i++)
+            //{
+            //    dimScalars[floodNodes[i]] = _dataMatrix(floodNodes[i], dimRanking[0]);
+            //}
+            //for (int i = 0; i < _dataMatrix.rows(); i++)
+            //{
+            //    dimScalars[i] = _dataMatrix(i, dimRanking[0]);
+            //}
+            //getScatterplotWidget().setScalars(dimScalars);
         }
 
         /////////////////////
@@ -633,14 +670,65 @@ void ScatterplotPlugin::onPointSelection()
             _projectionViews[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
         }
 
-        // Show dim values on floodnodes
-        std::vector<float> dimScalars(_dataMatrix.rows(), 0);
-
-        for (int i = 0; i < floodNodes.size(); i++)
+        // Coloring
+        switch (_overlayType)
         {
-            dimScalars[floodNodes[i]] = _dataMatrix(floodNodes[i], dimRanking[0]);
+        case OverlayType::NONE:
+        {
+            std::vector<float> ccolors(_dataMatrix.rows(), 0);
+            for (int i = 0; i < floodFill.size(); i++)
+            {
+                for (int j = 0; j < floodFill[i].size(); j++)
+                {
+                    int index = floodFill[i][j];
+                    ccolors[index] = 1 - 0.1 * i;
+                }
+            }
+
+            _scatterPlotWidget->setScalars(ccolors);
+            _scatterPlotWidget->setColorMapRange(0, 1);
+            break;
         }
-        getScatterplotWidget().setScalars(dimScalars);
+        case OverlayType::DIM_VALUES:
+        {
+            std::vector<float> dimScalars(_dataMatrix.rows(), 0);
+
+            for (int i = 0; i < floodNodes.size(); i++)
+            {
+                dimScalars[floodNodes[i]] = _dataMatrix(floodNodes[i], dimRanking[0]);
+            }
+            getScatterplotWidget().setScalars(dimScalars);
+            break;
+        }
+        case OverlayType::LOCAL_DIMENSIONALITY:
+        {
+            std::vector<float> scalars(_dataMatrix.rows(), 0);
+
+            for (int i = 0; i < floodNodes.size(); i++)
+            {
+                scalars[floodNodes[i]] = _dimensionality[floodNodes[i]];
+            }
+            getScatterplotWidget().setScalars(scalars);
+            break;
+        }
+        case OverlayType::DIRECTIONS:
+        {
+            std::vector<float> scalars(_dataMatrix.rows(), 0);
+            std::vector<Vector2f> directions(floodNodes.size() * 2);
+
+            for (int i = 0; i < floodNodes.size(); i++)
+            {
+                float idx = floodNodes[i];
+                directions[i * 2 + 0] = _directions[idx * 2 + 0];
+                directions[i * 2 + 1] = _directions[idx * 2 + 1];
+                scalars[idx] = 0.5f;
+            }
+            getScatterplotWidget().setScalars(scalars);
+            getScatterplotWidget().setDirections(directions);
+
+            break;
+        }
+        }
     }
 }
 
@@ -671,12 +759,11 @@ void ScatterplotPlugin::computeStaticData()
     _largeKnnGraph.build(_dataMatrix, _kdtree, 30);
 
     //compute::computeSpatialLocalDimensionality(_dataMatrix, _projMatrix, _colors);
-    compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _colors);
-    getScatterplotWidget().setScalars(_colors);
+    compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _dimensionality);
+    getScatterplotWidget().setScalars(_dimensionality);
 
-    std::vector<Vector2f> directions;
-    computeDirection(_dataMatrix, _projMatrix, _knnGraph, directions);
-    getScatterplotWidget().setDirections(directions);
+    computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
+    getScatterplotWidget().setDirections(_directions);
 
     // Get enabled dimension names
     const auto& dimNames = _positionSourceDataset->getDimensionNames();
@@ -913,7 +1000,7 @@ void ScatterplotPlugin::updateSelection()
 
 void ScatterplotPlugin::showLocalDimensionality()
 {
-    getScatterplotWidget().setScalars(_colors);
+    getScatterplotWidget().setScalars(_dimensionality);
 }
 
 void ScatterplotPlugin::setFilterType(filters::FilterType type)

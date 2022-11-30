@@ -37,6 +37,14 @@ namespace hdps
     }
 }
 
+enum class OverlayType
+{
+    NONE,
+    DIM_VALUES,
+    LOCAL_DIMENSIONALITY,
+    DIRECTIONS
+};
+
 class ScatterplotPlugin : public ViewPlugin
 {
     Q_OBJECT
@@ -140,13 +148,15 @@ protected:
     ScatterplotWidget*              _scatterPlotWidget;
     std::vector<ProjectionView*>    _projectionViews;
     std::vector<Vector3f> colors;
-    std::vector<float> _colors;
+    std::vector<float>              _dimensionality;
+    std::vector<Vector2f>           _directions;
     GradientGraph*                  _gradientGraph;
     int                             _selectedDimension;
     float                           _projectionSize;
     filters::FilterType             _filterType;
     filters::SpatialPeakFilter      _spatialPeakFilter;
     filters::HDFloodPeakFilter      _hdFloodPeakFilter;
+    OverlayType                     _overlayType;
     QPoint                          _mousePos;
     bool                            _mousePressed = false;
 

@@ -166,9 +166,9 @@ public slots:
         update();
     }
 
-    void showDirections()
+    void showDirections(bool show)
     {
-        _showDirections = !_showDirections;
+        _showDirections = show;
         update();
     }
 
