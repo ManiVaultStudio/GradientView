@@ -146,11 +146,13 @@ private:
 protected:
     ScatterplotWidget*              _scatterPlotWidget;
     std::vector<ProjectionView*>    _projectionViews;
+    ProjectionView*                 _selectedView;
     std::vector<Vector3f> colors;
     std::vector<float>              _localSpatialDimensionality;
     std::vector<float>              _localHighDimensionality;
     std::vector<Vector2f>           _directions;
     GradientGraph*                  _gradientGraph;
+    int                             _selectedPoint;
     int                             _selectedDimension;
     float                           _projectionSize;
     filters::FilterType             _filterType;

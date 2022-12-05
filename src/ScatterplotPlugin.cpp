@@ -3,6 +3,7 @@
 #include "ProjectionView.h"
 #include "DataHierarchyItem.h"
 #include "Application.h"
+#include "actions/GroupsAction.h"
 
 #include "util/PixelSelectionTool.h"
 #include "DimensionsPickerAction.h"
@@ -130,7 +131,8 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _positions(),
     _numPoints(0),
     _scatterPlotWidget(new ScatterplotWidget()),
-    _projectionViews(3),
+    _projectionViews(2),
+    _selectedView(),
     _dropWidget(nullptr),
     _settingsAction(this),
     _gradientGraph(new GradientGraph()),
@@ -146,6 +148,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     {
         _projectionViews[i] = new ProjectionView();
     }
+    _selectedView = new ProjectionView();
 
     connect(_gradientGraph, &GradientGraph::lineClicked, this, &ScatterplotPlugin::onLineClicked);
 
@@ -281,23 +284,39 @@ void ScatterplotPlugin::init()
     auto layout = new QVBoxLayout();
     auto plotLayout = new QHBoxLayout();
     auto gradientViewLayout = new QVBoxLayout();
+    auto dimensionViewsLayout = new QHBoxLayout();
 
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->addWidget(_settingsAction.createWidget(&getWidget()));
+
+    auto groupsAction = new GroupsAction(&getWidget());
+
+    //auto filterGroupAction = new GroupAction(&getWidget());
+    //filterGroupAction->setText("Filters");
+    //filterGroupAction->setShowLabels(false);
 
     QLabel* filterLabel = new QLabel();
     filterLabel->setText("Spatial Peak Ranking");
     QFont font = filterLabel->font();
     font.setPointSize(font.pointSize() * 2);
     filterLabel->setFont(font);
+
     gradientViewLayout->addWidget(filterLabel);
 
-    gradientViewLayout->addWidget(_projectionViews[0], 33);
-    gradientViewLayout->addWidget(_projectionViews[1], 33);
+    dimensionViewsLayout->addWidget(_projectionViews[0], 50);
+    dimensionViewsLayout->addWidget(_projectionViews[1], 50);
+    gradientViewLayout->addLayout(dimensionViewsLayout, 50);
+
+    // Graph
+    //QHBoxLayout* graphLayout = new QHBoxLayout();
+    //graphLayout->addWidget(_selectedView, 50);
+    //graphLayout->addWidget(_gradientGraph, 50);
 
     // Filter layout
     QHBoxLayout* filterLayout = new QHBoxLayout();
+    //QLabel* filtersLabel = new QLabel("Filters");
+    //filtersLabel->setFont(font);
     QPushButton* spatialPeakFilter = new QPushButton("Spatial Peak Filter");
     QPushButton* hdPeakFilter = new QPushButton("HD Peak Filter");
 
@@ -310,6 +329,7 @@ void ScatterplotPlugin::init()
         filterLabel->setText("HD Peak Ranking");
     });
 
+    //gradientViewLayout->addWidget(filtersLabel);
     filterLayout->addWidget(spatialPeakFilter);
     filterLayout->addWidget(hdPeakFilter);
     gradientViewLayout->addLayout(filterLayout);
@@ -333,43 +353,91 @@ void ScatterplotPlugin::init()
 
     gradientViewLayout->addWidget(filterGroupAction->createWidget(&this->getWidget()), Qt::AlignLeft);
 
+    // Dimension selection
+    QLabel* dimensionSelectionLabel = new QLabel("Dimension Selection");
+    dimensionSelectionLabel->setFont(font);
+    gradientViewLayout->addWidget(dimensionSelectionLabel);
+    gradientViewLayout->addWidget(_selectedView, 50);
+    gradientViewLayout->addWidget(_gradientGraph, 50);
+
+    gradientViewLayout->addWidget(groupsAction->createWidget(&getWidget()));
+
     // Overlay options
     auto overlayGroupAction = new GroupAction(&getWidget());
+    overlayGroupAction->setText("Flood Nodes Overlay");
+    overlayGroupAction->setShowLabels(false);
 
-    TriggerAction* floodStepsOverlay = new TriggerAction(this, "Flood Steps");
-    connect(floodStepsOverlay, &TriggerAction::triggered, this, [this]()
+    QVector<TriggersAction::Trigger> triggers;
+    triggers << TriggersAction::Trigger("Flood Steps", "Color flood points by closeness to seed point in HD space");
+    triggers << TriggersAction::Trigger("Top Dimension Values", "Color flood points by values of top ranked dimension");
+    triggers << TriggersAction::Trigger("Local Dimensionality", "Color flood points by local intrinsic dimensionality");
+    triggers << TriggersAction::Trigger("Directions", "Show major eigenvector directions over flood points");
+
+    TriggersAction* overlayTriggers = new TriggersAction(overlayGroupAction, "Overlay Triggers", triggers);
+
+    connect(overlayTriggers, &TriggersAction::triggered, this, [this](int32_t triggerIndex)
+    {
+        getScatterplotWidget().showDirections(false);
+        switch (triggerIndex)
+        {
+        case 0: _overlayType = OverlayType::NONE; break;
+        case 1: _overlayType = OverlayType::DIM_VALUES; break;
+        case 2: _overlayType = OverlayType::LOCAL_DIMENSIONALITY; break;
+        case 3: {_overlayType = OverlayType::DIRECTIONS; getScatterplotWidget().showDirections(true); break;}
+        }
+    });
+
+    groupsAction->addGroupAction(overlayGroupAction);
+
+    //QHBoxLayout* overlayLayout = new QHBoxLayout();
+
+    //QLabel* overlayLabel = new QLabel("Flood Overlay");
+    //overlayLabel->setFont(font);
+
+    /*QPushButton* floodStepsOverlay = new QPushButton("Flood Steps");
+    QPushButton* dimValueOverlay = new QPushButton("Top Dimension Values");
+    QPushButton* localDimensionalityOverlay = new QPushButton("Local Dimensionality");
+    QPushButton* directionsOverlay = new QPushButton("Directions");
+
+    connect(floodStepsOverlay, &QPushButton::pressed, this, [this]()
     {
         _overlayType = OverlayType::NONE;
         getScatterplotWidget().showDirections(false);
     });
-    TriggerAction* dimValueOverlay = new TriggerAction(this, "Top Dimension Values");
-    connect(dimValueOverlay, &TriggerAction::triggered, this, [this]()
+    connect(dimValueOverlay, &QPushButton::pressed, this, [this]()
     {
         _overlayType = OverlayType::DIM_VALUES;
         getScatterplotWidget().showDirections(false);
     });
-    TriggerAction* localDimensionalityOverlay = new TriggerAction(this, "Local Dimensionality");
-    connect(localDimensionalityOverlay, &TriggerAction::triggered, this, [this]()
+    connect(localDimensionalityOverlay, &QPushButton::pressed, this, [this]()
     {
         _overlayType = OverlayType::LOCAL_DIMENSIONALITY;
         getScatterplotWidget().showDirections(false);
     });
-    TriggerAction* directionsOverlay = new TriggerAction(this, "Directions");
-    connect(directionsOverlay, &TriggerAction::triggered, this, [this]()
+    connect(directionsOverlay, &QPushButton::pressed, this, [this]()
     {
         _overlayType = OverlayType::DIRECTIONS;
         getScatterplotWidget().showDirections(true);
     });
     
-    *overlayGroupAction << *floodStepsOverlay;
-    *overlayGroupAction << *dimValueOverlay;
-    *overlayGroupAction << *localDimensionalityOverlay;
-    *overlayGroupAction << *directionsOverlay;
-    gradientViewLayout->addWidget(overlayGroupAction->createWidget(&this->getWidget()), Qt::AlignLeft);
+    gradientViewLayout->addWidget(overlayLabel);
+    overlayLayout->addWidget(floodStepsOverlay);
+    overlayLayout->addWidget(dimValueOverlay);
+    overlayLayout->addWidget(localDimensionalityOverlay);
+    overlayLayout->addWidget(directionsOverlay);
+    gradientViewLayout->addLayout(overlayLayout);*/
+
+    //QLabel* exportLabel = new QLabel("Export");
+    //exportLabel->setFont(font);
+    //gradientViewLayout->addWidget(exportLabel);
+
+    auto exportGroupAction = new GroupAction(&getWidget());
+    exportGroupAction->setText("Export");
+    exportGroupAction->setShowLabels(false);
 
     // Rankings save
-    QPushButton* saveRanking = new QPushButton("Save rankings");
-    connect(saveRanking, &QPushButton::pressed, this, [this]()
+    TriggerAction* saveRanking = new TriggerAction(this, "Export rankings");
+    connect(saveRanking, &TriggerAction::triggered, this, [this]()
     {
         std::vector<std::vector<int>> perPointDimRankings(_dataMatrix.rows());
         for (int i = 0; i < _dataMatrix.rows(); i++)
@@ -388,13 +456,11 @@ void ScatterplotPlugin::init()
         }
 
         writeDimensionRanking(perPointDimRankings, _enabledDimNames);
-        //filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
     });
-    gradientViewLayout->addWidget(saveRanking);
 
     // Floodnodes save
-    QPushButton* saveNodes = new QPushButton("Save flood nodes");
-    connect(saveNodes, &QPushButton::pressed, this, [this]()
+    TriggerAction* saveNodes = new TriggerAction(this, "Export flood nodes");
+    connect(saveNodes, &TriggerAction::triggered, this, [this]()
     {
         std::vector<std::vector<int>> perPointFloodNodes(_dataMatrix.rows());
         for (int p = 0; p < _dataMatrix.rows(); p++)
@@ -421,28 +487,41 @@ void ScatterplotPlugin::init()
         }
 
         writeFloodNodes(perPointFloodNodes);
-        //filters::radiusPeakFilterHD(selectionIndex, _dataMatrix, floodFill, dimRanking);
     });
-    gradientViewLayout->addWidget(saveNodes);
 
-    // Graph
-    gradientViewLayout->addWidget(_gradientGraph, 33);
-    QPushButton* showRandomWalk = new QPushButton("Show random walks");
-    connect(showRandomWalk, &QPushButton::pressed, &getScatterplotWidget(), &ScatterplotWidget::showRandomWalk);
-    gradientViewLayout->addWidget(showRandomWalk);
-    QPushButton* showDirections = new QPushButton("Show directions");
-    connect(showDirections, &QPushButton::pressed, [this]() { getScatterplotWidget().showDirections(true); });
-    gradientViewLayout->addWidget(showDirections);
-    QPushButton* showSpatialLocalDimensionality = new QPushButton("Show Spatial Local Dimensionality");
-    connect(showSpatialLocalDimensionality, &QPushButton::pressed, this, [this]() {
+    *exportGroupAction << *saveRanking;
+    *exportGroupAction << *saveNodes;
+    groupsAction->addGroupAction(exportGroupAction);
+
+    //QLabel* mapOverlayLabel = new QLabel("Map Overlay");
+    //mapOverlayLabel->setFont(font);
+    //gradientViewLayout->addWidget(mapOverlayLabel);
+
+    auto mapOverlayGroupAction = new GroupAction(&getWidget());
+    mapOverlayGroupAction->setText("Map Overlay");
+    mapOverlayGroupAction->setShowLabels(false);
+
+    //QHBoxLayout* mapOverlayLayout = new QHBoxLayout();
+    TriggerAction* showRandomWalk = new TriggerAction(this, "Show random walks");
+    TriggerAction* showDirections = new TriggerAction(this, "Show directions");
+    TriggerAction* showSpatialLocalDimensionality = new TriggerAction(this, "Show Spatial Local Dimensionality");
+    TriggerAction* showHDLocalDimensionality = new TriggerAction(this, "Show HD Local Dimensionality");
+
+    connect(showRandomWalk, &TriggerAction::triggered, &getScatterplotWidget(), &ScatterplotWidget::showRandomWalk);
+    connect(showDirections, &TriggerAction::triggered, [this]() { getScatterplotWidget().showDirections(true); });
+    connect(showSpatialLocalDimensionality, &TriggerAction::triggered, this, [this]() {
         getScatterplotWidget().setScalars(_localSpatialDimensionality);
     });
-    gradientViewLayout->addWidget(showSpatialLocalDimensionality);
-    QPushButton* showHDLocalDimensionality = new QPushButton("Show HD Local Dimensionality");
-    connect(showHDLocalDimensionality, &QPushButton::pressed, this, [this]() {
+    connect(showHDLocalDimensionality, &TriggerAction::triggered, this, [this]() {
         getScatterplotWidget().setScalars(_localHighDimensionality);
     });
-    gradientViewLayout->addWidget(showHDLocalDimensionality);
+
+    *mapOverlayGroupAction << *showRandomWalk;
+    *mapOverlayGroupAction << *showDirections;
+    *mapOverlayGroupAction << *showSpatialLocalDimensionality;
+    *mapOverlayGroupAction << *showHDLocalDimensionality;
+
+    groupsAction->addGroupAction(mapOverlayGroupAction);
 
     //gradientViewLayout->addWidget(_dimPicker.createWidget(&getWidget()));
     //QPushButton* updateFeatureSet = new QPushButton("Update feature set");
@@ -532,8 +611,8 @@ void ScatterplotPlugin::onPointSelection()
 
     if (selection->indices.size() > 0)
     {
-        int selectionIndex = selection->indices[0];
-        Vector2f center = _positions[selectionIndex];
+        _selectedPoint = selection->indices[0];
+        Vector2f center = _positions[_selectedPoint];
 
         getScatterplotWidget().setCurrentPosition(center);
         getScatterplotWidget().setFilterRadii(Vector2f(_spatialPeakFilter.getInnerFilterRadius() * _projectionSize, _spatialPeakFilter.getOuterFilterRadius() * _projectionSize));
@@ -544,7 +623,7 @@ void ScatterplotPlugin::onPointSelection()
         std::vector<std::vector<int>> floodFill;
 
         {
-            compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, selectionIndex, floodFill);
+            compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, _selectedPoint, floodFill);
 
             int numNodes = 0;
             for (int i = 0; i < 3; i++)
@@ -578,10 +657,10 @@ void ScatterplotPlugin::onPointSelection()
         switch (_filterType)
         {
         case filters::FilterType::SPATIAL_PEAK:
-            _spatialPeakFilter.computeDimensionRanking(selectionIndex, _dataMatrix, _projMatrix, _projectionSize, dimRanking);
+            _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _projMatrix, _projectionSize, dimRanking);
             break;
         case filters::FilterType::HD_PEAK:
-            _hdFloodPeakFilter.computeDimensionRanking(selectionIndex, _dataMatrix, floodFill, dimRanking);
+            _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, floodFill, dimRanking);
             break;
         }
 
@@ -598,11 +677,30 @@ void ScatterplotPlugin::onPointSelection()
             {
                 float dimValue = dimValues[i] / (maxV - minV);
 
-                colors[i] = (i == selectionIndex) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
+                colors[i] = (i == _selectedPoint) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
             }
             _projectionViews[pi]->setColors(colors);
 
             _projectionViews[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
+        }
+        // Set selected gradient view
+        if (_selectedDimension > 0)
+        {
+            const auto dimValues = _dataMatrix(Eigen::all, _selectedDimension);
+
+            float minV = *std::min_element(dimValues.begin(), dimValues.end());
+            float maxV = *std::max_element(dimValues.begin(), dimValues.end());
+
+            std::vector<Vector3f> colors(_positions.size());
+            for (int i = 0; i < dimValues.size(); i++)
+            {
+                float dimValue = dimValues[i] / (maxV - minV);
+
+                colors[i] = (i == _selectedPoint) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
+            }
+            _selectedView->setColors(colors);
+
+            _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
         }
 
         _gradientGraph->setTopDimension(dimRanking[0]);
@@ -627,7 +725,7 @@ void ScatterplotPlugin::onPointSelection()
             }
         }
 
-        int currentNode = selectionIndex;
+        int currentNode = _selectedPoint;
         Vector2f currentNodePos = center;
 
         // Store dimension values for every flood node
@@ -654,8 +752,8 @@ void ScatterplotPlugin::onPointSelection()
         for (int w = 0; w < 10; w++)
         {
             std::vector<int> lineage;
-            lineage.push_back(selectionIndex);
-            compute::traceLineage(_dataMatrix, floodFill, _positions, selectionIndex, lineage);
+            lineage.push_back(_selectedPoint);
+            compute::traceLineage(_dataMatrix, floodFill, _positions, _selectedPoint, lineage);
 
             for (int i = 0; i < lineage.size(); i++)
             {
@@ -947,6 +1045,7 @@ void ScatterplotPlugin::updateData()
         _scatterPlotWidget->setData(&_positions);
         for (int i = 0; i < _projectionViews.size(); i++)
             _projectionViews[i]->setData(&_positions);
+        _selectedView->setData(&_positions);
 
         updateSelection();
 
@@ -1109,6 +1208,22 @@ void ScatterplotPlugin::onLineClicked(int dim)
 {
     qDebug() << "Dim: " << dim;
     _selectedDimension = dim;
+
+    const auto dimValues = _dataMatrix(Eigen::all, _selectedDimension);
+
+    float minV = *std::min_element(dimValues.begin(), dimValues.end());
+    float maxV = *std::max_element(dimValues.begin(), dimValues.end());
+
+    std::vector<Vector3f> colors(_positions.size());
+    for (int i = 0; i < dimValues.size(); i++)
+    {
+        float dimValue = dimValues[i] / (maxV - minV);
+
+        colors[i] = (i == _selectedPoint) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
+    }
+    _selectedView->setColors(colors);
+
+    _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
 }
 
 QIcon ScatterplotPluginFactory::getIcon(const QColor& color /*= Qt::black*/) const

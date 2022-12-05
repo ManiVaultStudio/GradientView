@@ -34,7 +34,7 @@ ProjectionView::ProjectionView() :
     //setFocusPolicy(Qt::ClickFocus);
 
     _pointRenderer.setPointScaling(Absolute);
-    _pointRenderer.setPointSize(6);
+    _pointRenderer.setPointSize(5);
 
     QSurfaceFormat surfaceFormat;
 
