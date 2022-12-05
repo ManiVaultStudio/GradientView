@@ -363,172 +363,134 @@ void ScatterplotPlugin::init()
     gradientViewLayout->addWidget(groupsAction->createWidget(&getWidget()));
 
     // Overlay options
-    auto overlayGroupAction = new GroupAction(&getWidget());
-    overlayGroupAction->setText("Flood Nodes Overlay");
-    overlayGroupAction->setShowLabels(false);
-
-    QVector<TriggersAction::Trigger> triggers;
-    triggers << TriggersAction::Trigger("Flood Steps", "Color flood points by closeness to seed point in HD space");
-    triggers << TriggersAction::Trigger("Top Dimension Values", "Color flood points by values of top ranked dimension");
-    triggers << TriggersAction::Trigger("Local Dimensionality", "Color flood points by local intrinsic dimensionality");
-    triggers << TriggersAction::Trigger("Directions", "Show major eigenvector directions over flood points");
-
-    TriggersAction* overlayTriggers = new TriggersAction(overlayGroupAction, "Overlay Triggers", triggers);
-
-    connect(overlayTriggers, &TriggersAction::triggered, this, [this](int32_t triggerIndex)
     {
-        getScatterplotWidget().showDirections(false);
-        switch (triggerIndex)
+        auto overlayGroupAction = new GroupAction(&getWidget(), true);
+        overlayGroupAction->setText("Flood Nodes Overlay");
+        overlayGroupAction->setShowLabels(false);
+
+        QVector<TriggersAction::Trigger> triggers;
+        triggers << TriggersAction::Trigger("Flood Steps", "Color flood points by closeness to seed point in HD space");
+        triggers << TriggersAction::Trigger("Top Dimension Values", "Color flood points by values of top ranked dimension");
+        triggers << TriggersAction::Trigger("Local Dimensionality", "Color flood points by local intrinsic dimensionality");
+        triggers << TriggersAction::Trigger("Directions", "Show major eigenvector directions over flood points");
+
+        TriggersAction* overlayTriggers = new TriggersAction(overlayGroupAction, "Overlay Triggers", triggers);
+
+        connect(overlayTriggers, &TriggersAction::triggered, this, [this](int32_t triggerIndex)
         {
-        case 0: _overlayType = OverlayType::NONE; break;
-        case 1: _overlayType = OverlayType::DIM_VALUES; break;
-        case 2: _overlayType = OverlayType::LOCAL_DIMENSIONALITY; break;
-        case 3: {_overlayType = OverlayType::DIRECTIONS; getScatterplotWidget().showDirections(true); break;}
-        }
-    });
-
-    groupsAction->addGroupAction(overlayGroupAction);
-
-    //QHBoxLayout* overlayLayout = new QHBoxLayout();
-
-    //QLabel* overlayLabel = new QLabel("Flood Overlay");
-    //overlayLabel->setFont(font);
-
-    /*QPushButton* floodStepsOverlay = new QPushButton("Flood Steps");
-    QPushButton* dimValueOverlay = new QPushButton("Top Dimension Values");
-    QPushButton* localDimensionalityOverlay = new QPushButton("Local Dimensionality");
-    QPushButton* directionsOverlay = new QPushButton("Directions");
-
-    connect(floodStepsOverlay, &QPushButton::pressed, this, [this]()
-    {
-        _overlayType = OverlayType::NONE;
-        getScatterplotWidget().showDirections(false);
-    });
-    connect(dimValueOverlay, &QPushButton::pressed, this, [this]()
-    {
-        _overlayType = OverlayType::DIM_VALUES;
-        getScatterplotWidget().showDirections(false);
-    });
-    connect(localDimensionalityOverlay, &QPushButton::pressed, this, [this]()
-    {
-        _overlayType = OverlayType::LOCAL_DIMENSIONALITY;
-        getScatterplotWidget().showDirections(false);
-    });
-    connect(directionsOverlay, &QPushButton::pressed, this, [this]()
-    {
-        _overlayType = OverlayType::DIRECTIONS;
-        getScatterplotWidget().showDirections(true);
-    });
-    
-    gradientViewLayout->addWidget(overlayLabel);
-    overlayLayout->addWidget(floodStepsOverlay);
-    overlayLayout->addWidget(dimValueOverlay);
-    overlayLayout->addWidget(localDimensionalityOverlay);
-    overlayLayout->addWidget(directionsOverlay);
-    gradientViewLayout->addLayout(overlayLayout);*/
-
-    //QLabel* exportLabel = new QLabel("Export");
-    //exportLabel->setFont(font);
-    //gradientViewLayout->addWidget(exportLabel);
-
-    auto exportGroupAction = new GroupAction(&getWidget());
-    exportGroupAction->setText("Export");
-    exportGroupAction->setShowLabels(false);
-
-    // Rankings save
-    TriggerAction* saveRanking = new TriggerAction(this, "Export rankings");
-    connect(saveRanking, &TriggerAction::triggered, this, [this]()
-    {
-        std::vector<std::vector<int>> perPointDimRankings(_dataMatrix.rows());
-        for (int i = 0; i < _dataMatrix.rows(); i++)
-        {
-            switch (_filterType)
+            getScatterplotWidget().showDirections(false);
+            switch (triggerIndex)
             {
-            case filters::FilterType::SPATIAL_PEAK:
-                _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _projMatrix, _projectionSize, perPointDimRankings[i]);
-                break;
-            case filters::FilterType::HD_PEAK:
-                std::vector<std::vector<int>> floodFill;
-                compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, floodFill);
-                _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, floodFill, perPointDimRankings[i]);
-                break;
+            case 0: _overlayType = OverlayType::NONE; break;
+            case 1: _overlayType = OverlayType::DIM_VALUES; break;
+            case 2: _overlayType = OverlayType::LOCAL_DIMENSIONALITY; break;
+            case 3: {_overlayType = OverlayType::DIRECTIONS; getScatterplotWidget().showDirections(true); break; }
             }
-        }
+        });
 
-        writeDimensionRanking(perPointDimRankings, _enabledDimNames);
-    });
+        groupsAction->addGroupAction(overlayGroupAction);
+    }
 
-    // Floodnodes save
-    TriggerAction* saveNodes = new TriggerAction(this, "Export flood nodes");
-    connect(saveNodes, &TriggerAction::triggered, this, [this]()
+    // Export options
     {
-        std::vector<std::vector<int>> perPointFloodNodes(_dataMatrix.rows());
-        for (int p = 0; p < _dataMatrix.rows(); p++)
+        auto exportGroupAction = new GroupAction(&getWidget(), false);
+        exportGroupAction->setText("Export");
+        exportGroupAction->setShowLabels(false);
+
+        QVector<TriggersAction::Trigger> triggers;
+        triggers << TriggersAction::Trigger("Export rankings", "");
+        triggers << TriggersAction::Trigger("Export flood nodes", "");
+
+        TriggersAction* exportTriggers = new TriggersAction(exportGroupAction, "Export Triggers", triggers);
+
+        connect(exportTriggers, &TriggersAction::triggered, this, [this](int32_t triggerIndex)
         {
-            std::vector<std::vector<int>> floodFill;
-            compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, p, floodFill);
-
-            int numFloodNodes = 0;
-            for (int i = 0; i < floodFill.size(); i++)
+            switch (triggerIndex)
             {
-                numFloodNodes += floodFill[i].size();
-            }
-
-            // Store all flood nodes together
-            perPointFloodNodes[p].resize(numFloodNodes);
-            int n = 0;
-            for (int i = 0; i < floodFill.size(); i++)
+            case 0: // Export rankings
             {
-                for (int j = 0; j < floodFill[i].size(); j++)
+                std::vector<std::vector<int>> perPointDimRankings(_dataMatrix.rows());
+                for (int i = 0; i < _dataMatrix.rows(); i++)
                 {
-                    perPointFloodNodes[p][n++] = floodFill[i][j];
+                    switch (_filterType)
+                    {
+                    case filters::FilterType::SPATIAL_PEAK:
+                        _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _projMatrix, _projectionSize, perPointDimRankings[i]);
+                        break;
+                    case filters::FilterType::HD_PEAK:
+                        std::vector<std::vector<int>> floodFill;
+                        compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, floodFill);
+                        _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, floodFill, perPointDimRankings[i]);
+                        break;
+                    }
                 }
+
+                writeDimensionRanking(perPointDimRankings, _enabledDimNames);
+                break;
             }
-        }
+            case 1: // Export flood nodes
+            {
+                std::vector<std::vector<int>> perPointFloodNodes(_dataMatrix.rows());
+                for (int p = 0; p < _dataMatrix.rows(); p++)
+                {
+                    std::vector<std::vector<int>> floodFill;
+                    compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, p, floodFill);
 
-        writeFloodNodes(perPointFloodNodes);
-    });
+                    int numFloodNodes = 0;
+                    for (int i = 0; i < floodFill.size(); i++)
+                    {
+                        numFloodNodes += floodFill[i].size();
+                    }
 
-    *exportGroupAction << *saveRanking;
-    *exportGroupAction << *saveNodes;
-    groupsAction->addGroupAction(exportGroupAction);
+                    // Store all flood nodes together
+                    perPointFloodNodes[p].resize(numFloodNodes);
+                    int n = 0;
+                    for (int i = 0; i < floodFill.size(); i++)
+                    {
+                        for (int j = 0; j < floodFill[i].size(); j++)
+                        {
+                            perPointFloodNodes[p][n++] = floodFill[i][j];
+                        }
+                    }
+                }
 
-    //QLabel* mapOverlayLabel = new QLabel("Map Overlay");
-    //mapOverlayLabel->setFont(font);
-    //gradientViewLayout->addWidget(mapOverlayLabel);
+                writeFloodNodes(perPointFloodNodes);
+                break;
+            }
+            }
+        });
 
-    auto mapOverlayGroupAction = new GroupAction(&getWidget());
-    mapOverlayGroupAction->setText("Map Overlay");
-    mapOverlayGroupAction->setShowLabels(false);
+        groupsAction->addGroupAction(exportGroupAction);
+    }
 
-    //QHBoxLayout* mapOverlayLayout = new QHBoxLayout();
-    TriggerAction* showRandomWalk = new TriggerAction(this, "Show random walks");
-    TriggerAction* showDirections = new TriggerAction(this, "Show directions");
-    TriggerAction* showSpatialLocalDimensionality = new TriggerAction(this, "Show Spatial Local Dimensionality");
-    TriggerAction* showHDLocalDimensionality = new TriggerAction(this, "Show HD Local Dimensionality");
+    // Map overlay
+    {
+        auto mapOverlayGroupAction = new GroupAction(&getWidget(), true);
+        mapOverlayGroupAction->setText("Map Overlay");
+        mapOverlayGroupAction->setShowLabels(false);
 
-    connect(showRandomWalk, &TriggerAction::triggered, &getScatterplotWidget(), &ScatterplotWidget::showRandomWalk);
-    connect(showDirections, &TriggerAction::triggered, [this]() { getScatterplotWidget().showDirections(true); });
-    connect(showSpatialLocalDimensionality, &TriggerAction::triggered, this, [this]() {
-        getScatterplotWidget().setScalars(_localSpatialDimensionality);
-    });
-    connect(showHDLocalDimensionality, &TriggerAction::triggered, this, [this]() {
-        getScatterplotWidget().setScalars(_localHighDimensionality);
-    });
+        QVector<TriggersAction::Trigger> triggers;
+        triggers << TriggersAction::Trigger("Show random walks", "");
+        triggers << TriggersAction::Trigger("Show directions", "");
+        triggers << TriggersAction::Trigger("Show Spatial Local Dimensionality", "");
+        triggers << TriggersAction::Trigger("Show HD Local Dimensionality", "");
 
-    *mapOverlayGroupAction << *showRandomWalk;
-    *mapOverlayGroupAction << *showDirections;
-    *mapOverlayGroupAction << *showSpatialLocalDimensionality;
-    *mapOverlayGroupAction << *showHDLocalDimensionality;
+        TriggersAction* overlayTriggers = new TriggersAction(mapOverlayGroupAction, "Map Overlay Triggers", triggers);
 
-    groupsAction->addGroupAction(mapOverlayGroupAction);
+        connect(overlayTriggers, &TriggersAction::triggered, this, [this](int32_t triggerIndex)
+        {
+            getScatterplotWidget().showDirections(false);
+            switch (triggerIndex)
+            {
+            case 0: getScatterplotWidget().showRandomWalk(); break;
+            case 1: getScatterplotWidget().showDirections(true); break;
+            case 2: getScatterplotWidget().setScalars(_localSpatialDimensionality); break;
+            case 3: getScatterplotWidget().setScalars(_localHighDimensionality); break;
+            }
+        });
 
-    //gradientViewLayout->addWidget(_dimPicker.createWidget(&getWidget()));
-    //QPushButton* updateFeatureSet = new QPushButton("Update feature set");
-    //connect(updateFeatureSet, &QPushButton::pressed, this, [this]() {
-    //    computeStaticData();
-    //});
-    //gradientViewLayout->addWidget(updateFeatureSet);
+        groupsAction->addGroupAction(mapOverlayGroupAction);
+    }
 
     plotLayout->addWidget(_scatterPlotWidget, 60);
     plotLayout->addLayout(gradientViewLayout, 30);
