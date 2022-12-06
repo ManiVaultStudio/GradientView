@@ -292,10 +292,6 @@ void ScatterplotPlugin::init()
 
     auto groupsAction = new GroupsAction(&getWidget());
 
-    //auto filterGroupAction = new GroupAction(&getWidget());
-    //filterGroupAction->setText("Filters");
-    //filterGroupAction->setShowLabels(false);
-
     QLabel* filterLabel = new QLabel();
     filterLabel->setText("Spatial Peak Ranking");
     QFont font = filterLabel->font();
@@ -308,15 +304,8 @@ void ScatterplotPlugin::init()
     dimensionViewsLayout->addWidget(_projectionViews[1], 50);
     gradientViewLayout->addLayout(dimensionViewsLayout, 50);
 
-    // Graph
-    //QHBoxLayout* graphLayout = new QHBoxLayout();
-    //graphLayout->addWidget(_selectedView, 50);
-    //graphLayout->addWidget(_gradientGraph, 50);
-
     // Filter layout
     QHBoxLayout* filterLayout = new QHBoxLayout();
-    //QLabel* filtersLabel = new QLabel("Filters");
-    //filtersLabel->setFont(font);
     QPushButton* spatialPeakFilter = new QPushButton("Spatial Peak Filter");
     QPushButton* hdPeakFilter = new QPushButton("HD Peak Filter");
 
@@ -415,12 +404,12 @@ void ScatterplotPlugin::init()
                     switch (_filterType)
                     {
                     case filters::FilterType::SPATIAL_PEAK:
-                        _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _projMatrix, _projectionSize, perPointDimRankings[i]);
+                        _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i]);
                         break;
                     case filters::FilterType::HD_PEAK:
                         std::vector<std::vector<int>> floodFill;
                         compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, floodFill);
-                        _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, floodFill, perPointDimRankings[i]);
+                        _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, floodFill, perPointDimRankings[i]);
                         break;
                     }
                 }
@@ -619,10 +608,10 @@ void ScatterplotPlugin::onPointSelection()
         switch (_filterType)
         {
         case filters::FilterType::SPATIAL_PEAK:
-            _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _projMatrix, _projectionSize, dimRanking);
+            _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, _projMatrix, _projectionSize, dimRanking);
             break;
         case filters::FilterType::HD_PEAK:
-            _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, floodFill, dimRanking);
+            _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, floodFill, dimRanking);
             break;
         }
 
@@ -832,6 +821,30 @@ void ScatterplotPlugin::computeStaticData()
 
     // Set up chart
     _gradientGraph->setNumDimensions(enabledDimensions.size());
+
+    // Compute means
+    std::vector<float> means(_dataMatrix.rows());
+    for (int d = 0; d < _dataMatrix.cols(); d++)
+    {
+        means[d] = 0;
+        for (int i = 0; i < _dataMatrix.rows(); i++)
+        {
+            means[d] += _dataMatrix(i, d);
+        }
+        means[d] /= _dataMatrix.rows();
+    }
+
+    // Compute variances
+    _variances.resize(_dataMatrix.rows());
+    for (int d = 0; d < _dataMatrix.cols(); d++)
+    {
+        _variances[d] = 0;
+        for (int i = 0; i < _dataMatrix.rows(); i++)
+        {
+            _variances[d] += (_dataMatrix(i, d) - means[d]) * (_dataMatrix(i, d) - means[d]);
+        }
+        _variances[d] /= _dataMatrix.rows();
+    }
 }
 
 void ScatterplotPlugin::loadData(const Datasets& datasets)

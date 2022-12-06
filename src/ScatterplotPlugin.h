@@ -142,6 +142,7 @@ private:
     KnnGraph                        _knnGraph;
     KnnGraph                        _largeKnnGraph;
     std::vector<QString>            _enabledDimNames;
+    std::vector<float>              _variances;
 
 protected:
     ScatterplotWidget*              _scatterPlotWidget;

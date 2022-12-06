@@ -115,7 +115,7 @@ namespace filters
         _outerFilterRadius = radius;
     }
 
-    void SpatialPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const DataMatrix& projMatrix, float projSize, std::vector<int>& dimRanking)
+    void SpatialPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const DataMatrix& projMatrix, float projSize, std::vector<int>& dimRanking)
     {
         int numDimensions = dataMatrix.cols();
 
@@ -133,7 +133,7 @@ namespace filters
         std::vector<float> diffAverages(numDimensions);
         for (int d = 0; d < numDimensions; d++)
         {
-            diffAverages[d] = averages[0][d] - averages[1][d];
+            diffAverages[d] = (averages[0][d] - averages[1][d]) / variances[d];
         }
 
         // Sort averages from high to low
@@ -160,7 +160,7 @@ namespace filters
         _outerFilterSize = size;
     }
 
-    void HDFloodPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<std::vector<int>>& floodPoints, std::vector<int>& dimRanking)
+    void HDFloodPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const std::vector<std::vector<int>>& floodPoints, std::vector<int>& dimRanking)
     {
         int numDimensions = dataMatrix.cols();
 
@@ -184,7 +184,7 @@ namespace filters
 
         std::vector<float> diffAverages(numDimensions);
         for (int d = 0; d < numDimensions; d++)
-            diffAverages[d] = nearAverages[d] - farAverages[d];
+            diffAverages[d] = (nearAverages[d] - farAverages[d]) / variances[d];
 
         // Sort averages from high to low
         dimRanking.resize(numDimensions);
