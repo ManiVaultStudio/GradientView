@@ -133,7 +133,9 @@ namespace filters
         std::vector<float> diffAverages(numDimensions);
         for (int d = 0; d < numDimensions; d++)
         {
-            diffAverages[d] = (averages[0][d] - averages[1][d]) / variances[d];
+            diffAverages[d] = 0;
+            if (variances[d] > 0)
+                diffAverages[d] = (averages[0][d] - averages[1][d]) / variances[d];
         }
 
         // Sort averages from high to low
@@ -184,7 +186,11 @@ namespace filters
 
         std::vector<float> diffAverages(numDimensions);
         for (int d = 0; d < numDimensions; d++)
-            diffAverages[d] = (nearAverages[d] - farAverages[d]) / variances[d];
+        {
+            diffAverages[d] = 0;
+            if (variances[d] > 0)
+                diffAverages[d] = (nearAverages[d] - farAverages[d]) / variances[d];
+        }
 
         // Sort averages from high to low
         dimRanking.resize(numDimensions);

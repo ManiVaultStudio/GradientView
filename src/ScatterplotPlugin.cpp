@@ -823,7 +823,7 @@ void ScatterplotPlugin::computeStaticData()
     _gradientGraph->setNumDimensions(enabledDimensions.size());
 
     // Compute means
-    std::vector<float> means(_dataMatrix.rows());
+    std::vector<float> means(_dataMatrix.cols());
     for (int d = 0; d < _dataMatrix.cols(); d++)
     {
         means[d] = 0;
@@ -835,7 +835,7 @@ void ScatterplotPlugin::computeStaticData()
     }
 
     // Compute variances
-    _variances.resize(_dataMatrix.rows());
+    _variances.resize(_dataMatrix.cols());
     for (int d = 0; d < _dataMatrix.cols(); d++)
     {
         _variances[d] = 0;
