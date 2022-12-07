@@ -696,7 +696,7 @@ void ScatterplotPlugin::onPointSelection()
             sort(dimValues[d].begin(), dimValues[d].end());
         }
 
-        _gradientGraph->setValues(dimValues);
+        //_gradientGraph->setValues(dimValues);
 
         //////////////////
         std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());
@@ -832,6 +832,7 @@ void ScatterplotPlugin::computeStaticData()
             means[d] += _dataMatrix(i, d);
         }
         means[d] /= _dataMatrix.rows();
+        std::cout << "Mean " << d << " " << means[d] << std::endl;
     }
 
     // Compute variances
@@ -844,6 +845,16 @@ void ScatterplotPlugin::computeStaticData()
             _variances[d] += (_dataMatrix(i, d) - means[d]) * (_dataMatrix(i, d) - means[d]);
         }
         _variances[d] /= _dataMatrix.rows();
+        std::cout << "Variance " << d << " " << _variances[d] << std::endl;
+    }
+    for (int d = 0; d < _dataMatrix.cols(); d++)
+    {
+        if (_variances[d] < 0) continue;
+        for (int i = 0; i < _dataMatrix.rows(); i++)
+        {
+            _dataMatrix(i, d) -= means[d];
+            _dataMatrix(i, d) /= _variances[d];
+        }
     }
 }
 
