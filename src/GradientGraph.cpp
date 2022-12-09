@@ -37,20 +37,20 @@ GradientGraph::GradientGraph() :
 
     _xAxis = new QValueAxis();
     _xAxis->setRange(0, 1);
-    _xAxis->setTickCount(10);
+    _xAxis->setTickCount(4);
     _xAxis->setLabelFormat("%d");
     _chart->addAxis(_xAxis, Qt::AlignBottom);
 
     _yAxis = new QValueAxis();
     _yAxis->setRange(0, 1);
-    _yAxis->setTickCount(10);
+    _yAxis->setTickCount(4);
     _yAxis->setLabelFormat("%d");
     _chart->addAxis(_yAxis, Qt::AlignLeft);
 
-    _chart->setTitle("Gradient Graph");
-
     _chartView = new QChartView(_chart);
     _chartView->setRenderHint(QPainter::Antialiasing);
+    setContentsMargins(0, 0, 0, 0);
+    _chart->setContentsMargins(0, 0, 0, 0);
 
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(_chartView);

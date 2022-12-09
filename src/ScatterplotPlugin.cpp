@@ -347,9 +347,9 @@ void ScatterplotPlugin::init()
     dimensionSelectionLabel->setFont(font);
     gradientViewLayout->addWidget(dimensionSelectionLabel);
     gradientViewLayout->addWidget(_selectedView, 50);
-    gradientViewLayout->addWidget(_gradientGraph, 50);
+    gradientViewLayout->addWidget(_gradientGraph, 70);
 
-    gradientViewLayout->addWidget(groupsAction->createWidget(&getWidget()));
+    gradientViewLayout->addWidget(groupsAction->createWidget(&getWidget()), 40);
 
     // Overlay options
     {
