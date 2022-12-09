@@ -473,8 +473,20 @@ void ScatterplotPlugin::init()
             {
             case 0: getScatterplotWidget().showRandomWalk(); break;
             case 1: getScatterplotWidget().showDirections(true); break;
-            case 2: getScatterplotWidget().setScalars(_localSpatialDimensionality); break;
-            case 3: getScatterplotWidget().setScalars(_localHighDimensionality); break;
+            case 2:
+            {
+                if (_localSpatialDimensionality.empty())
+                    compute::computeSpatialLocalDimensionality(_dataMatrix, _projMatrix, _localSpatialDimensionality);
+                getScatterplotWidget().setScalars(_localSpatialDimensionality);
+                break;
+            }
+            case 3:
+            {
+                if (_localHighDimensionality.empty())
+                    compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _localHighDimensionality);
+                getScatterplotWidget().setScalars(_localHighDimensionality);
+                break;
+            }
             }
         });
 
@@ -748,6 +760,8 @@ void ScatterplotPlugin::onPointSelection()
         {
             std::vector<float> scalars(_dataMatrix.rows(), 0);
 
+            if (_localHighDimensionality.empty()) break;
+
             for (int i = 0; i < floodNodes.size(); i++)
             {
                 scalars[floodNodes[i]] = _localHighDimensionality[floodNodes[i]];
@@ -802,8 +816,10 @@ void ScatterplotPlugin::computeStaticData()
     _knnGraph.build(_dataMatrix, _kdtree, 6);
     _largeKnnGraph.build(_dataMatrix, _kdtree, 30);
 
-    compute::computeSpatialLocalDimensionality(_dataMatrix, _projMatrix, _localSpatialDimensionality);
-    compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _localHighDimensionality);
+
+    _localSpatialDimensionality.clear();
+    _localHighDimensionality.clear();
+
 
     computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
     getScatterplotWidget().setDirections(_directions);
