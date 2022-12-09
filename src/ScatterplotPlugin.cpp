@@ -948,6 +948,7 @@ void ScatterplotPlugin::createKnnGraph(const DataMatrix& highDim)
 {
     Eigen::MatrixXf tarray = highDim.transpose();
     _kdtree = new knncpp::KDTreeMinkowskiX<float, knncpp::ManhattenDistance<float>>(tarray, true);
+    _kdtree->setThreads(-1);
     _kdtree->build();
 
     qDebug() << "Rows:" << tarray.rows() << tarray.cols();

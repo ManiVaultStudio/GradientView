@@ -139,6 +139,11 @@ target_link_libraries(${PROJECT} "${HDPS_LINK_LIBRARY}")
 target_link_libraries(${PROJECT} "${POINTDATA_LINK_LIBRARY}")
 target_link_libraries(${PROJECT} "${CLUSTERDATA_LINK_LIBRARY}")
 
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${PROJECT} OpenMP::OpenMP_CXX)
+endif()
+
 install(TARGETS ${PROJECT}
    RUNTIME DESTINATION Plugins COMPONENT SHAREDLIB
    LIBRARY DESTINATION Plugins COMPONENT LINKLIB
