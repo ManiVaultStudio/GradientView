@@ -865,7 +865,7 @@ void ScatterplotPlugin::computeStaticData()
     }
     for (int d = 0; d < _dataMatrix.cols(); d++)
     {
-        if (_variances[d] < 0) continue;
+        if (_variances[d] <= 0) continue;
         for (int i = 0; i < _dataMatrix.rows(); i++)
         {
             _dataMatrix(i, d) -= means[d];
