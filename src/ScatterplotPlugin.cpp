@@ -666,7 +666,7 @@ void ScatterplotPlugin::onPointSelection()
             _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
         }
 
-        _gradientGraph->setTopDimension(dimRanking[0]);
+        _gradientGraph->setTopDimensions(dimRanking[0], dimRanking[1]);
 
         /////////////////////
         // Trace lineage   //
@@ -708,7 +708,7 @@ void ScatterplotPlugin::onPointSelection()
             sort(dimValues[d].begin(), dimValues[d].end());
         }
 
-        //_gradientGraph->setValues(dimValues);
+        _gradientGraph->setValues(dimValues);
 
         //////////////////
         std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());

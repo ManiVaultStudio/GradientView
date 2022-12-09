@@ -29,7 +29,9 @@ void LineSeries::onClicked(const QPointF& point)
 GradientGraph::GradientGraph() :
     _numDimensions(0),
     _chart(new QChart()),
-    _chartView(nullptr)
+    _chartView(nullptr),
+    _topDimension1(-1),
+    _topDimension2(-1)
 {
     _chart->legend()->hide();
 
@@ -90,16 +92,25 @@ void GradientGraph::setValues(const std::vector<std::vector<float>>& values)
         float maxVal = *std::max_element(values[d].begin(), values[d].end());
         maxValue = maxVal > maxValue ? maxVal : maxValue;
 
-        for (int i = 0; i < values[d].size(); i++)
+        int i = 0;
+        int divisions = 30;
+        int step = std::max(1, (int)(values[d].size() / divisions));
+        int size = values[d].size() - 1;
+        while (true)
         {
             pointLists[d].append(QPointF(i, values[d][i]));
+
+            if (i >= size) break;
+            i += (i + step) < size ? step : size - i;
         }
     }
 
     // Replace series values with new values
     for (int d = 0; d < values.size(); d++)
     {
-        _seriesArray[d]->setOpacity(d == _topDimension ? 1.0f : 0.1f);
+        float opacity = (d == _topDimension1 || d == _topDimension2) ? 1.0f : 0.1f;
+        _seriesArray[d]->setColor(QColor(255, 0, 0, opacity * 255));
+        //_seriesArray[d]->setOpacity();
         _seriesArray[d]->replace(pointLists[d]);
     }
 
@@ -110,9 +121,10 @@ void GradientGraph::setValues(const std::vector<std::vector<float>>& values)
     _chartView->update();
 }
 
-void GradientGraph::setTopDimension(int dimension)
+void GradientGraph::setTopDimensions(int dimension1, int dimension2)
 {
-    _topDimension = dimension;
+    _topDimension1 = dimension1;
+    _topDimension2 = dimension2;
 }
 
 void GradientGraph::onLineClicked(int dim)
