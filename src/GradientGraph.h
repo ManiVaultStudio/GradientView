@@ -56,4 +56,5 @@ private:
     QValueAxis* _yAxis;
     int _topDimension1;
     int _topDimension2;
+    int _selectedDimension;
 };

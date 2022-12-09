@@ -106,11 +106,18 @@ void GradientGraph::setValues(const std::vector<std::vector<float>>& values)
     }
 
     // Replace series values with new values
+    QColor grey = QColor(128, 128, 128, 25);
+    QColor selected = QColor(255, 0, 0, 255);
+    QColor primary = QColor(255, 128, 0, 255);
+    QColor secondary = QColor(255, 128, 0, 128);
     for (int d = 0; d < values.size(); d++)
     {
-        float opacity = (d == _topDimension1 || d == _topDimension2) ? 1.0f : 0.1f;
-        _seriesArray[d]->setColor(QColor(255, 0, 0, opacity * 255));
-        //_seriesArray[d]->setOpacity();
+        QColor color = grey;
+        if (d == _topDimension1) color = primary;
+        if (d == _topDimension2) color = secondary;
+        if (d == _selectedDimension) color = selected;
+
+        _seriesArray[d]->setColor(color);
         _seriesArray[d]->replace(pointLists[d]);
     }
 
@@ -130,4 +137,21 @@ void GradientGraph::setTopDimensions(int dimension1, int dimension2)
 void GradientGraph::onLineClicked(int dim)
 {
     emit lineClicked(dim);
+    _selectedDimension = dim;
+
+    // Replace series values with new values
+    QColor grey = QColor(128, 128, 128, 25);
+    QColor selected = QColor(255, 0, 0, 255);
+    QColor primary = QColor(255, 128, 0, 255);
+    QColor secondary = QColor(255, 128, 0, 128);
+    for (int d = 0; d < _seriesArray.size(); d++)
+    {
+        QColor color = grey;
+        if (d == _topDimension1) color = primary;
+        if (d == _topDimension2) color = secondary;
+        if (d == _selectedDimension) color = selected;
+
+        _seriesArray[d]->setColor(color);
+    }
+    _chartView->update();
 }
