@@ -41,6 +41,8 @@ public:
     void setValues(const std::vector<std::vector<float>>& values);
     void setTopDimensions(int dimension1, int dimension2);
 
+    void updateChartColors();
+
 signals:
     void lineClicked(int dim);
 

@@ -26,12 +26,21 @@ void LineSeries::onClicked(const QPointF& point)
     emit lineClicked(_dim);
 }
 
+// Replace series values with new values
+QColor grey = QColor(128, 128, 128, 25);
+QColor selected = QColor(255, 0, 0, 255);
+QColor primary = QColor(255, 128, 0, 255);
+QColor secondary = QColor(255, 128, 0, 128);
+
 GradientGraph::GradientGraph() :
     _numDimensions(0),
     _chart(new QChart()),
     _chartView(nullptr),
+    _xAxis(nullptr),
+    _yAxis(nullptr),
     _topDimension1(-1),
-    _topDimension2(-1)
+    _topDimension2(-1),
+    _selectedDimension(-1)
 {
     _chart->legend()->hide();
 
@@ -49,6 +58,7 @@ GradientGraph::GradientGraph() :
 
     _chartView = new QChartView(_chart);
     _chartView->setRenderHint(QPainter::Antialiasing);
+
     setContentsMargins(0, 0, 0, 0);
     _chart->setContentsMargins(0, 0, 0, 0);
 
@@ -105,27 +115,14 @@ void GradientGraph::setValues(const std::vector<std::vector<float>>& values)
         }
     }
 
-    // Replace series values with new values
-    QColor grey = QColor(128, 128, 128, 25);
-    QColor selected = QColor(255, 0, 0, 255);
-    QColor primary = QColor(255, 128, 0, 255);
-    QColor secondary = QColor(255, 128, 0, 128);
-    for (int d = 0; d < values.size(); d++)
-    {
-        QColor color = grey;
-        if (d == _topDimension1) color = primary;
-        if (d == _topDimension2) color = secondary;
-        if (d == _selectedDimension) color = selected;
-
-        _seriesArray[d]->setColor(color);
-        _seriesArray[d]->replace(pointLists[d]);
-    }
-
     // Update axes to proper values
     _xAxis->setRange(0, values[0].size());
     _yAxis->setRange(0, maxValue);
-    
-    _chartView->update();
+
+    for (int d = 0; d < values.size(); d++)
+        _seriesArray[d]->replace(pointLists[d]);
+
+    updateChartColors();
 }
 
 void GradientGraph::setTopDimensions(int dimension1, int dimension2)
@@ -134,16 +131,9 @@ void GradientGraph::setTopDimensions(int dimension1, int dimension2)
     _topDimension2 = dimension2;
 }
 
-void GradientGraph::onLineClicked(int dim)
+void GradientGraph::updateChartColors()
 {
-    emit lineClicked(dim);
-    _selectedDimension = dim;
-
     // Replace series values with new values
-    QColor grey = QColor(128, 128, 128, 25);
-    QColor selected = QColor(255, 0, 0, 255);
-    QColor primary = QColor(255, 128, 0, 255);
-    QColor secondary = QColor(255, 128, 0, 128);
     for (int d = 0; d < _seriesArray.size(); d++)
     {
         QColor color = grey;
@@ -154,4 +144,12 @@ void GradientGraph::onLineClicked(int dim)
         _seriesArray[d]->setColor(color);
     }
     _chartView->update();
+}
+
+void GradientGraph::onLineClicked(int dim)
+{
+    emit lineClicked(dim);
+    _selectedDimension = dim;
+
+    updateChartColors();
 }
