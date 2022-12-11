@@ -128,9 +128,7 @@ namespace hdps
             floodFill.resize(numSteps);
 
             // Set of unique nodes
-            std::set<int> nodes;
-            for (int i = 0; i < highDim.rows(); i++)
-                nodes.insert(nodes.end(), i);
+            std::vector<bool> visitedNodes(highDim.rows(), false);
 
             // Perform given number of iterations of floodfill
             auto currentNodes = std::vector<int>(1, selectedPoint);
@@ -139,21 +137,18 @@ namespace hdps
             for (int s = 0; s < numSteps; s++)
             {
                 // Copy current nodes to floodfill storage
-                //floodFill[s].reserve(currentNodes.size());
                 for (int i = 0; i < currentNodes.size(); i++)
                 {
                     int node = currentNodes[i];
-                    if (nodes.find(node) != nodes.end())
+                    if (!visitedNodes[node])
                     {
-                        nodes.erase(node);
+                        visitedNodes[node] = true;
                         floodFill[s].push_back(node);
                     }
                     else
-                    {
                         currentNodes[i] = -1;
-                    }
                 }
-                //if (s == 1) qDebug() << "===============";
+
                 // Add neighbours of current nodes to new nodes
                 std::vector<int> newNodes;
                 for (const int& node : currentNodes)
