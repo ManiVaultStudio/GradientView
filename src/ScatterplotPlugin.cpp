@@ -588,26 +588,6 @@ void ScatterplotPlugin::onPointSelection()
         {
             compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, _selectedPoint, floodFill);
 
-            int numNodes = 0;
-            for (int i = 0; i < 3; i++)
-            {
-                numNodes += floodFill[i].size();
-            }
-
-            Eigen::MatrixXf nodeLocations(numNodes, 2);
-            int p = 0;
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < floodFill[i].size(); j++)
-                {
-                    int index = floodFill[i][j];
-
-                    nodeLocations(p, 0) = _projMatrix(index, 0);
-                    nodeLocations(p, 1) = _projMatrix(index, 1);
-                    p++;
-                }
-            }
-
             getScatterplotWidget().setColorMap(_settingsAction.getColoringAction().getColorMapAction().getColorMapImage());
             _scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
             getScatterplotWidget().setScalarEffect(PointEffect::Color);
@@ -631,38 +611,14 @@ void ScatterplotPlugin::onPointSelection()
         for (int pi = 0; pi < _projectionViews.size(); pi++)
         {
             const auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
-
-            float minV = *std::min_element(dimValues.begin(), dimValues.end());
-            float maxV = *std::max_element(dimValues.begin(), dimValues.end());
-
-            std::vector<Vector3f> colors(_positions.size());
-            for (int i = 0; i < dimValues.size(); i++)
-            {
-                float dimValue = dimValues[i] / (maxV - minV);
-
-                colors[i] = (i == _selectedPoint) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
-            }
-            _projectionViews[pi]->setColors(colors);
-
+            _projectionViews[pi]->setScalars(dimValues, _selectedPoint);
             _projectionViews[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
         }
         // Set selected gradient view
         if (_selectedDimension > 0)
         {
             const auto dimValues = _dataMatrix(Eigen::all, _selectedDimension);
-
-            float minV = *std::min_element(dimValues.begin(), dimValues.end());
-            float maxV = *std::max_element(dimValues.begin(), dimValues.end());
-
-            std::vector<Vector3f> colors(_positions.size());
-            for (int i = 0; i < dimValues.size(); i++)
-            {
-                float dimValue = dimValues[i] / (maxV - minV);
-
-                colors[i] = (i == _selectedPoint) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
-            }
-            _selectedView->setColors(colors);
-
+            _selectedView->setScalars(dimValues, _selectedPoint);
             _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
         }
 
@@ -681,15 +637,8 @@ void ScatterplotPlugin::onPointSelection()
         std::vector<int> floodNodes(numFloodNodes);
         int n = 0;
         for (int i = 0; i < floodFill.size(); i++)
-        {
             for (int j = 0; j < floodFill[i].size(); j++)
-            {
                 floodNodes[n++] = floodFill[i][j];
-            }
-        }
-
-        int currentNode = _selectedPoint;
-        Vector2f currentNodePos = center;
 
         // Store dimension values for every flood node
         std::vector<std::vector<float>> dimValues(_dataMatrix.cols(), std::vector<float>(floodNodes.size()));

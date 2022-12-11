@@ -6,11 +6,15 @@
 #include "graphics/Vector3f.h"
 #include "graphics/Bounds.h"
 
+#include <Eigen/Eigen>
+
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_3_3_Core>
 
 using namespace hdps;
 using namespace hdps::gui;
+
+using DataMatrix = Eigen::MatrixXf;
 
 /**
  * Projection view class
@@ -32,6 +36,7 @@ public:
 
     void setData(const std::vector<Vector2f>* data);
 
+    void setScalars(const Eigen::Block<Eigen::MatrixXf, -1, 1, true>& scalars, int selectedPoint);
     void setColors(const std::vector<Vector3f>& colors);
 
     void setProjectionName(QString name);

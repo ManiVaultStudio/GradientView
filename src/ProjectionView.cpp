@@ -3,6 +3,7 @@
 #include "util/Exception.h"
 
 #include <vector>
+#include <algorithm>
 
 #include <QSize>
 #include <QPainter>
@@ -91,6 +92,25 @@ void ProjectionView::setData(const std::vector<Vector2f>* points)
     _pointRenderer.setSelectionOutlineColor(Vector3f(1, 0, 0));
     _pointRenderer.setAlpha(0.5f);
     //_pointRenderer.setPointScaling(PointScaling::Relative);
+
+    update();
+}
+
+void ProjectionView::setScalars(const Eigen::Block<Eigen::MatrixXf, -1, 1, true>& scalars, int selectedPoint)
+{
+    float minV = *std::min_element(scalars.begin(), scalars.end());
+    float maxV = *std::max_element(scalars.begin(), scalars.end());
+
+    std::vector<Vector3f> colors(scalars.size());
+    for (int i = 0; i < scalars.size(); i++)
+    {
+        float dimValue = scalars[i] / (maxV - minV);
+
+        colors[i] = (i == selectedPoint) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
+    }
+
+    _pointRenderer.setColors(colors);
+    _pointRenderer.setScalarEffect(None);
 
     update();
 }

@@ -17,7 +17,7 @@ void KnnGraph::build(const DataMatrix& data, KdTree* kdTree, int k)
     for (int i = 0; i < data.rows(); i++)
     {
         if (i % 100 == 0) std::cout << "Querying neighbours: " << i << "/" << data.rows() << std::endl;
-        for (int j = 0; j < k - 1; j++)
+        for (int j = 0; j < numNeighbours; j++)
         {
             neighbours[i][j] = indices(j + 1, i);
         }
