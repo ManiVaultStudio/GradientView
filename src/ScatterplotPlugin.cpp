@@ -802,7 +802,7 @@ void ScatterplotPlugin::computeStaticData()
     _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
     std::cout << "Projection size: " << _projectionSize << std::endl;
     createKnnGraph(_dataMatrix);
-    _knnGraph.build(_dataMatrix, _kdtree, 80);
+    _knnGraph.build(_dataMatrix, _kdtree, 10);
     _largeKnnGraph.build(_dataMatrix, _kdtree, 30);
 
     std::chrono::duration<double> elapsedKnn = std::chrono::high_resolution_clock::now() - start;
