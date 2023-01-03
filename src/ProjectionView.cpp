@@ -36,7 +36,7 @@ ProjectionView::ProjectionView() :
     //setMinimumHeight(200);
 
     _pointRenderer.setPointScaling(Relative);
-    _pointRenderer.setPointSize(5);
+    _pointRenderer.setPointSize(1.50f);
 
     QSurfaceFormat surfaceFormat;
 
@@ -91,8 +91,16 @@ void ProjectionView::setData(const std::vector<Vector2f>* points)
     _pointRenderer.setData(*points);
 
     _pointRenderer.setSelectionOutlineColor(Vector3f(1, 0, 0));
-    _pointRenderer.setAlpha(0.5f);
+    _pointRenderer.setAlpha(1.0f);
     //_pointRenderer.setPointScaling(PointScaling::Relative);
+
+    update();
+}
+
+void ProjectionView::setScalars(const std::vector<float>& scalars, int selectedPoint)
+{
+    _pointRenderer.setColorChannelScalars(scalars);
+    _pointRenderer.setScalarEffect(Color);
 
     update();
 }
@@ -111,7 +119,7 @@ void ProjectionView::setScalars(const Eigen::Block<Eigen::MatrixXf, -1, 1, true>
     }
 
     _pointRenderer.setColors(colors);
-    _pointRenderer.setScalarEffect(None);
+    _pointRenderer.setScalarEffect(Color);
 
     update();
 }
@@ -154,7 +162,7 @@ void ProjectionView::initializeGL()
     _pointRenderer.init();
 
     // Set a default color map for both renderers
-    _pointRenderer.setScalarEffect(PointEffect::None);
+    _pointRenderer.setScalarEffect(PointEffect::Color);
 
     // OpenGL is initialized
     _isInitialized = true;
@@ -224,6 +232,24 @@ void ProjectionView::paintGL()
     catch (...) {
         hdps::util::exceptionMessageBox("Rendering failed");
     }
+}
+
+void ProjectionView::setColorMap(const QImage& colorMapImage)
+{
+    _colorMapImage = colorMapImage;
+
+    // Do not update color maps of the renderers when OpenGL is not initialized
+    if (!_isInitialized)
+        return;
+
+    // Activate OpenGL context
+    makeCurrent();
+
+    // Apply color maps to renderers
+    _pointRenderer.setColormap(_colorMapImage);
+
+    // Render
+    update();
 }
 
 void ProjectionView::cleanup()

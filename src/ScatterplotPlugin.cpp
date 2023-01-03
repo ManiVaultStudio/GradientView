@@ -133,7 +133,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _positions(),
     _numPoints(0),
     _scatterPlotWidget(new ScatterplotWidget()),
-    _projectionViews(2),
+    _projectionViews(2, nullptr),
     _selectedView(),
     _dropWidget(nullptr),
     _settingsAction(this),
@@ -634,7 +634,8 @@ timer.mark("Ranking");
         for (int pi = 0; pi < _projectionViews.size(); pi++)
         {
             const auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
-            _projectionViews[pi]->setScalars(dimValues, _selectedPoint);
+            std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
+            _projectionViews[pi]->setScalars(dimV, _selectedPoint);
             _projectionViews[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
         }
         // Set selected gradient view

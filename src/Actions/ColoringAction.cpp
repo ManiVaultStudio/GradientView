@@ -3,6 +3,7 @@
 
 #include "ScatterplotPlugin.h"
 #include "ScatterplotWidget.h"
+#include "ProjectionView.h"
 #include "DataHierarchyItem.h"
 
 #include "PointData.h"
@@ -305,11 +306,14 @@ void ColoringAction::updateScatterplotWidgetColorMap()
 
                 // Update the scatter plot widget with the color map
                 getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
+                for (int i = 0; i < getProjectionViews().size(); i++)
+                    if (getProjectionViews()[i] != nullptr)
+                        getProjectionViews()[i]->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
             }
 
             break;
         }
-
+        
         case ScatterplotWidget::DENSITY:
             break;
 

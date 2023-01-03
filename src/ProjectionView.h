@@ -36,10 +36,14 @@ public:
 
     void setData(const std::vector<Vector2f>* data);
 
+    void setScalars(const std::vector<float>& scalars, int selectedPoint);
     void setScalars(const Eigen::Block<Eigen::MatrixXf, -1, 1, true>& scalars, int selectedPoint);
     void setColors(const std::vector<Vector3f>& colors);
 
     void setProjectionName(QString name);
+
+    /** Assign a color map image to the point renderer */
+    void setColorMap(const QImage& colorMapImage);
 
     /////
         /**
@@ -70,6 +74,8 @@ private:
     QSize         _windowSize;             /** Size of the scatterplot widget */
 
     QString       _projectionName;
+
+    QImage        _colorMapImage;
 
     bool          _isInitialized = false;
 };

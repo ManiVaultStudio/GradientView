@@ -2,6 +2,7 @@
 
 #include "ScatterplotPlugin.h"
 #include "ScatterplotWidget.h"
+#include "ProjectionView.h"
 
 using namespace hdps::gui;
 
@@ -20,4 +21,11 @@ ScatterplotWidget& PluginAction::getScatterplotWidget()
     Q_ASSERT(_scatterplotPlugin != nullptr);
 
     return _scatterplotPlugin->getScatterplotWidget();
+}
+
+std::vector<ProjectionView*>& PluginAction::getProjectionViews()
+{
+    Q_ASSERT(_scatterplotPlugin != nullptr);
+
+    return _scatterplotPlugin->getProjectionViews();
 }

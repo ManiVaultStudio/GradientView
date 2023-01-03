@@ -125,6 +125,7 @@ public:
 
     /** Get reference to the scatter plot widget */
     ScatterplotWidget& getScatterplotWidget();
+    std::vector<ProjectionView*>& getProjectionViews() { return _projectionViews; }
 
     SettingsAction& getSettingsAction() { return _settingsAction; }
 
