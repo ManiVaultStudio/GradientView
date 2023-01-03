@@ -367,7 +367,7 @@ void ScatterplotPlugin::init()
         });
         *overlayGroupAction << *floodDecimal;
 
-        IntegralAction* floodStepsAction = new IntegralAction(this, "Flood steps", 3, 20, 10, 10);
+        IntegralAction* floodStepsAction = new IntegralAction(this, "Flood steps", 3, 50, 10, 10);
         connect(floodStepsAction, &IntegralAction::valueChanged, this, [this](int32_t value)
         {
             _numFloodSteps = value;
