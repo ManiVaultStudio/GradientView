@@ -842,7 +842,7 @@ void ScatterplotPlugin::computeStaticData()
         if (range == 0) range = 1;
 
         for (int i = 0; i < _dataMatrix.rows(); i++)
-            _normalizedData[d][i] = (_dataD[d][i] - minVal) / range;
+            _normalizedData[d][i] = std::min(0.99999f, (_dataD[d][i] - minVal) / range);
     }
     _bins.resize(_dataMatrix.cols(), std::vector<int>(30));
 
