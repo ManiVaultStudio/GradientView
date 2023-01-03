@@ -18,7 +18,7 @@ ColoringAction::ColoringAction(ScatterplotPlugin* scatterplotPlugin) :
     _colorByAction(this, "Color by"),
     _constantColorAction(this, "Constant color", DEFAULT_CONSTANT_COLOR, DEFAULT_CONSTANT_COLOR),
     _dimensionAction(this, "Dim"),
-    _colorMapAction(this, "Color map")
+    _colorMapAction(this, "Color map", util::ColorMap::Type::OneDimensional, "RdYlBu", "RdYlBu")
 {
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("palette"));
 
