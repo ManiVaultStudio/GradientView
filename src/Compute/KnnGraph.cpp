@@ -249,6 +249,25 @@ void printDistances(std::string name, float* distances, int k)
 //    delete[] D;
 //}
 
+// Build KNN sub-graph from bigger graph
+void KnnGraph::build(const KnnGraph& graph, int numNeighbours)
+{
+    assert(graph.getNumNeighbours() > numNeighbours);
+
+    _numNeighbours = numNeighbours;
+
+    const auto& graphNeighbours = graph.getNeighbours();
+    _neighbours.resize(graphNeighbours.size(), std::vector<int>(numNeighbours));
+
+    for (int i = 0; i < _neighbours.size(); i++)
+    {
+        for (int k = 0; k < numNeighbours; k++)
+        {
+            _neighbours[i][k] = graphNeighbours[i][k];
+        }
+    }
+}
+
 void KnnGraph::build(const DataMatrix& data, const knn::Index& index, int numNeighbours)
 {
     std::vector<int> indices;

@@ -21,8 +21,10 @@ public:
     //void build(const DataMatrix& data, faiss::gpu::GpuIndexFlatL2* index, int k);
     //void build(const DataMatrix& data, AnnoyIndex* index, int k);
 
+    void build(const KnnGraph& graph, int numNeighbours);
     void build(const DataMatrix& data, const knn::Index& index, int numNeighbours);
 
+private:
     std::vector<std::vector<int>> _neighbours;
     int _numNeighbours;
 };

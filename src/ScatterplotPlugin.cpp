@@ -847,8 +847,8 @@ void ScatterplotPlugin::computeStaticData()
     _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
     _knnIndex.addData(_dataMatrix);
 
-    _knnGraph.build(_dataMatrix, _knnIndex, 10);
-    _largeKnnGraph.build(_dataMatrix, _knnIndex, 10);
+    _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
+    _knnGraph.build(_largeKnnGraph, 10);
 
     std::chrono::duration<double> elapsedKnn = std::chrono::high_resolution_clock::now() - start;
     start = std::chrono::high_resolution_clock::now();
