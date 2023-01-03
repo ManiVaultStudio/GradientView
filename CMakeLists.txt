@@ -24,6 +24,7 @@ set(PLUGIN
     src/Common.h
     src/ScatterplotPlugin.h
     src/ScatterplotPlugin.cpp
+    src/CudaCheck.h
 )
 
 set(UI
@@ -84,6 +85,8 @@ set(Compute
     src/Compute/LocalDimensionality.cpp
     src/Compute/RandomWalks.h
     src/Compute/RandomWalks.cpp
+    src/Compute/KnnIndex.h
+    src/Compute/KnnIndex.cpp
     src/Compute/KnnGraph.h
     src/Compute/KnnGraph.cpp
     src/Compute/Filters.h

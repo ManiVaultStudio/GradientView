@@ -15,6 +15,7 @@
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexIVFFlat.h>
 
+#include "KnnIndex.h"
 #include "KnnGraph.h"
 #include "Filters.h"
 
@@ -146,23 +147,14 @@ private:
 
     DataMatrix                      _dataMatrix;
     std::vector<std::vector<float>> _dataD;
-    std::vector<std::vector<float>> _colSortedData;
-    std::vector<std::vector<int>>   _colSortedIndices;
     std::vector<std::vector<float>> _dimValues;
     std::vector<std::vector<float>> _normalizedData;
     std::vector<std::vector<int>>   _bins;
 
+    knn::Index                      _knnIndex;
+
     DataMatrix                      _fullProjMatrix;
     DataMatrix                      _projMatrix;
-    Brute*                          _brute;
-    KdTree*                         _kdtree;
-    //flann::Index<flann::L2<float>>* _index;
-    faiss::IndexFlat*               _faissIndex;
-    faiss::IndexFlat*               _quantizer;
-    faiss::IndexIVFFlat*            _faissIvfIndex;
-    faiss::gpu::StandardGpuResources* _res;
-    faiss::gpu::GpuIndexFlatL2*       _faissGpuIndex;
-    AnnoyIndex*                     _annoyIndex;
     KnnGraph                        _knnGraph;
     KnnGraph                        _largeKnnGraph;
     std::vector<QString>            _enabledDimNames;
