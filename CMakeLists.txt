@@ -18,6 +18,102 @@ endif(MSVC)
 
 file(TO_CMAKE_PATH $ENV{HDPS_INSTALL_DIR} INSTALL_DIR)
 
+# -----------------------------------------------------------------------------
+# Install libraries
+# -----------------------------------------------------------------------------
+# Set the directory where CMake include files are to be found
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+set(flann_VERSION 1.9.1)
+set(lz4_VERSION 1.9.3)
+
+set(LIBRARY_INSTALL_DIR ${PROJECT_BINARY_DIR})
+set(ARTIFACTORY_LIBS_INSTALLED TRUE)
+
+include(InstallArtifactoryPackage)
+message(STATUS "Beep: ${ARTIFACTORY_LIBS_INSTALLED}")
+if (NOT ARTIFACTORY_LIBS_INSTALLED) 
+    message(STATUS "Installing artifactory packages to: ${LIBRARY_INSTALL_DIR}")
+    # Both HDILib and flann are available prebuilt in the lkeb-artifactory as combined Debug/Release packages
+    # lz4 is also available in the lkb-artifactory in separate Debug and |Release packages
+    install_artifactory_package(flann ${flann_VERSION} lkeb TRUE)
+    install_artifactory_package(lz4 ${lz4_VERSION} _ FALSE)
+
+
+    message(STATUS "module path ${CMAKE_MODULE_PATH}")
+
+    set(ARTIFACTORY_LIBS_INSTALLED TRUE CACHE BOOL "Use the prebuilt libraries from artifactory" FORCE)
+endif()
+
+# Include flann includes via target_include_directories to the current project
+macro(set_flann_project_includes target)
+    if(1)
+        MESSAGE( STATUS "Including PREBUILT flann ${LIBRARY_INSTALL_DIR}/flann")
+        target_include_directories("${target}" PRIVATE "${LIBRARY_INSTALL_DIR}/flann/include")
+    else()
+        if(MSVC)
+            target_include_directories ("${target}" PRIVATE "${LIBRARY_INSTALL_DIR}/tSNE/lib/Flann/Win/include")
+        endif()
+
+        if(APPLE)
+            target_include_directories ("${target}" PRIVATE "${LIBRARY_INSTALL_DIR}/tSNE/lib/Flann/OSX/include")
+        endif()
+
+        if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+            target_include_directories ("${target}" PRIVATE "${LIBRARY_INSTALL_DIR}/tSNE/lib/Flann/Linux/include")
+        endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    endif()
+endmacro()
+
+# Link the flann libraries via target_link_library to the current project
+macro(set_flann_project_link_libraries target)
+    if(1)
+        MESSAGE( STATUS "Linking PREBUILT flann libraries...")
+        if(MSVC)
+            target_link_libraries("${target}" debug "${LIBRARY_INSTALL_DIR}/flann/lib/flann_cpp_s.lib")
+            target_link_libraries("${target}" optimized "${LIBRARY_INSTALL_DIR}/flann/lib/flann_cpp_s.lib")
+        endif()
+    else()
+        if(MSVC)
+            MESSAGE( STATUS "Linking Windows flann libraries...")
+            target_link_libraries("${target}" debug "${LIBRARY_INSTALL_DIR}/tSNE/lib/Flann/Win/Debug/flann_cpp_s.lib")
+            target_link_libraries("${target}" optimized "${LIBRARY_INSTALL_DIR}/tSNE/lib/Flann/Win/Release/flann_cpp_s.lib")
+        endif()
+
+        if(APPLE)
+            MESSAGE( STATUS "Linking Mac OS X libraries...")
+            target_link_libraries("${target}" "${LIBRARY_INSTALL_DIR}/tSNE/lib/Flann/OSX/libflann_s.a")
+        endif()
+    endif()
+endmacro()
+
+# lz4 currently only with prebuilt libs - is used in flann 1.8.4 and greater.
+macro(set_lz4_project_includes target)
+    if(1)
+        MESSAGE( STATUS "Including PREBUILT lz4 ${LIBRARY_INSTALL_DIR}/lz4")
+        target_include_directories("${target}" PRIVATE "${LIBRARY_INSTALL_DIR}/lz4/Release/include")
+    else()
+    endif()
+endmacro()
+
+macro(set_lz4_project_link_libraries target)
+    if(1)
+        MESSAGE( STATUS "Linking PREBUILT lz4 libraries...")
+        if(MSVC)
+            target_link_libraries("${target}" debug "${LIBRARY_INSTALL_DIR}/lz4/Release/lib/lz4.lib")
+            target_link_libraries("${target}" optimized "${LIBRARY_INSTALL_DIR}/lz4/Release/lib/lz4.lib")
+        endif()
+        if(APPLE)
+            target_link_libraries("${target}" debug "${LIBRARY_INSTALL_DIR}/lz4/Debug/lib/liblz4.a")
+            target_link_libraries("${target}" optimized "${LIBRARY_INSTALL_DIR}/lz4/Release/lib/liblz4.a")
+        endif()
+    else()
+    endif()
+endmacro()
+
+# -----------------------------------------------------------------------------
+# Rest
+# -----------------------------------------------------------------------------
 find_package(Qt6 COMPONENTS Widgets WebEngineWidgets OpenGL OpenGLWidgets Charts REQUIRED)
 
 set(PLUGIN
@@ -117,6 +213,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Compute)
 
 add_library(${PROJECT} SHARED ${SOURCES} ${SHADERS} ${AUX})
 
+set_lz4_project_includes(${PROJECT})
+set_flann_project_includes(${PROJECT})
+
 # Set CXX_STANDARD to avoid osx 10.14.4/xcode10.3 build error "no member named 'make_unique'..."
 # (C++14 should be sufficient to avoid the error, but C++17 is even better!)
 set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)
@@ -138,6 +237,8 @@ target_link_libraries(${PROJECT} Qt6::Charts)
 target_link_libraries(${PROJECT} "${HDPS_LINK_LIBRARY}")
 target_link_libraries(${PROJECT} "${POINTDATA_LINK_LIBRARY}")
 target_link_libraries(${PROJECT} "${CLUSTERDATA_LINK_LIBRARY}")
+set_lz4_project_link_libraries(${PROJECT})
+set_flann_project_link_libraries(${PROJECT})
 
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
