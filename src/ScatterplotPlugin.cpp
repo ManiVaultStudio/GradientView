@@ -766,7 +766,9 @@ timer.finish("Overlay");
 
 void ScatterplotPlugin::computeStaticData()
 {
-    auto start = std::chrono::high_resolution_clock::now();
+    Timer timer;
+    timer.start();
+
     std::cout << "Start conversion" << std::endl;
     DataMatrix dataMatrix;
     convertToEigenMatrix(_positionSourceDataset, dataMatrix);
@@ -783,8 +785,8 @@ void ScatterplotPlugin::computeStaticData()
         _dataMatrix = dataMatrix;
 
     std::cout << "Number of enabled dimensions in the dataset : " << _dataMatrix.cols() << std::endl;
-    std::chrono::duration<double> elapsedSub = std::chrono::high_resolution_clock::now() - start;
-    start = std::chrono::high_resolution_clock::now();
+
+    timer.mark("Data preparation");
 
     // Standardize
     // Compute means
@@ -844,28 +846,25 @@ void ScatterplotPlugin::computeStaticData()
     _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
     std::cout << "Projection size: " << _projectionSize << std::endl;
 
+    timer.mark("Data transformations");
+
     _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
     _knnIndex.addData(_dataMatrix);
 
     _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
     _knnGraph.build(_largeKnnGraph, 10);
 
-    std::chrono::duration<double> elapsedKnn = std::chrono::high_resolution_clock::now() - start;
-    start = std::chrono::high_resolution_clock::now();
-    
-
+    timer.mark("Computing KNN graph");
 
     _localSpatialDimensionality.clear();
     _localHighDimensionality.clear();
 
-    std::chrono::duration<double> elapsedDim = std::chrono::high_resolution_clock::now() - start;
-    start = std::chrono::high_resolution_clock::now();
+    timer.mark("Local dimensionality");
 
     //computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
     //getScatterplotWidget().setDirections(_directions);
 
-    std::chrono::duration<double> elapsedDir = std::chrono::high_resolution_clock::now() - start;
-    start = std::chrono::high_resolution_clock::now();
+    timer.mark("Directions");
 
     // Get enabled dimension names
     const auto& dimNames = _positionSourceDataset->getDimensionNames();
@@ -881,18 +880,7 @@ void ScatterplotPlugin::computeStaticData()
     // Set up chart
     _gradientGraph->setNumDimensions(enabledDimensions.size());
 
-    std::chrono::duration<double> elapsedGraph = std::chrono::high_resolution_clock::now() - start;
-    start = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double> elapsedStan = std::chrono::high_resolution_clock::now() - start;
-    start = std::chrono::high_resolution_clock::now();
-
-    std::cout << "Elapsed time subsetting: " << elapsedSub.count() << " s\n";
-    std::cout << "Elapsed time knn: " << elapsedKnn.count() << " s\n";
-    std::cout << "Elapsed time local dimensionality: " << elapsedDim.count() << " s\n";
-    std::cout << "Elapsed time directions: " << elapsedDir.count() << " s\n";
-    std::cout << "Elapsed time graph setup: " << elapsedGraph.count() << " s\n";
-    std::cout << "Elapsed time standardization: " << elapsedStan.count() << " s\n";
+    timer.finish("Graph init");
 }
 
 void ScatterplotPlugin::loadData(const Datasets& datasets)
