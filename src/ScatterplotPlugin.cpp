@@ -666,17 +666,21 @@ timer.mark("Filter");
                 floodNodes[n++] = floodFill[i][j];
 
         // Binning
+        int binSteps = _bins[0].size();
+
+        for (int d = 0; d < _bins.size(); d++)
+            std::fill(_bins[d].begin(), _bins[d].end(), 0);
+
 #pragma omp parallel for
         for (int d = 0; d < _bins.size(); d++)
         {
-            for (int i = 0; i < _bins[d].size(); i++)
-            {
-                _bins[d][i] = 0;
-            }
+            int* const bins_d = &_bins[d][0];
+            float* const norm_d = &_normalizedData[d][0];
+
             for (int i = 0; i < floodNodes.size(); i++)
             {
-                const float& f = std::min(0.99999f, _normalizedData[d][floodNodes[i]]);
-                _bins[d][(int) (f * 30)] += 1;
+                const float& f = norm_d[floodNodes[i]];
+                bins_d[(long)(f * binSteps)]++;
             }
         }
 
