@@ -1,5 +1,7 @@
 #include "GradientGraph.h"
 
+#include "Timer.h"
+
 #include <QVBoxLayout>
 
 #include <iostream>
@@ -125,7 +127,8 @@ void GradientGraph::setValues(const std::vector<std::vector<float>>& values)
     updateChartColors();
 void GradientGraph::setBins(const std::vector<std::vector<int>>& bins)
 {
-    auto start = std::chrono::high_resolution_clock::now();
+    Timer timer;
+    timer.start();
 
     // Store values in a QList<QPointF>
     std::vector<QList<QPointF>> pointLists(bins.size());
@@ -151,9 +154,7 @@ void GradientGraph::setBins(const std::vector<std::vector<int>>& bins)
 
     updateChartColors();
 
-    auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish - start;
-    std::cout << "Graphgraph: " << elapsed.count() * 1000 << " ms | ";
+    timer.finish("Graph inner");
 }
 
 void GradientGraph::setTopDimensions(int dimension1, int dimension2)

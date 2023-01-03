@@ -25,6 +25,8 @@ set(PLUGIN
     src/ScatterplotPlugin.h
     src/ScatterplotPlugin.cpp
     src/CudaCheck.h
+    src/Timer.h
+    src/Timer.cpp
 )
 
 set(UI

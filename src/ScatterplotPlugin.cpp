@@ -19,6 +19,7 @@
 #include <Eigen/Dense>
 #include "LocalDimensionality.h"
 #include "RandomWalks.h"
+#include "Timer.h"
 
 #include <QtCore>
 #include <QApplication>
@@ -585,12 +586,15 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
 
 void ScatterplotPlugin::onPointSelection()
 {
+    Timer timer;
+
     hdps::Dataset<Points> selection = _positionSourceDataset->getSelection();
 
     int numDimensions = _dataMatrix.cols();
 
     if (selection->indices.size() > 0)
     {
+timer.start();
         _selectedPoint = selection->indices[0];
         Vector2f center = _positions[_selectedPoint];
 
@@ -609,6 +613,7 @@ void ScatterplotPlugin::onPointSelection()
             _scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
             getScatterplotWidget().setScalarEffect(PointEffect::Color);
         }
+timer.mark("Floodfill");
 
         /////////////////////
         // Gradient picker //
@@ -623,6 +628,7 @@ void ScatterplotPlugin::onPointSelection()
             _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, floodFill, dimRanking);
             break;
         }
+timer.mark("Ranking");
 
         // Set appropriate coloring of gradient view, FIXME use colormap later
         for (int pi = 0; pi < _projectionViews.size(); pi++)
@@ -640,6 +646,7 @@ void ScatterplotPlugin::onPointSelection()
         }
 
         _gradientGraph->setTopDimensions(dimRanking[0], dimRanking[1]);
+timer.mark("Filter");
 
         /////////////////////
         // Trace lineage   //
@@ -694,7 +701,7 @@ void ScatterplotPlugin::onPointSelection()
         }
 
         _gradientGraph->setBins(_bins);
-
+timer.mark("Graph");
 
         //////////////////
         std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());
@@ -773,6 +780,7 @@ void ScatterplotPlugin::onPointSelection()
             break;
         }
         }
+timer.finish("Overlay");
     }
 }
 
