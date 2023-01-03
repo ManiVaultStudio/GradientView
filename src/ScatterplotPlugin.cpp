@@ -664,27 +664,6 @@ timer.mark("Filter");
             for (int j = 0; j < floodFill[i].size(); j++)
                 floodNodes[n++] = floodFill[i][j];
 
-        // Store dimension values for every flood node
-        //DataMatrix subMatrix = _dataMatrix(floodNodes, Eigen::all);
-        //std::vector<std::vector<float>> dimValues(subMatrix.data(), subMatrix.data() + subMatrix.rows() * subMatrix.cols());
-
-//        _dimValues.resize(_dataMatrix.cols(), std::vector<float>(floodNodes.size()));
-////#pragma omp parallel for
-//        for (int i = 0; i < floodNodes.size(); i++)
-//        {
-//            int floodNode = floodNodes[i];
-//            auto floodValues = _dataMatrix.row(floodNode);
-//            for (int d = 0; d < _dataMatrix.cols(); d++)
-//            {
-//                _dimValues[d][i] = _dataD[d][floodNode];
-//            }
-//        }
-
-        //for (int d = 0; d < _dimValues.size(); d++)
-        //{
-        //    sort(_dimValues[d].begin(), _dimValues[d].end());
-        //}
-
         // Binning
 #pragma omp parallel for
         for (int d = 0; d < _bins.size(); d++)
