@@ -125,6 +125,8 @@ void GradientGraph::setValues(const std::vector<std::vector<float>>& values)
         _seriesArray[d]->replace(pointLists[d]);
 
     updateChartColors();
+}
+
 void GradientGraph::setBins(const std::vector<std::vector<int>>& bins)
 {
     Timer timer;
