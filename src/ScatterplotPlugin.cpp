@@ -549,7 +549,7 @@ void ScatterplotPlugin::init()
     connect(&_positionDataset, &Dataset<Points>::changed, this, &ScatterplotPlugin::positionDatasetChanged);
 
     // Update points when the position dataset data changes
-    connect(&_positionDataset, &Dataset<Points>::dataChanged, this, &ScatterplotPlugin::updateData);
+    //connect(&_positionDataset, &Dataset<Points>::dataChanged, this, &ScatterplotPlugin::updateData);
 
     // Update point selection when the position dataset data changes
     connect(&_positionDataset, &Dataset<Points>::dataSelectionChanged, this, &ScatterplotPlugin::updateSelection);
@@ -650,8 +650,26 @@ void ScatterplotPlugin::onPointSelection()
                 floodNodes[n++] = floodFill[i][j];
 
         // Store dimension values for every flood node
-        std::vector<std::vector<float>> dimValues(_dataMatrix.cols(), std::vector<float>(floodNodes.size()));
-        for (int i = 0; i < floodNodes.size(); i++)
+        //DataMatrix subMatrix = _dataMatrix(floodNodes, Eigen::all);
+        //std::vector<std::vector<float>> dimValues(subMatrix.data(), subMatrix.data() + subMatrix.rows() * subMatrix.cols());
+
+//        _dimValues.resize(_dataMatrix.cols(), std::vector<float>(floodNodes.size()));
+////#pragma omp parallel for
+//        for (int i = 0; i < floodNodes.size(); i++)
+//        {
+//            int floodNode = floodNodes[i];
+//            auto floodValues = _dataMatrix.row(floodNode);
+//            for (int d = 0; d < _dataMatrix.cols(); d++)
+//            {
+//                _dimValues[d][i] = _dataD[d][floodNode];
+//            }
+//        }
+
+        //for (int d = 0; d < _dimValues.size(); d++)
+        //{
+        //    sort(_dimValues[d].begin(), _dimValues[d].end());
+        //}
+
         // Binning
 #pragma omp parallel for
         for (int d = 0; d < _bins.size(); d++)
@@ -808,6 +826,46 @@ void ScatterplotPlugin::computeStaticData()
         }
     }
 
+    // Compute normalized data
+    _dataD.resize(_dataMatrix.cols(), std::vector<float>(_dataMatrix.rows()));
+    _normalizedData.resize(_dataMatrix.cols(), std::vector<float>(_dataMatrix.rows()));
+    for (int d = 0; d < _dataMatrix.cols(); d++)
+    {
+        for (int i = 0; i < _dataMatrix.rows(); i++)
+            _dataD[d][i] = _dataMatrix(i, d);
+
+        float minVal = *std::min_element(_dataD[d].begin(), _dataD[d].end());
+        float maxVal = *std::max_element(_dataD[d].begin(), _dataD[d].end());
+        float range = maxVal - minVal;
+        if (range == 0) range = 1;
+
+        for (int i = 0; i < _dataMatrix.rows(); i++)
+            _normalizedData[d][i] = (_dataD[d][i] - minVal) / range;
+    }
+    _bins.resize(_dataMatrix.cols(), std::vector<int>(30));
+
+    // Compute sorted data
+    _colSortedData.resize(_dataMatrix.cols(), std::vector<float>(_dataMatrix.rows()));
+    _colSortedIndices.resize(_dataMatrix.cols(), std::vector<int>(_dataMatrix.rows()));
+    for (int d = 0; d < _dataMatrix.cols(); d++)
+    {
+        std::vector<float> data(_dataMatrix.rows());
+        for (int i = 0; i < _dataMatrix.rows(); i++)
+        {
+            data[i] = _dataMatrix(i, d);
+        }
+
+        std::vector<int> indices(_dataMatrix.rows());
+        std::iota(indices.begin(), indices.end(), 0);
+        std::sort(indices.begin(), indices.end(), [&data](size_t i1, size_t i2) {return data[i1] < data[i2]; });
+
+        for (int i = 0; i < indices.size(); i++)
+            _colSortedData[d][i] = data[indices[i]];
+
+        for (int i = 0; i < indices.size(); i++)
+            _colSortedIndices[d][indices[i]] = i;
+    }
+
     Bounds bounds = _scatterPlotWidget->getBounds();
     _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
     std::cout << "Projection size: " << _projectionSize << std::endl;
@@ -846,8 +904,8 @@ void ScatterplotPlugin::computeStaticData()
     std::chrono::duration<double> elapsedDim = std::chrono::high_resolution_clock::now() - start;
     start = std::chrono::high_resolution_clock::now();
 
-    computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
-    getScatterplotWidget().setDirections(_directions);
+    //computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
+    //getScatterplotWidget().setDirections(_directions);
 
     std::chrono::duration<double> elapsedDir = std::chrono::high_resolution_clock::now() - start;
     start = std::chrono::high_resolution_clock::now();
@@ -1217,9 +1275,9 @@ void ScatterplotPlugin::updateData()
         _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
         std::cout << "Projection size: " << _projectionSize << std::endl;
 
-        std::vector<Vector2f> directions;
-        computeDirection(_dataMatrix, _projMatrix, _knnGraph, directions);
-        getScatterplotWidget().setDirections(directions);
+        //std::vector<Vector2f> directions;
+        //computeDirection(_dataMatrix, _projMatrix, _knnGraph, directions);
+        //getScatterplotWidget().setDirections(directions);
     }
     else {
         _positions.clear();
