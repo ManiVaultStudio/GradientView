@@ -31,6 +31,7 @@ protected:
     ToggleAction    _scatterPlotAction;
     ToggleAction    _densityPlotAction;
     ToggleAction    _contourPlotAction;
+    ToggleAction    _cellPlotAction;
     QActionGroup    _actionGroup;
 
     friend class Widget;

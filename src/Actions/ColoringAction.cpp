@@ -286,6 +286,7 @@ void ColoringAction::updateScatterplotWidgetColorMap()
     switch (_scatterplotPlugin->getScatterplotWidget().getRenderMode())
     {
         case ScatterplotWidget::SCATTERPLOT:
+        case ScatterplotWidget::CELL:
         {
             if (_colorByAction.getCurrentIndex() == 0) {
                 
@@ -366,7 +367,7 @@ ColoringAction::Widget::Widget(QWidget* parent, ColoringAction* coloringAction, 
 
     // Enable/disable the widget depending on the render mode
     const auto renderModeChanged = [this, coloringAction]() {
-        setEnabled(coloringAction->getScatterplotWidget().getRenderMode() == ScatterplotWidget::SCATTERPLOT);
+        setEnabled(coloringAction->getScatterplotWidget().getRenderMode() == ScatterplotWidget::SCATTERPLOT || coloringAction->getScatterplotWidget().getRenderMode() == ScatterplotWidget::CELL);
     };
 
     // Enable/disable depending on the render mode

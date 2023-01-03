@@ -29,6 +29,8 @@ set(PLUGIN
 set(UI
     src/ScatterplotWidget.h
     src/ScatterplotWidget.cpp
+    src/CellRenderer.h
+    src/CellRenderer.cpp
     src/ProjectionView.h
     src/ProjectionView.cpp
     src/GradientGraph.h
@@ -91,6 +93,8 @@ set(Compute
 set(SHADERS
     res/shaders/SelectionTool.frag
     res/shaders/SelectionTool.vert
+    res/shaders/TrianglePlot.frag
+    res/shaders/TrianglePlot.vert
 )
 
 set(AUX
@@ -110,6 +114,7 @@ source_group(Aux FILES ${AUX})
 
 include_directories("${INSTALL_DIR}/$<CONFIGURATION>/include/")
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/Eigen/include)
+include_directories(${PROJECT_SOURCE_DIR}/thirdparty/jcv/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Actions)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/Models)

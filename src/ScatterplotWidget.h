@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderers/PointRenderer.h"
+#include "CellRenderer.h"
 #include "renderers/DensityRenderer.h"
 #include "util/PixelSelectionTool.h"
 
@@ -28,7 +29,8 @@ public:
     enum RenderMode {
         SCATTERPLOT,
         DENSITY,
-        LANDSCAPE
+        LANDSCAPE,
+        CELL
     };
 
     /** The way that point colors are determined */
@@ -180,8 +182,9 @@ private:
     RenderMode              _renderMode = SCATTERPLOT;
     QColor                  _backgroundColor;
     ColoringMode            _coloringMode = ColoringMode::Constant;
-    PointRenderer           _pointRenderer;                     
-    DensityRenderer         _densityRenderer;                   
+    PointRenderer           _pointRenderer;
+    CellRenderer            _cellRenderer;
+    DensityRenderer         _densityRenderer;
     QSize                   _windowSize;                        /** Size of the scatterplot widget */
     Bounds                  _dataBounds;                        /** Bounds of the loaded data */
     QImage                  _colorMapImage;

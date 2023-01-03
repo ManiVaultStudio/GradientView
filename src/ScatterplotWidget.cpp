@@ -36,6 +36,7 @@ ScatterplotWidget::ScatterplotWidget() :
     _densityRenderer(DensityRenderer::RenderMode::DENSITY),
     _backgroundColor(0, 0, 22, 255),
     _pointRenderer(),
+    _cellRenderer(),
     //_pixelSelectionTool(this),
     _showRandomWalk(false),
     _showDirections(false)
@@ -179,9 +180,11 @@ void ScatterplotWidget::setData(const std::vector<Vector2f>* points)
     // Pass bounds and data to renderers
     _pointRenderer.setBounds(_dataBounds);
     _densityRenderer.setBounds(_dataBounds);
+    _cellRenderer.setBounds(_dataBounds);
 
     _pointRenderer.setData(*points);
     _densityRenderer.setData(points);
+    _cellRenderer.setData(*points);
 
     switch (_renderMode)
     {
@@ -226,6 +229,7 @@ void ScatterplotWidget::setHighlights(const std::vector<char>& highlights, const
 void ScatterplotWidget::setScalars(const std::vector<float>& scalars)
 {
     _pointRenderer.setColorChannelScalars(scalars);
+    _cellRenderer.setColorChannelScalars(scalars);
     
     update();
 }
@@ -261,6 +265,7 @@ void ScatterplotWidget::setPointScaling(hdps::gui::PointScaling scalingMode)
 void ScatterplotWidget::setScalarEffect(PointEffect effect)
 {
     _pointRenderer.setScalarEffect(effect);
+    _cellRenderer.setScalarEffect(ScalarEffect::Color);
 
     update();
 }
@@ -300,6 +305,11 @@ void ScatterplotWidget::setColorMapRange(const float& min, const float& max)
         case LANDSCAPE:
         {
             _densityRenderer.setColorMapRange(min, max);
+            break;
+        }
+        case CELL:
+        {
+            _cellRenderer.setColorMapRange(min, max);
             break;
         }
 
@@ -415,6 +425,7 @@ void ScatterplotWidget::initializeGL()
     // Initialize renderers
     _pointRenderer.init();
     _densityRenderer.init();
+    _cellRenderer.init();
 
     // Set a default color map for both renderers
     _pointRenderer.setScalarEffect(PointEffect::Color);
@@ -435,6 +446,7 @@ void ScatterplotWidget::resizeGL(int w, int h)
 
     _pointRenderer.resize(QSize(w, h));
     _densityRenderer.resize(QSize(w, h));
+    _cellRenderer.resize(QSize(w, h));
 
     // Set matrix for normalizing from pixel coordinates to [0, 1]
     toNormalisedCoordinates = Matrix3f(1.0f / w, 0, 0, 1.0f / h, 0, 0);
@@ -483,6 +495,9 @@ void ScatterplotWidget::paintGL()
                 case LANDSCAPE:
                     _densityRenderer.setRenderMode(_renderMode == DENSITY ? DensityRenderer::DENSITY : DensityRenderer::LANDSCAPE);
                     _densityRenderer.render();
+                    break;
+                case CELL:
+                    _cellRenderer.render();
                     break;
             }
 
@@ -567,6 +582,7 @@ void ScatterplotWidget::cleanup()
     makeCurrent();
     _pointRenderer.destroy();
     _densityRenderer.destroy();
+    _cellRenderer.destroy();
 }
 
 void ScatterplotWidget::setColorMap(const QImage& colorMapImage)
@@ -583,6 +599,7 @@ void ScatterplotWidget::setColorMap(const QImage& colorMapImage)
     // Apply color maps to renderers
     _pointRenderer.setColormap(_colorMapImage);
     _densityRenderer.setColormap(_colorMapImage);
+    _cellRenderer.setColormap(_colorMapImage);
 
     // Render
     update();
