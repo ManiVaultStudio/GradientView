@@ -358,6 +358,14 @@ void ScatterplotPlugin::init()
         auto overlayGroupAction = new GroupAction(&getWidget(), true);
         overlayGroupAction->setText("Flood Nodes Overlay");
         overlayGroupAction->setShowLabels(false);
+        
+        IntegralAction* floodDecimal = new IntegralAction(this, "Flood nodes", 10, 500, 10, 10);
+        connect(floodDecimal, &IntegralAction::valueChanged, this, [this](int32_t value)
+        {
+            _knnGraph.build(_dataMatrix, _faissGpuIndex, value);
+        });
+        *overlayGroupAction << *floodDecimal;
+
         IntegralAction* floodStepsAction = new IntegralAction(this, "Flood steps", 3, 20, 10, 10);
         connect(floodStepsAction, &IntegralAction::valueChanged, this, [this](int32_t value)
         {
