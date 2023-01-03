@@ -136,14 +136,16 @@ void GradientGraph::setBins(const std::vector<std::vector<int>>& bins)
     std::vector<QList<QPointF>> pointLists(bins.size());
 
     int binTotal = 0;
+
     for (int d = 0; d < bins.size(); d++)
     {
         binTotal = 0;
-        pointLists[d].append(QPointF(0, 0));
+        pointLists[d].resize(bins[d].size()+1);
+        pointLists[d][0] = QPointF(0, 0);
         for (int i = 0; i < bins[d].size(); i++)
         {
             binTotal += bins[d][i];
-            pointLists[d].append(QPointF(binTotal, i / 30.0f));
+            pointLists[d][i+1] = QPointF(binTotal, i / 30.0f);
         }
     }
 
