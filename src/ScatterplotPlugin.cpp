@@ -811,9 +811,29 @@ void ScatterplotPlugin::computeStaticData()
     Bounds bounds = _scatterPlotWidget->getBounds();
     _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
     std::cout << "Projection size: " << _projectionSize << std::endl;
-    createKnnGraph(_dataMatrix);
-    _knnGraph.build(_dataMatrix, _kdtree, 10);
-    _largeKnnGraph.build(_dataMatrix, _kdtree, 30);
+    //createAnnGraph(_dataMatrix);
+    //createFaissGraph(_dataMatrix);
+    //createFaissIVFGraph(_dataMatrix);
+    createFaissGpuGraph(_dataMatrix);
+    //createAnnoyIndex(_dataMatrix);
+    std::cout << "Projection size post: " << _projectionSize << std::endl;
+    //createKnnGraph(_dataMatrix);
+    //createBruteGraph(_dataMatrix);
+    //std::cout << "Projection size post2: " << _projectionSize << std::endl;
+    //_knnGraph.build(_dataMatrix, _brute, 10);
+    //_largeKnnGraph.build(_dataMatrix, _brute, 30);
+    //_knnGraph.build(_dataMatrix, _kdtree, 10);
+    //_largeKnnGraph.build(_dataMatrix, _kdtree, 30);
+    //_knnGraph.build(_dataMatrix, _index, 10);
+    //_largeKnnGraph.build(_dataMatrix, _index, 30);
+    //_knnGraph.build(_dataMatrix, _faissIndex, 10);
+    //_largeKnnGraph.build(_dataMatrix, _faissIndex, 30);
+    //_knnGraph.build(_dataMatrix, _faissIvfIndex, 10);
+    //_largeKnnGraph.build(_dataMatrix, _faissIvfIndex, 30);
+    _knnGraph.build(_dataMatrix, _faissGpuIndex, 10);
+    _largeKnnGraph.build(_dataMatrix, _faissGpuIndex, 30);
+    //_knnGraph.build(_dataMatrix, _annoyIndex, 10);
+    //_largeKnnGraph.build(_dataMatrix, _annoyIndex, 30);
 
     std::chrono::duration<double> elapsedKnn = std::chrono::high_resolution_clock::now() - start;
     start = std::chrono::high_resolution_clock::now();
@@ -930,6 +950,16 @@ void ScatterplotPlugin::positionDatasetChanged()
     computeStaticData();
 }
 
+void ScatterplotPlugin::createBruteGraph(const DataMatrix& highDim)
+{
+    Eigen::MatrixXf tarray = highDim.transpose();
+    _brute = new knncpp::BruteForce<float, knncpp::ManhattenDistance<float>>(tarray, true);
+    _brute->setThreads(-1);
+    _brute->build();
+
+    qDebug() << "Rows:" << tarray.rows() << tarray.cols();
+}
+
 void ScatterplotPlugin::createKnnGraph(const DataMatrix& highDim)
 {
     Eigen::MatrixXf tarray = highDim.transpose();
@@ -938,6 +968,148 @@ void ScatterplotPlugin::createKnnGraph(const DataMatrix& highDim)
     _kdtree->build();
 
     qDebug() << "Rows:" << tarray.rows() << tarray.cols();
+}
+
+//void ScatterplotPlugin::createAnnGraph(const DataMatrix& highDim)
+//{
+//    Eigen::MatrixXf tarray = highDim.transpose();
+//
+//    qDebug() << "Rows:" << tarray.rows() << tarray.cols();
+//
+//    std::vector<float> highDimArray(highDim.rows() * highDim.cols());
+//    //Eigen::Map<Eigen::MatrixXf>(highDimArray.data(), highDim.rows(), highDim.cols()) = highDim;
+//
+//    int idx = 0;
+//    for (int i = 0; i < highDim.rows(); i++)
+//    {
+//        for (int d = 0; d < highDim.cols(); d++)
+//        {
+//            highDimArray[idx++] = highDim(i, d);
+//        }
+//    }
+//
+//    flann::Matrix<float> dataset(highDimArray.data(), highDim.rows(), highDim.cols());
+//
+//    _index = new flann::Index<flann::L2<float>>(dataset, flann::KDTreeIndexParams(4));
+//
+//    _index->buildIndex();
+//}
+
+void ScatterplotPlugin::createFaissGraph(const DataMatrix& highDim)
+{
+    Eigen::MatrixXf tarray = highDim.transpose();
+
+    qDebug() << "Rows:" << tarray.rows() << tarray.cols();
+
+    std::vector<float> highDimArray(highDim.rows() * highDim.cols());
+    //Eigen::Map<Eigen::MatrixXf>(highDimArray.data(), highDim.rows(), highDim.cols()) = highDim;
+
+    int idx = 0;
+    for (int i = 0; i < highDim.rows(); i++)
+    {
+        for (int d = 0; d < highDim.cols(); d++)
+        {
+            highDimArray[idx++] = highDim(i, d);
+        }
+    }
+
+    _faissIndex = new faiss::IndexFlat(highDim.cols(), faiss::METRIC_L2);
+    printf("is_trained = %s\n", _faissIndex->is_trained ? "true" : "false");
+    _faissIndex->add(highDim.rows(), highDimArray.data());                     // add vectors to the index
+    printf("ntotal = %ld\n", _faissIndex->ntotal);
+}
+
+void ScatterplotPlugin::createFaissIVFGraph(const DataMatrix& highDim)
+{
+    Eigen::MatrixXf tarray = highDim.transpose();
+
+    qDebug() << "Rows:" << tarray.rows() << tarray.cols();
+
+    std::vector<float> highDimArray(highDim.rows() * highDim.cols());
+    //Eigen::Map<Eigen::MatrixXf>(highDimArray.data(), highDim.rows(), highDim.cols()) = highDim;
+
+    int idx = 0;
+    for (int i = 0; i < highDim.rows(); i++)
+    {
+        for (int d = 0; d < highDim.cols(); d++)
+        {
+            highDimArray[idx++] = highDim(i, d);
+        }
+    }
+
+    int numPoints = highDim.rows();
+    int numDimensions = highDim.cols();
+
+    _quantizer = new faiss::IndexFlatL2(numDimensions);
+    _faissIvfIndex = new faiss::IndexIVFFlat(_quantizer, numDimensions, 100);
+    assert(!_faissIvfIndex->is_trained);
+    _faissIvfIndex->train(numPoints, highDimArray.data());
+    assert(_faissIvfIndex->is_trained);
+    printf("is_trained = %s\n", _faissIvfIndex->is_trained ? "true" : "false");
+    _faissIvfIndex->add(numPoints, highDimArray.data());                     // add vectors to the index
+    printf("ntotal = %ld\n", _faissIvfIndex->ntotal);
+}
+
+void ScatterplotPlugin::createFaissGpuGraph(const DataMatrix& highDim)
+{
+    Eigen::MatrixXf tarray = highDim.transpose();
+
+    qDebug() << "Rows:" << tarray.rows() << tarray.cols();
+
+    std::vector<float> highDimArray(highDim.rows() * highDim.cols());
+    //Eigen::Map<Eigen::MatrixXf>(highDimArray.data(), highDim.rows(), highDim.cols()) = highDim;
+
+    int idx = 0;
+    for (int i = 0; i < highDim.rows(); i++)
+    {
+        float len = 0;
+        for (int d = 0; d < highDim.cols(); d++)
+        {
+            len += highDim(i, d) * highDim(i, d);
+        }
+        len = sqrt(len);
+        for (int d = 0; d < highDim.cols(); d++)
+        {
+            highDimArray[idx++] = highDim(i, d);// / len;
+        }
+    }
+
+    _res = new faiss::gpu::StandardGpuResources();
+    _faissGpuIndex = new faiss::gpu::GpuIndexFlatL2(_res, highDim.cols());
+    //_faissIndex = new faiss::IndexFlat(highDim.cols(), faiss::METRIC_L1);
+    printf("is_trained = %s\n", _faissGpuIndex->is_trained ? "true" : "false");
+    _faissGpuIndex->add(highDim.rows(), highDimArray.data());                     // add vectors to the index
+    printf("ntotal = %ld\n", _faissGpuIndex->ntotal);
+}
+
+void ScatterplotPlugin::createAnnoyIndex(const DataMatrix& highDim)
+{
+    Eigen::MatrixXf tarray = highDim.transpose();
+
+    qDebug() << "Rows:" << tarray.rows() << tarray.cols();
+
+    std::vector<float> highDimArray(highDim.rows() * highDim.cols());
+
+    int idx = 0;
+    for (int i = 0; i < highDim.rows(); i++)
+    {
+        for (int d = 0; d < highDim.cols(); d++)
+        {
+            highDimArray[idx++] = highDim(i, d);
+        }
+    }
+
+    int f = highDim.cols();
+    _annoyIndex = new AnnoyIndex(f);
+
+    for (int i = 0; i < highDim.rows(); ++i) {
+        _annoyIndex->add_item(i, highDimArray.data() + (i * highDim.cols()));
+        if (i % 1000 == 0)
+            std::cout << "Loading objects ...\t object: " << i + 1 << "\tProgress:" << std::fixed << std::setprecision(2) << (double)i / (double)(highDim.rows() + 1) * 100 << "%\r";
+    }
+
+    std::cout << "Building index.." << std::endl;
+    _annoyIndex->build(20 * f);
 }
 
 void ScatterplotPlugin::loadColors(const Dataset<Points>& points, const std::uint32_t& dimensionIndex)

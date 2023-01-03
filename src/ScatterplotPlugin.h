@@ -12,6 +12,9 @@
 #include "Filters.h"
 
 #include <Eigen/Eigen>
+#include <faiss/IndexFlat.h>
+#include <faiss/IndexIVFFlat.h>
+
 #include "KnnGraph.h"
 #include "Filters.h"
 
@@ -81,7 +84,12 @@ protected: // Data loading
     /** Invoked when the position points dataset changes */
     void positionDatasetChanged();
 
+    void createBruteGraph(const DataMatrix& highDim);
     void createKnnGraph(const DataMatrix& highDim);
+    //void createAnnGraph(const DataMatrix& highDim);
+    void createFaissGraph(const DataMatrix& highDim);
+    void createFaissIVFGraph(const DataMatrix& highDim);
+    void createFaissGpuGraph(const DataMatrix& highDim);
     void createAnnoyIndex(const DataMatrix& highDim);
 
 public: // Point colors
@@ -137,9 +145,23 @@ private:
     unsigned int                    _numPoints;                 /** Number of point positions */
 
     DataMatrix                      _dataMatrix;
+    std::vector<std::vector<float>> _dataD;
+    std::vector<std::vector<float>> _colSortedData;
+    std::vector<std::vector<int>>   _colSortedIndices;
+    std::vector<std::vector<float>> _dimValues;
+    std::vector<std::vector<float>> _normalizedData;
+    std::vector<std::vector<int>>   _bins;
+
     DataMatrix                      _fullProjMatrix;
     DataMatrix                      _projMatrix;
-    knncpp::KDTreeMinkowskiX<float, knncpp::ManhattenDistance<float>>* _kdtree;
+    Brute*                          _brute;
+    KdTree*                         _kdtree;
+    //flann::Index<flann::L2<float>>* _index;
+    faiss::IndexFlat*               _faissIndex;
+    faiss::IndexFlat*               _quantizer;
+    faiss::IndexIVFFlat*            _faissIvfIndex;
+    faiss::gpu::StandardGpuResources* _res;
+    faiss::gpu::GpuIndexFlatL2*       _faissGpuIndex;
     AnnoyIndex*                     _annoyIndex;
     KnnGraph                        _knnGraph;
     KnnGraph                        _largeKnnGraph;
