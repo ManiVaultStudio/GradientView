@@ -75,12 +75,12 @@ namespace
 
     }
 
-    void computeDirection(DataMatrix& dataMatrix, DataMatrix& projMatrix, KnnGraph& knnGraph, std::vector<Vector2f>& directions)
+    void computeDirection(DataMatrix& dataMatrix, DataMatrix& projMatrix, KnnGraph& knnGraph, int numSteps, std::vector<Vector2f>& directions)
     {
         for (int p = 0; p < dataMatrix.rows(); p++)
         {
             std::vector<std::vector<int>> floodFill;
-            compute::doFloodFill(dataMatrix, projMatrix, knnGraph, p, floodFill);
+            compute::doFloodFill(dataMatrix, projMatrix, knnGraph, p, numSteps, floodFill);
 
             int depth = 3;
             int numNodes = 0;
@@ -138,6 +138,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _settingsAction(this),
     _gradientGraph(new GradientGraph()),
     _selectedDimension(-1),
+    _numFloodSteps(10),
     _filterType(filters::FilterType::SPATIAL_PEAK),
     _overlayType(OverlayType::NONE)
 {
@@ -357,6 +358,13 @@ void ScatterplotPlugin::init()
         auto overlayGroupAction = new GroupAction(&getWidget(), true);
         overlayGroupAction->setText("Flood Nodes Overlay");
         overlayGroupAction->setShowLabels(false);
+        IntegralAction* floodStepsAction = new IntegralAction(this, "Flood steps", 3, 20, 10, 10);
+        connect(floodStepsAction, &IntegralAction::valueChanged, this, [this](int32_t value)
+        {
+            _numFloodSteps = value;
+            onPointSelection();
+        });
+        *overlayGroupAction << *floodStepsAction;
 
         QVector<TriggersAction::Trigger> triggers;
         triggers << TriggersAction::Trigger("Flood Steps", "Color flood points by closeness to seed point in HD space");
@@ -409,7 +417,7 @@ void ScatterplotPlugin::init()
                         break;
                     case filters::FilterType::HD_PEAK:
                         std::vector<std::vector<int>> floodFill;
-                        compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, floodFill);
+                        compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, _numFloodSteps, floodFill);
                         _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, floodFill, perPointDimRankings[i]);
                         break;
                     }
@@ -424,7 +432,7 @@ void ScatterplotPlugin::init()
                 for (int p = 0; p < _dataMatrix.rows(); p++)
                 {
                     std::vector<std::vector<int>> floodFill;
-                    compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, p, floodFill);
+                    compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, p, _numFloodSteps, floodFill);
 
                     int numFloodNodes = 0;
                     for (int i = 0; i < floodFill.size(); i++)
@@ -587,7 +595,7 @@ void ScatterplotPlugin::onPointSelection()
         std::vector<std::vector<int>> floodFill;
 
         {
-            compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, _selectedPoint, floodFill);
+            compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, _selectedPoint, _numFloodSteps, floodFill);
 
             getScatterplotWidget().setColorMap(_settingsAction.getColoringAction().getColorMapAction().getColorMapImage());
             _scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
@@ -689,7 +697,7 @@ void ScatterplotPlugin::onPointSelection()
                 for (int j = 0; j < floodFill[i].size(); j++)
                 {
                     int index = floodFill[i][j];
-                    ccolors[index] = 1 - 0.1 * i;
+                    ccolors[index] = 1 - (1.0f/_numFloodSteps) * i;
                 }
             }
 

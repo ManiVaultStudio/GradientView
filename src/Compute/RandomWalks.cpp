@@ -119,11 +119,9 @@ namespace hdps
             }
         }
 
-        void doFloodFill(const DataMatrix& highDim, const DataMatrix& spatialMap, const KnnGraph& knnGraph, int selectedPoint, std::vector<std::vector<int>>& floodFill)
+        void doFloodFill(const DataMatrix& highDim, const DataMatrix& spatialMap, const KnnGraph& knnGraph, int selectedPoint, int numSteps, std::vector<std::vector<int>>& floodFill)
         {
             int numDimensions = highDim.cols();
-
-            int numSteps = 10;
 
             floodFill.resize(numSteps);
 
@@ -136,6 +134,7 @@ namespace hdps
             // Start flooding in N steps
             for (int s = 0; s < numSteps; s++)
             {
+                floodFill.reserve(currentNodes.size());
                 // Copy current nodes to floodfill storage
                 for (int i = 0; i < currentNodes.size(); i++)
                 {
@@ -151,6 +150,7 @@ namespace hdps
 
                 // Add neighbours of current nodes to new nodes
                 std::vector<int> newNodes;
+                newNodes.reserve(currentNodes.size() * knnGraph.numNeighbours);
                 for (const int& node : currentNodes)
                 {
                     if (node == -1) continue;

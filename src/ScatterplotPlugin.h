@@ -146,6 +146,8 @@ private:
     std::vector<QString>            _enabledDimNames;
     std::vector<float>              _variances;
 
+    int _numFloodSteps;
+
 protected:
     ScatterplotWidget*              _scatterPlotWidget;
     std::vector<ProjectionView*>    _projectionViews;

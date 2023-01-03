@@ -19,7 +19,7 @@ namespace hdps
 
         void doRandomWalksKNN(const DataMatrix& highDim, const DataMatrix& spatialMap, const KnnGraph& knnGraph, int selectedPoint, std::vector<std::vector<int>>& randomWalks);
 
-        void doFloodFill(const DataMatrix& highDim, const DataMatrix& spatialMap, const KnnGraph& knnGraph, int selectedPoint, std::vector<std::vector<int>>& floodFill);
+        void doFloodFill(const DataMatrix& highDim, const DataMatrix& spatialMap, const KnnGraph& knnGraph, int selectedPoint, int numSteps, std::vector<std::vector<int>>& floodFill);
 
         void traceLineage(const DataMatrix& data, const std::vector<std::vector<int>>& floodFill, std::vector<Vector2f>& positions, int seedIndex, std::vector<int>& lineage);
     }
