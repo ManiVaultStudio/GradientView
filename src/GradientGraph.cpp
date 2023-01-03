@@ -123,6 +123,37 @@ void GradientGraph::setValues(const std::vector<std::vector<float>>& values)
         _seriesArray[d]->replace(pointLists[d]);
 
     updateChartColors();
+void GradientGraph::setBins(const std::vector<std::vector<int>>& bins)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+
+    // Store values in a QList<QPointF>
+    std::vector<QList<QPointF>> pointLists(bins.size());
+
+    int binTotal = 0;
+    for (int d = 0; d < bins.size(); d++)
+    {
+        binTotal = 0;
+        pointLists[d].append(QPointF(0, 0));
+        for (int i = 0; i < bins[d].size(); i++)
+        {
+            binTotal += bins[d][i];
+            pointLists[d].append(QPointF(binTotal, i / 30.0f));
+        }
+    }
+
+    // Update axes to proper values
+    _xAxis->setRange(0, binTotal);
+    _yAxis->setRange(0, 1);
+
+    for (int d = 0; d < bins.size(); d++)
+        _seriesArray[d]->replace(pointLists[d]);
+
+    updateChartColors();
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
+    std::cout << "Graphgraph: " << elapsed.count() * 1000 << " ms | ";
 }
 
 void GradientGraph::setTopDimensions(int dimension1, int dimension2)

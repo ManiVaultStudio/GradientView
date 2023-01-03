@@ -644,21 +644,23 @@ void ScatterplotPlugin::onPointSelection()
         // Store dimension values for every flood node
         std::vector<std::vector<float>> dimValues(_dataMatrix.cols(), std::vector<float>(floodNodes.size()));
         for (int i = 0; i < floodNodes.size(); i++)
+        // Binning
+#pragma omp parallel for
+        for (int d = 0; d < _bins.size(); d++)
         {
-            int floodNode = floodNodes[i];
-            auto floodValues = _dataMatrix.row(floodNode);
-            for (int d = 0; d < floodValues.size(); d++)
+            for (int i = 0; i < _bins[d].size(); i++)
             {
-                dimValues[d][i] = floodValues(d);
+                _bins[d][i] = 0;
+            }
+            for (int i = 0; i < floodNodes.size(); i++)
+            {
+                const float& f = std::min(0.99999f, _normalizedData[d][floodNodes[i]]);
+                _bins[d][(int) (f * 30)] += 1;
             }
         }
 
-        for (int d = 0; d < dimValues.size(); d++)
-        {
-            sort(dimValues[d].begin(), dimValues[d].end());
-        }
+        _gradientGraph->setBins(_bins);
 
-        _gradientGraph->setValues(dimValues);
 
         //////////////////
         std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());

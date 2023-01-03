@@ -39,6 +39,7 @@ public:
 
     void setNumDimensions(int numDimensions);
     void setValues(const std::vector<std::vector<float>>& values);
+    void setBins(const std::vector<std::vector<int>>& bins);
     void setTopDimensions(int dimension1, int dimension2);
 
     void updateChartColors();
