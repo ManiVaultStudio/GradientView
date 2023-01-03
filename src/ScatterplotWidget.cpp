@@ -46,7 +46,7 @@ ScatterplotWidget::ScatterplotWidget() :
     setMouseTracking(true);
     setFocusPolicy(Qt::ClickFocus);
 
-    _pointRenderer.setPointScaling(Absolute);
+    _pointRenderer.setPointScaling(Relative);
 
     //// Configure pixel selection tool
     //_pixelSelectionTool.setEnabled(true);

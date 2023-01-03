@@ -33,8 +33,9 @@ ProjectionView::ProjectionView() :
     //setAcceptDrops(true);
     //setMouseTracking(true);
     //setFocusPolicy(Qt::ClickFocus);
+    //setMinimumHeight(200);
 
-    _pointRenderer.setPointScaling(Absolute);
+    _pointRenderer.setPointScaling(Relative);
     _pointRenderer.setPointSize(5);
 
     QSurfaceFormat surfaceFormat;
