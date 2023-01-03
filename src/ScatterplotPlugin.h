@@ -82,6 +82,7 @@ protected: // Data loading
     void positionDatasetChanged();
 
     void createKnnGraph(const DataMatrix& highDim);
+    void createAnnoyIndex(const DataMatrix& highDim);
 
 public: // Point colors
 
@@ -139,6 +140,7 @@ private:
     DataMatrix                      _fullProjMatrix;
     DataMatrix                      _projMatrix;
     knncpp::KDTreeMinkowskiX<float, knncpp::ManhattenDistance<float>>* _kdtree;
+    AnnoyIndex*                     _annoyIndex;
     KnnGraph                        _knnGraph;
     KnnGraph                        _largeKnnGraph;
     std::vector<QString>            _enabledDimNames;
