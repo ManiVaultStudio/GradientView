@@ -85,7 +85,7 @@ namespace hdps
         {
             int numDimensions = highDim.cols();
 
-            int k = knnGraph.numNeighbours;
+            int k = knnGraph.getNumNeighbours();
             int numWalks = 100;
             int numSteps = 10;
 
@@ -110,7 +110,7 @@ namespace hdps
                         float u = distribution(generator) * 0.999f;
                         int knnIndex = (int)(u * k);
 
-                        newNode = knnGraph.neighbours[currentNode][knnIndex];
+                        newNode = knnGraph.getNeighbours()[currentNode][knnIndex];
                     } while (newNode == prevNode);
 
                     prevNode = currentNode;
@@ -150,11 +150,11 @@ namespace hdps
 
                 // Add neighbours of current nodes to new nodes
                 std::vector<int> newNodes;
-                newNodes.reserve(currentNodes.size() * knnGraph.numNeighbours);
+                newNodes.reserve(currentNodes.size() * knnGraph.getNumNeighbours());
                 for (const int& node : currentNodes)
                 {
                     if (node == -1) continue;
-                    newNodes.insert(newNodes.end(), knnGraph.neighbours[node].begin(), knnGraph.neighbours[node].end());
+                    newNodes.insert(newNodes.end(), knnGraph.getNeighbours()[node].begin(), knnGraph.getNeighbours()[node].end());
                 }
 
                 // New nodes become the current indices
