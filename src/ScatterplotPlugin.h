@@ -141,47 +141,62 @@ private slots:
     void onLineClicked(int dim);
 
 private:
+    // Data
     Dataset<Points>                 _positionDataset;           /** Smart pointer to points dataset for point position */
     Dataset<Points>                 _positionSourceDataset;     /** Smart pointer to source of the points dataset for point position (if any) */
     std::vector<hdps::Vector2f>     _positions;                 /** Point positions */
     unsigned int                    _numPoints;                 /** Number of point positions */
-
-    DataMatrix                      _dataMatrix;
-    std::vector<std::vector<float>> _dimValues;
     std::vector<std::vector<float>> _normalizedData;
-    std::vector<std::vector<int>>   _bins;
-
-    knn::Index                      _knnIndex;
-
-    DataMatrix                      _fullProjMatrix;
-    DataMatrix                      _projMatrix;
-    KnnGraph                        _knnGraph;
-    KnnGraph                        _largeKnnGraph;
-    KnnGraph                        _sourceKnnGraph;
+    DataMatrix                      _dataMatrix;
+    DataMatrix                      _eigenDataMatrix;
     std::vector<QString>            _enabledDimNames;
     std::vector<float>              _variances;
 
+    // Projection
+    DataMatrix                      _fullProjMatrix;
+    DataMatrix                      _projMatrix;
+    float                           _projectionSize;
+
+    // Interaction
+    int                             _selectedPoint;
+    int                             _selectedDimension;
+    QPoint                          _mousePos;
+    bool                            _mousePressed = false;
+
+    // Filters
+    filters::FilterType             _filterType;
+    filters::SpatialPeakFilter      _spatialPeakFilter;
+    filters::HDFloodPeakFilter      _hdFloodPeakFilter;
+
+    // KNN
+    knn::Index                      _knnIndex;
+    KnnGraph                        _knnGraph;
+    KnnGraph                        _largeKnnGraph;
+    KnnGraph                        _sourceKnnGraph;
+    bool                            _useSharedDistances = false;
+
+    // Floodfill
     int _numFloodSteps;
+
+    // Graph
+    GradientGraph*                  _gradientGraph;
+    std::vector<std::vector<int>>   _bins;
+
+    // Local dimensionality
+    std::vector<float>              _localSpatialDimensionality;
+    std::vector<float>              _localHighDimensionality;
+
+    // Directions
+    std::vector<Vector2f>           _directions;
+
+    // Overlays
+    OverlayType                     _overlayType;
 
 protected:
     ScatterplotWidget*              _scatterPlotWidget;
     std::vector<ProjectionView*>    _projectionViews;
     ProjectionView*                 _selectedView;
     std::vector<Vector3f> colors;
-    std::vector<float>              _localSpatialDimensionality;
-    std::vector<float>              _localHighDimensionality;
-    std::vector<Vector2f>           _directions;
-    GradientGraph*                  _gradientGraph;
-    int                             _selectedPoint;
-    int                             _selectedDimension;
-    float                           _projectionSize;
-    filters::FilterType             _filterType;
-    filters::SpatialPeakFilter      _spatialPeakFilter;
-    filters::HDFloodPeakFilter      _hdFloodPeakFilter;
-    bool                            _useSharedDistances = false;
-    OverlayType                     _overlayType;
-    QPoint                          _mousePos;
-    bool                            _mousePressed = false;
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;
