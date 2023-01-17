@@ -19,6 +19,7 @@
 #include <Eigen/Dense>
 #include "LocalDimensionality.h"
 #include "RandomWalks.h"
+#include "DataTransformations.h"
 #include "Timer.h"
 
 #include <QtCore>
@@ -793,57 +794,11 @@ void ScatterplotPlugin::computeStaticData()
     timer.mark("Data preparation");
 
     // Standardize
-    // Compute means
-    std::vector<float> means(_dataMatrix.cols());
-    for (int d = 0; d < _dataMatrix.cols(); d++)
-    {
-        means[d] = 0;
-        for (int i = 0; i < _dataMatrix.rows(); i++)
-        {
-            means[d] += _dataMatrix(i, d);
-        }
-        means[d] /= _dataMatrix.rows();
-        std::cout << "Mean " << d << " " << means[d] << std::endl;
-    }
-
-    // Compute variances
-    _variances.resize(_dataMatrix.cols());
-    for (int d = 0; d < _dataMatrix.cols(); d++)
-    {
-        _variances[d] = 0;
-        for (int i = 0; i < _dataMatrix.rows(); i++)
-        {
-            _variances[d] += (_dataMatrix(i, d) - means[d]) * (_dataMatrix(i, d) - means[d]);
-        }
-        _variances[d] /= _dataMatrix.rows();
-        std::cout << "Variance " << d << " " << _variances[d] << std::endl;
-    }
-    for (int d = 0; d < _dataMatrix.cols(); d++)
-    {
-        if (_variances[d] <= 0) continue;
-        for (int i = 0; i < _dataMatrix.rows(); i++)
-        {
-            _dataMatrix(i, d) -= means[d];
-            _dataMatrix(i, d) /= sqrt(_variances[d]);
-        }
-    }
+    standardizeData(_dataMatrix, _variances);
 
     // Compute normalized data
-    _dataD.resize(_dataMatrix.cols(), std::vector<float>(_dataMatrix.rows()));
-    _normalizedData.resize(_dataMatrix.cols(), std::vector<float>(_dataMatrix.rows()));
-    for (int d = 0; d < _dataMatrix.cols(); d++)
-    {
-        for (int i = 0; i < _dataMatrix.rows(); i++)
-            _dataD[d][i] = _dataMatrix(i, d);
+    normalizeData(_dataMatrix, _normalizedData);
 
-        float minVal = *std::min_element(_dataD[d].begin(), _dataD[d].end());
-        float maxVal = *std::max_element(_dataD[d].begin(), _dataD[d].end());
-        float range = maxVal - minVal;
-        if (range == 0) range = 1;
-
-        for (int i = 0; i < _dataMatrix.rows(); i++)
-            _normalizedData[d][i] = std::min(0.99999f, (_dataD[d][i] - minVal) / range);
-    }
     _bins.resize(_dataMatrix.cols(), std::vector<int>(30));
 
     Bounds bounds = _scatterPlotWidget->getBounds();

@@ -93,6 +93,8 @@ set(Compute
     src/Compute/KnnGraph.cpp
     src/Compute/Filters.h
     src/Compute/Filters.cpp
+    src/Compute/DataTransformations.h
+    src/Compute/DataTransformations.cpp
 )
 
 set(SHADERS

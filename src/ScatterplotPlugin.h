@@ -147,7 +147,6 @@ private:
     unsigned int                    _numPoints;                 /** Number of point positions */
 
     DataMatrix                      _dataMatrix;
-    std::vector<std::vector<float>> _dataD;
     std::vector<std::vector<float>> _dimValues;
     std::vector<std::vector<float>> _normalizedData;
     std::vector<std::vector<int>>   _bins;
