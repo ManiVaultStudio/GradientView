@@ -814,7 +814,10 @@ void ScatterplotPlugin::computeStaticData()
 
     timer.mark("Data transformations");
 
-    _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
+    if (_dataMatrix.rows() < 5000)
+        _knnIndex.create(_dataMatrix.cols(), knn::Metric::MANHATTAN);
+    else
+        _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
     _knnIndex.addData(_dataMatrix);
 
     _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);

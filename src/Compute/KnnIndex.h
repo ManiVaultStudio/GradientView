@@ -47,7 +47,7 @@ namespace knn
         //faiss::IndexIVFFlat*                _faissIvfIndex  = nullptr;
         AnnoyIndex*                         _annoyIndex     = nullptr;
         faiss::gpu::StandardGpuResources*   _res            = nullptr;
-        faiss::gpu::GpuIndexFlatL2*         _faissGpuIndex  = nullptr;
+        faiss::gpu::GpuIndexFlat*           _faissGpuIndex  = nullptr;
 
         bool _hasCudaCapableGpu = false;
     };

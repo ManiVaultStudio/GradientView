@@ -71,12 +71,17 @@
 //    printf("ntotal = %ld\n", index->ntotal);
 //}
 
-void createFaissGpuGraph(faiss::gpu::StandardGpuResources*& res, faiss::gpu::GpuIndexFlatL2*& index, int numDimensions)
+void createFaissGpuGraph(faiss::gpu::StandardGpuResources*& res, faiss::gpu::GpuIndexFlat*& index, int numDimensions, knn::Metric metric)
 {
     res = new faiss::gpu::StandardGpuResources();
-    index = new faiss::gpu::GpuIndexFlatL2(res, numDimensions);
-    //printf("is_trained = %s\n", index->is_trained ? "true" : "false");
-    //printf("ntotal = %ld\n", index->ntotal);
+
+    switch (metric)
+    {
+    case knn::Metric::MANHATTAN:
+        index = new faiss::gpu::GpuIndexFlat(res, numDimensions, faiss::METRIC_L1); break;
+    case knn::Metric::EUCLIDEAN:
+        index = new faiss::gpu::GpuIndexFlat(res, numDimensions, faiss::METRIC_L2); break;
+    }
 }
 
 void createAnnoyIndex(AnnoyIndex*& index, int numDimensions)
@@ -100,7 +105,7 @@ namespace knn
     {
         if (_hasCudaCapableGpu)
         {
-            createFaissGpuGraph(_res, _faissGpuIndex, numDimensions);
+            createFaissGpuGraph(_res, _faissGpuIndex, numDimensions, metric);
         }
         else
         {
