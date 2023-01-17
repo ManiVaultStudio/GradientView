@@ -157,6 +157,7 @@ private:
     DataMatrix                      _projMatrix;
     KnnGraph                        _knnGraph;
     KnnGraph                        _largeKnnGraph;
+    KnnGraph                        _sourceKnnGraph;
     std::vector<QString>            _enabledDimNames;
     std::vector<float>              _variances;
 
@@ -177,6 +178,7 @@ protected:
     filters::FilterType             _filterType;
     filters::SpatialPeakFilter      _spatialPeakFilter;
     filters::HDFloodPeakFilter      _hdFloodPeakFilter;
+    bool                            _useSharedDistances = false;
     OverlayType                     _overlayType;
     QPoint                          _mousePos;
     bool                            _mousePressed = false;

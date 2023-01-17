@@ -1,5 +1,7 @@
 #include "KnnGraph.h"
 
+#include "SecondaryDistanceMeasures.h"
+
 #include <iostream>
 
 void printIndices(std::string name, idx_t* indices, int k)
@@ -294,4 +296,13 @@ void KnnGraph::build(const DataMatrix& data, const knn::Index& index, int numNei
             _neighbours[i][j] = indices[i * k + j + 1];
         }
     }
+}
+
+void KnnGraph::build(const KnnGraph& graph, int numNeighbours, bool shared)
+{
+    _numNeighbours = numNeighbours;
+    _neighbours.clear();
+    _neighbours.resize(graph.getNeighbours().size(), std::vector<int>(_numNeighbours));
+
+    computeSharedNeighboursBitset(graph.getNeighbours(), _neighbours, numNeighbours);
 }

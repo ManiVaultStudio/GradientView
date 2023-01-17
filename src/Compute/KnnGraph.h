@@ -23,6 +23,7 @@ public:
 
     void build(const KnnGraph& graph, int numNeighbours);
     void build(const DataMatrix& data, const knn::Index& index, int numNeighbours);
+    void build(const KnnGraph& graph, int numNeighbours, bool shared);
 
 private:
     std::vector<std::vector<int>> _neighbours;

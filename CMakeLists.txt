@@ -95,6 +95,8 @@ set(Compute
     src/Compute/Filters.cpp
     src/Compute/DataTransformations.h
     src/Compute/DataTransformations.cpp
+    src/Compute/SecondaryDistanceMeasures.h
+    src/Compute/SecondaryDistanceMeasures.cpp
 )
 
 set(SHADERS

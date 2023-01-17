@@ -376,6 +376,13 @@ void ScatterplotPlugin::init()
         });
         *overlayGroupAction << *floodStepsAction;
 
+        ToggleAction* sharedDistAction = new ToggleAction(this, "Shared distances", false, false);
+        connect(sharedDistAction, &ToggleAction::toggled, this, [this](bool enabled)
+        {
+            _useSharedDistances = enabled;
+        });
+        *overlayGroupAction << *sharedDistAction;
+
         QVector<TriggersAction::Trigger> triggers;
         triggers << TriggersAction::Trigger("Flood Steps", "Color flood points by closeness to seed point in HD space");
         triggers << TriggersAction::Trigger("Top Dimension Values", "Color flood points by values of top ranked dimension");
@@ -811,7 +818,14 @@ void ScatterplotPlugin::computeStaticData()
     _knnIndex.addData(_dataMatrix);
 
     _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
-    _knnGraph.build(_largeKnnGraph, 10);
+    //_knnGraph.build(_dataMatrix, _knnIndex, 10);
+    if (_dataMatrix.rows() < 5000 && _useSharedDistances)
+    {
+        _sourceKnnGraph.build(_dataMatrix, _knnIndex, 100);
+        _knnGraph.build(_sourceKnnGraph, 10, true);
+    }
+    else
+        _knnGraph.build(_largeKnnGraph, 10);
 
     timer.mark("Computing KNN graph");
 
