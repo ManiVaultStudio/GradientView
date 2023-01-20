@@ -119,6 +119,8 @@ namespace knn
         int numDimensions = data.cols();
 
         std::vector<float> highDimArray(numPoints * numDimensions);
+        bool angular = numDimensions > 200;
+        std::cout << "ANGULAR: " << angular;
 
         int idx = 0;
         for (int i = 0; i < numPoints; i++)
@@ -131,7 +133,10 @@ namespace knn
             len = sqrt(len);
             for (int d = 0; d < numDimensions; d++)
             {
-                highDimArray[idx++] = data(i, d);// / len;
+                if (angular)
+                    highDimArray[idx++] = data(i, d) / len;
+                else
+                    highDimArray[idx++] = data(i, d);
             }
         }
 
