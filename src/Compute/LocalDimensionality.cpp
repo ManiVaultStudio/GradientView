@@ -105,7 +105,7 @@ namespace hdps
 
             for (int i = 0; i < numPoints; i++)
             {
-                auto neighbours = dataMatrix(knnGraph.neighbours[i], Eigen::all);
+                auto neighbours = dataMatrix(knnGraph.getNeighbours()[i], Eigen::all);
 
                 // Mean centering data.
                 Eigen::MatrixXf centered = neighbours.rowwise() - neighbours.colwise().mean();
