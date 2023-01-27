@@ -309,42 +309,27 @@ void ScatterplotPlugin::init()
     gradientViewLayout->addLayout(dimensionViewsLayout, 50);
 
     // Filter layout
-    QHBoxLayout* filterLayout = new QHBoxLayout();
+    QVBoxLayout* filterLayout = new QVBoxLayout();
     QPushButton* spatialPeakFilter = new QPushButton("Spatial Peak Filter");
     QPushButton* hdPeakFilter = new QPushButton("HD Peak Filter");
 
-    connect(spatialPeakFilter, &QPushButton::pressed, this, [this, filterLabel]() {
-        setFilterType(filters::FilterType::SPATIAL_PEAK);
-        filterLabel->setText("Spatial Peak Ranking");
-    });
-    connect(hdPeakFilter, &QPushButton::pressed, this, [this, filterLabel]() {
-        setFilterType(filters::FilterType::HD_PEAK);
-        filterLabel->setText("HD Peak Ranking");
-    });
+    //connect(spatialPeakFilter, &QPushButton::pressed, this, [this, filterLabel]() {
+    //    setFilterType(filters::FilterType::SPATIAL_PEAK);
+    //    filterLabel->setText("Spatial Peak Ranking");
+    //    getScatterplotWidget().showFiltersCircles(true);
+    //    getScatterplotWidget().update();
+    //});
+    //connect(hdPeakFilter, &QPushButton::pressed, this, [this, filterLabel]() {
+    //    setFilterType(filters::FilterType::HD_PEAK);
+    //    filterLabel->setText("HD Peak Ranking");
+    //    getScatterplotWidget().showFiltersCircles(false);
+    //    getScatterplotWidget().update();
+    //});
 
     //gradientViewLayout->addWidget(filtersLabel);
-    filterLayout->addWidget(spatialPeakFilter);
-    filterLayout->addWidget(hdPeakFilter);
-    gradientViewLayout->addLayout(filterLayout);
-
-    // Filter parameters
-    auto filterGroupAction = new GroupAction(&getWidget());
-
-    auto innerFilterRadius = new ScalarAction(this, "Spatial Inner Filter Radius", 1, 10, 2.5f, 2.5f);
-    auto outerFilterRadius = new ScalarAction(this, "Spatial Outer Filter Radius", 2, 20, 5, 5);
-    connect(innerFilterRadius, &ScalarAction::magnitudeChanged, [this](float mag) { _spatialPeakFilter.setInnerFilterRadius(mag * 0.01f); });
-    connect(outerFilterRadius, &ScalarAction::magnitudeChanged, [this](float mag) { _spatialPeakFilter.setOuterFilterRadius(mag * 0.01f); });
-    *filterGroupAction << *innerFilterRadius;
-    *filterGroupAction << *outerFilterRadius;
-
-    auto innerFilterSize = new IntegralAction(this, "HD Inner Filter Size", 1, 10, 5, 5);
-    auto outerFilterSize = new IntegralAction(this, "HD Outer Filter Size", 2, 10, 10, 10);
-    connect(innerFilterSize, &IntegralAction::valueChanged, [this](int value) { _hdFloodPeakFilter.setInnerFilterSize(value); });
-    connect(outerFilterSize, &IntegralAction::valueChanged, [this](int value) { _hdFloodPeakFilter.setOuterFilterSize(value); });
-    *filterGroupAction << *innerFilterSize;
-    *filterGroupAction << *outerFilterSize;
-
-    gradientViewLayout->addWidget(filterGroupAction->createWidget(&this->getWidget()), Qt::AlignLeft);
+    //filterLayout->addWidget(spatialPeakFilter);
+    //filterLayout->addWidget(hdPeakFilter);
+    //settingsLayout->addLayout(filterLayout);
 
     // Dimension selection
     QLabel* dimensionSelectionLabel = new QLabel("Dimension Selection");

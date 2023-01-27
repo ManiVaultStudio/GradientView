@@ -69,6 +69,8 @@ set(Actions
     src/Actions/SubsetAction.cpp
     src/Actions/ExportImageAction.h
     src/Actions/ExportImageAction.cpp
+    src/Actions/FilterAction.h
+    src/Actions/FilterAction.cpp
 )
 
 set(Models

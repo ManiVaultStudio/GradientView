@@ -127,6 +127,9 @@ public:
     ScatterplotWidget& getScatterplotWidget();
     std::vector<ProjectionView*>& getProjectionViews() { return _projectionViews; }
 
+    filters::SpatialPeakFilter& getSpatialPeakFilter() { return _spatialPeakFilter; }
+    filters::HDFloodPeakFilter& getHDPeakFilter() { return _hdFloodPeakFilter; }
+    float getProjectionSize() { return _projectionSize; }
     SettingsAction& getSettingsAction() { return _settingsAction; }
 
 private:
@@ -155,7 +158,7 @@ private:
     // Projection
     DataMatrix                      _fullProjMatrix;
     DataMatrix                      _projMatrix;
-    float                           _projectionSize;
+    float                           _projectionSize = 0;
 
     // Interaction
     int                             _selectedPoint;

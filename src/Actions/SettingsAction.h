@@ -7,6 +7,7 @@
 #include "PositionAction.h"
 #include "SubsetAction.h"
 #include "MiscellaneousAction.h"
+#include "FilterAction.h"
 
 #include "actions/WidgetActionStateWidget.h"
 
@@ -78,6 +79,7 @@ public:
     PlotAction& getPlotAction() { return _plotAction; }
     TriggerAction& getExportAction() { return _exportAction; }
     MiscellaneousAction& getMiscellaneousAction() { return _miscellaneousAction; }
+    FilterAction& getFilterAction() { return _filterAction; }
 
 protected:
     RenderModeAction            _renderModeAction;
@@ -86,4 +88,5 @@ protected:
     PlotAction                  _plotAction;
     TriggerAction               _exportAction;
     MiscellaneousAction         _miscellaneousAction;
+    FilterAction                _filterAction;
 };
