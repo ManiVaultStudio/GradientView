@@ -623,6 +623,9 @@ timer.start();
         Vector2f center = _positions[_selectedPoint];
 
         getScatterplotWidget().setCurrentPosition(center);
+        getProjectionViews()[0]->setCurrentPosition(center);
+        getProjectionViews()[1]->setCurrentPosition(center);
+        _selectedView->setCurrentPosition(center);
         getScatterplotWidget().setFilterRadii(Vector2f(_spatialPeakFilter.getInnerFilterRadius() * _projectionSize, _spatialPeakFilter.getOuterFilterRadius() * _projectionSize));
 
         //////////////////

@@ -533,6 +533,11 @@ void ScatterplotWidget::paintGL()
             painter.drawEllipse(QPointF(cp.x, cp.y), outer_r, outer_r);
         }
 
+        // Render selection dot
+        painter.setBrush(Qt::red);
+        painter.drawEllipse(QPointF(cp.x, cp.y), 5, 5);
+        painter.setBrush(Qt::BrushStyle::NoBrush);
+
         if (_showRandomWalk)
         {
             painter.setPen(QPen(QColor(0, 0, 0, 255)));

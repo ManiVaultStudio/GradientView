@@ -191,6 +191,20 @@ void ProjectionView::resizeGL(int w, int h)
     //toIsotropicCoordinates = Matrix3f(wAspect, 0, 0, hAspect, -wDiff, -hDiff);
 }
 
+namespace {
+    Matrix3f createProjectionMatrix(Bounds bounds)
+    {
+        Matrix3f m;
+        m.setIdentity();
+        m[0] = 2 / bounds.getWidth();
+        m[4] = 2 / bounds.getHeight();
+        m[6] = -((bounds.getRight() + bounds.getLeft()) / bounds.getWidth());
+        m[7] = -((bounds.getTop() + bounds.getBottom()) / bounds.getHeight());
+        return m;
+    }
+}
+
+
 void ProjectionView::paintGL()
 {
     try {
@@ -222,6 +236,28 @@ void ProjectionView::paintGL()
         painter.drawText(30, 30, _projectionName);
 
         painter.endNativePainting();
+
+        Matrix3f orthoM = createProjectionMatrix(_dataBounds);
+
+        int size = std::min(width(), height());
+        Matrix3f toScreen;
+        toScreen.setIdentity();
+        toScreen[0] = size / 2;
+        toScreen[4] = size / 2;
+        toScreen[6] = width() / 2;
+        toScreen[7] = height() / 2;
+
+        Matrix3f invM;
+        invM.setIdentity();
+        invM[0] = 1;
+        invM[4] = -1;
+
+        Vector2f cp = toScreen * invM * orthoM * _currentPoint;
+
+        // Render selection dot
+        painter.setBrush(Qt::red);
+        painter.drawEllipse(QPointF(cp.x, cp.y), 5, 5);
+        painter.setBrush(Qt::BrushStyle::NoBrush);
 
         painter.end();
     }
