@@ -43,12 +43,8 @@ set(UI
 )
 
 set(Actions
-    src/Actions/ColoringAction.h
-    src/Actions/ColoringAction.cpp
     src/Actions/DensityPlotAction.h
     src/Actions/DensityPlotAction.cpp
-    src/Actions/ManualClusteringAction.h
-    src/Actions/ManualClusteringAction.cpp
     src/Actions/MiscellaneousAction.h
     src/Actions/MiscellaneousAction.cpp
     src/Actions/PlotAction.h

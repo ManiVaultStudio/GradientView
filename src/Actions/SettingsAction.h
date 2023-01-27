@@ -5,9 +5,7 @@
 #include "RenderModeAction.h"
 #include "PlotAction.h"
 #include "PositionAction.h"
-#include "ColoringAction.h"
 #include "SubsetAction.h"
-#include "ManualClusteringAction.h"
 #include "MiscellaneousAction.h"
 
 #include "actions/WidgetActionStateWidget.h"
@@ -76,7 +74,6 @@ public:
 
     RenderModeAction& getRenderModeAction() { return _renderModeAction; }
     PositionAction& getPositionAction() { return _positionAction; }
-    ColoringAction& getColoringAction() { return _coloringAction; }
     SubsetAction& getSubsetAction() { return _subsetAction; }
     PlotAction& getPlotAction() { return _plotAction; }
     TriggerAction& getExportAction() { return _exportAction; }
@@ -85,9 +82,7 @@ public:
 protected:
     RenderModeAction            _renderModeAction;
     PositionAction              _positionAction;
-    ColoringAction              _coloringAction;
     SubsetAction                _subsetAction;
-    ManualClusteringAction      _manualClusteringAction;
     PlotAction                  _plotAction;
     TriggerAction               _exportAction;
     MiscellaneousAction         _miscellaneousAction;

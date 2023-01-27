@@ -139,91 +139,91 @@ void ExportImageAction::initializeTargetSize()
 
 void ExportImageAction::exportImages()
 {
-    // Get reference to the coloring action
-    auto& coloringAction = _scatterplotPlugin.getSettingsAction().getColoringAction();
+    //// Get reference to the coloring action
+    //auto& coloringAction = _scatterplotPlugin.getSettingsAction().getColoringAction();
 
-    // Cache the coloring type and dimension index
-    const auto colorByIndex     = coloringAction.getColorByAction().getCurrentIndex();
-    const auto dimensionIndex   = coloringAction.getDimensionAction().getCurrentDimensionIndex();
+    //// Cache the coloring type and dimension index
+    //const auto colorByIndex     = coloringAction.getColorByAction().getCurrentIndex();
+    //const auto dimensionIndex   = coloringAction.getDimensionAction().getCurrentDimensionIndex();
 
-    // Set the coloring type to dimension
-    coloringAction.getColorByAction().setCurrentIndex(1);
+    //// Set the coloring type to dimension
+    //coloringAction.getColorByAction().setCurrentIndex(1);
 
-    auto numberOfExportedImages = 0;
+    //auto numberOfExportedImages = 0;
 
-    // Update status message
-    _statusAction.setMessage("Exporting...");
+    //// Update status message
+    //_statusAction.setMessage("Exporting...");
 
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    {
-        // Temporarily disable the export trigger
-        _exportCancelAction.setTriggerEnabled(0, false);
+    //QApplication::setOverrideCursor(Qt::WaitCursor);
+    //{
+    //    // Temporarily disable the export trigger
+    //    _exportCancelAction.setTriggerEnabled(0, false);
 
-        // Get enabled dimensions from dimension picker action
-        const auto enabledDimensions = _dimensionSelectionAction.getEnabledDimensions();
+    //    // Get enabled dimensions from dimension picker action
+    //    const auto enabledDimensions = _dimensionSelectionAction.getEnabledDimensions();
 
-        // Get screenshot dimensions and background color
-        const auto width            = _targetWidthAction.getValue();
-        const auto height           = _targetHeightAction.getValue();
-        const auto backgroundColor  = _backgroundColorAction.getColor();
-        const auto dimensionNames   = _scatterplotPlugin.getPositionDataset()->getDimensionNames();
+    //    // Get screenshot dimensions and background color
+    //    const auto width            = _targetWidthAction.getValue();
+    //    const auto height           = _targetHeightAction.getValue();
+    //    const auto backgroundColor  = _backgroundColorAction.getColor();
+    //    const auto dimensionNames   = _scatterplotPlugin.getPositionDataset()->getDimensionNames();
 
-        _statusAction.setStatus(StatusAction::Info);
+    //    _statusAction.setStatus(StatusAction::Info);
 
-        for (std::int32_t dimensionIndex = 0; dimensionIndex < enabledDimensions.size(); dimensionIndex++) {
+    //    for (std::int32_t dimensionIndex = 0; dimensionIndex < enabledDimensions.size(); dimensionIndex++) {
 
-            // Continue if the dimension is not enabled (not flagged for export)
-            if (!enabledDimensions[dimensionIndex])
-                continue;
+    //        // Continue if the dimension is not enabled (not flagged for export)
+    //        if (!enabledDimensions[dimensionIndex])
+    //            continue;
 
-            // Establish file name
-            const auto fileName = _fileNamePrefixAction.getString() + dimensionNames[dimensionIndex] + ".png";
+    //        // Establish file name
+    //        const auto fileName = _fileNamePrefixAction.getString() + dimensionNames[dimensionIndex] + ".png";
 
-            // Update status
-            _statusAction.setMessage("Export " + fileName + " (" + QString::number(numberOfExportedImages + 1) + "/" + QString::number(getNumberOfSelectedDimensions()) + ")");
+    //        // Update status
+    //        _statusAction.setMessage("Export " + fileName + " (" + QString::number(numberOfExportedImages + 1) + "/" + QString::number(getNumberOfSelectedDimensions()) + ")");
 
-            // Ensure status is updated properly
-            QCoreApplication::processEvents();
+    //        // Ensure status is updated properly
+    //        QCoreApplication::processEvents();
 
-            // Establish file path of the output image
-            const auto imageFilePath = _outputDirectoryAction.getDirectory() + "/" + fileName;
+    //        // Establish file path of the output image
+    //        const auto imageFilePath = _outputDirectoryAction.getDirectory() + "/" + fileName;
 
-            // Only proceed if the directory exists
-            if (!QDir(_outputDirectoryAction.getDirectory()).exists()) {
-                _statusAction.setStatus(StatusAction::Error);
-                _statusAction.setMessage(_outputDirectoryAction.getDirectory() + "does not exist, aborting", true);
-                break;
-            }
+    //        // Only proceed if the directory exists
+    //        if (!QDir(_outputDirectoryAction.getDirectory()).exists()) {
+    //            _statusAction.setStatus(StatusAction::Error);
+    //            _statusAction.setMessage(_outputDirectoryAction.getDirectory() + "does not exist, aborting", true);
+    //            break;
+    //        }
 
-            // Cache reference to the scatterplot widget
-            auto& scatterplotWidget = _scatterplotPlugin.getScatterplotWidget();
+    //        // Cache reference to the scatterplot widget
+    //        auto& scatterplotWidget = _scatterplotPlugin.getScatterplotWidget();
 
-            // Set the current dimension name
-            coloringAction.getDimensionAction().setCurrentDimensionName(dimensionNames[dimensionIndex]);
+    //        // Set the current dimension name
+    //        coloringAction.getDimensionAction().setCurrentDimensionName(dimensionNames[dimensionIndex]);
 
-            if (_overrideRangesAction.isChecked()) {
-                auto& rangeAction = coloringAction.getColorMapAction().getSettingsAction().getHorizontalAxisAction().getRangeAction();
+    //        if (_overrideRangesAction.isChecked()) {
+    //            auto& rangeAction = coloringAction.getColorMapAction().getSettingsAction().getHorizontalAxisAction().getRangeAction();
 
-                rangeAction.initialize(_fixedRangeAction.getMinimum(), _fixedRangeAction.getMaximum(), _fixedRangeAction.getMinimum(), _fixedRangeAction.getMaximum());
-            }
+    //            rangeAction.initialize(_fixedRangeAction.getMinimum(), _fixedRangeAction.getMaximum(), _fixedRangeAction.getMinimum(), _fixedRangeAction.getMaximum());
+    //        }
 
-            // Create and save the image
-            scatterplotWidget.createScreenshot(width, height, imageFilePath, backgroundColor);
+    //        // Create and save the image
+    //        scatterplotWidget.createScreenshot(width, height, imageFilePath, backgroundColor);
 
-            numberOfExportedImages++;
-        }
+    //        numberOfExportedImages++;
+    //    }
 
-        // Turn the export trigger back on
-        _exportCancelAction.setTriggerEnabled(0, true);
-    }
-    QApplication::restoreOverrideCursor();
+    //    // Turn the export trigger back on
+    //    _exportCancelAction.setTriggerEnabled(0, true);
+    //}
+    //QApplication::restoreOverrideCursor();
 
-    // Reset the coloring type and dimension index
-    coloringAction.getColorByAction().setCurrentIndex(colorByIndex);
-    coloringAction.getDimensionAction().setCurrentDimensionIndex(dimensionIndex);
+    //// Reset the coloring type and dimension index
+    //coloringAction.getColorByAction().setCurrentIndex(colorByIndex);
+    //coloringAction.getDimensionAction().setCurrentDimensionIndex(dimensionIndex);
 
-    // Update status message
-    _statusAction.setMessage("Exported " + QString::number(numberOfExportedImages) + " image" + (numberOfExportedImages > 1 ? "s" : ""), true);
+    //// Update status message
+    //_statusAction.setMessage("Exported " + QString::number(numberOfExportedImages) + " image" + (numberOfExportedImages > 1 ? "s" : ""), true);
 }
 
 void ExportImageAction::updateDimensionsPickerAction()

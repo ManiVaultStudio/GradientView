@@ -13,9 +13,7 @@ SettingsAction::SettingsAction(ScatterplotPlugin* scatterplotPlugin) :
     PluginAction(scatterplotPlugin, "Settings"),
     _renderModeAction(scatterplotPlugin),
     _positionAction(scatterplotPlugin),
-    _coloringAction(scatterplotPlugin),
     _subsetAction(scatterplotPlugin),
-    _manualClusteringAction(scatterplotPlugin),
     _plotAction(scatterplotPlugin),
     _exportAction(this, "Export to image/video"),
     _miscellaneousAction(scatterplotPlugin)
@@ -48,7 +46,6 @@ QMenu* SettingsAction::getContextMenu()
     menu->addMenu(_plotAction.getContextMenu());
     menu->addSeparator();
     menu->addMenu(_positionAction.getContextMenu());
-    menu->addMenu(_coloringAction.getContextMenu());
     menu->addSeparator();
     menu->addMenu(_subsetAction.getContextMenu());
     menu->addSeparator();
@@ -74,9 +71,7 @@ SettingsAction::Widget::Widget(QWidget* parent, SettingsAction* settingsAction) 
     addStateWidget(&settingsAction->_renderModeAction, 4);
     addStateWidget(&settingsAction->_plotAction, 7);
     addStateWidget(&settingsAction->_positionAction, 10);
-    addStateWidget(&settingsAction->_coloringAction, 8);
     addStateWidget(&settingsAction->_subsetAction, 3);
-    addStateWidget(&settingsAction->_manualClusteringAction, 0);
 
     _toolBarLayout.addStretch(1);
 
