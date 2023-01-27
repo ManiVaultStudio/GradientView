@@ -5,7 +5,7 @@
 
 using namespace hdps::gui;
 
-const QColor MiscellaneousAction::DEFAULT_BACKGROUND_COLOR = qRgb(0, 0, 22);
+const QColor MiscellaneousAction::DEFAULT_BACKGROUND_COLOR = qRgb(22, 22, 22);
 
 MiscellaneousAction::MiscellaneousAction(ScatterplotPlugin* scatterplotPlugin) :
     PluginAction(scatterplotPlugin, "Miscellaneous"),
