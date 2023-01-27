@@ -64,7 +64,7 @@ protected:
     std::int32_t            _lastOpacitySourceIndex;    /** Last opacity source index that was selected */
 
     static constexpr double DEFAULT_POINT_SIZE      = 10.0;     /** Default point size */
-    static constexpr double DEFAULT_POINT_OPACITY   = 50.0;     /** Default point opacity */
+    static constexpr double DEFAULT_POINT_OPACITY   = 100.0;     /** Default point opacity */
 
     friend class PlotAction;
 };
