@@ -85,14 +85,6 @@ protected: // Data loading
     /** Invoked when the position points dataset changes */
     void positionDatasetChanged();
 
-    void createBruteGraph(const DataMatrix& highDim);
-    void createKnnGraph(const DataMatrix& highDim);
-    //void createAnnGraph(const DataMatrix& highDim);
-    void createFaissGraph(const DataMatrix& highDim);
-    void createFaissIVFGraph(const DataMatrix& highDim);
-    void createFaissGpuGraph(const DataMatrix& highDim);
-    void createAnnoyIndex(const DataMatrix& highDim);
-
 public: // Point colors
 
     /**
