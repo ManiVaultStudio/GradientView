@@ -14,6 +14,13 @@ public:
     ScatterplotWidget& getScatterplotWidget();
     std::vector<ProjectionView*>& getProjectionViews();
 
+    /**
+     * Create collapsed widget
+     * @param parent Parent widget
+     * @return Pointer to collapsed widget
+     */
+    QWidget* createCollapsedWidget(QWidget* parent);
+
 protected:
     ScatterplotPlugin*  _scatterplotPlugin;
 };

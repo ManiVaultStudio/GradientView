@@ -18,6 +18,7 @@ SettingsAction::SettingsAction(ScatterplotPlugin* scatterplotPlugin) :
     _exportAction(this, "Export to image/video"),
     _miscellaneousAction(scatterplotPlugin),
     _filterAction(scatterplotPlugin),
+    _overlayAction(scatterplotPlugin)
 {
     setText("Settings");
 
@@ -53,6 +54,7 @@ QMenu* SettingsAction::getContextMenu()
     menu->addMenu(_miscellaneousAction.getContextMenu());
     menu->addSeparator();
     menu->addMenu(_filterAction.getContextMenu());
+    menu->addMenu(_overlayAction.getContextMenu());
 
     return menu;
 }
@@ -76,6 +78,7 @@ SettingsAction::Widget::Widget(QWidget* parent, SettingsAction* settingsAction) 
     addStateWidget(&settingsAction->_positionAction, 10);
     addStateWidget(&settingsAction->_subsetAction, 3);
     addStateWidget(&settingsAction->_filterAction, 0);
+    addStateWidget(&settingsAction->_overlayAction, 0);
 
     _toolBarLayout.addStretch(1);
 

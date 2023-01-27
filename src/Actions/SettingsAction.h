@@ -8,6 +8,7 @@
 #include "SubsetAction.h"
 #include "MiscellaneousAction.h"
 #include "FilterAction.h"
+#include "OverlayAction.h"
 
 #include "actions/WidgetActionStateWidget.h"
 
@@ -89,4 +90,5 @@ protected:
     TriggerAction               _exportAction;
     MiscellaneousAction         _miscellaneousAction;
     FilterAction                _filterAction;
+    OverlayAction               _overlayAction;
 };

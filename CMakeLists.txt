@@ -71,6 +71,8 @@ set(Actions
     src/Actions/ExportImageAction.cpp
     src/Actions/FilterAction.h
     src/Actions/FilterAction.cpp
+    src/Actions/OverlayAction.h
+    src/Actions/OverlayAction.cpp
 )
 
 set(Models

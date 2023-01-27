@@ -4,6 +4,8 @@
 #include "ScatterplotWidget.h"
 #include "ProjectionView.h"
 
+#include "actions/WidgetActionCollapsedWidget.h"
+
 using namespace hdps::gui;
 
 PluginAction::PluginAction(ScatterplotPlugin* scatterplotPlugin, const QString& title) :
@@ -28,4 +30,12 @@ std::vector<ProjectionView*>& PluginAction::getProjectionViews()
     Q_ASSERT(_scatterplotPlugin != nullptr);
 
     return _scatterplotPlugin->getProjectionViews();
+}
+
+QWidget* PluginAction::createCollapsedWidget(QWidget* parent)
+{
+    auto* w = new hdps::gui::WidgetActionCollapsedWidget(parent, this);
+    //w->getToolButton().setFixedSize(48, 48);
+    //w->getToolButton().setIconSize(QSize(48, 48));
+    return w;
 }

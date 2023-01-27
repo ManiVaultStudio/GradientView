@@ -125,13 +125,18 @@ public:
     filters::SpatialPeakFilter& getSpatialPeakFilter() { return _spatialPeakFilter; }
     filters::HDFloodPeakFilter& getHDPeakFilter() { return _hdFloodPeakFilter; }
     float getProjectionSize() { return _projectionSize; }
+
+    void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataMatrix, _knnIndex, floodNeighbours); }
+    void setFloodSteps(int numFloodSteps) { _numFloodSteps = numFloodSteps; }
+    void setOverlayType(OverlayType type) { _overlayType = type; }
+    void setFilterLabelText(QString text) { _filterLabel->setText(text); }
+    void setFilterType(filters::FilterType type);
     SettingsAction& getSettingsAction() { return _settingsAction; }
 
 private:
     void updateData();
     void calculatePositions(const Points& points);
     void updateSelection();
-    void setFilterType(filters::FilterType type);
 
     bool eventFilter(QObject* target, QEvent* event);
 
@@ -162,6 +167,7 @@ private:
     bool                            _mousePressed = false;
 
     // Filters
+    QLabel*                         _filterLabel;
     filters::FilterType             _filterType;
     filters::SpatialPeakFilter      _spatialPeakFilter;
     filters::HDFloodPeakFilter      _hdFloodPeakFilter;
