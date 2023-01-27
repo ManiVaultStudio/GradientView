@@ -91,6 +91,7 @@ public:
 
     void setCurrentPosition(Vector2f pos) { _currentPoint = pos; update(); }
     void setFilterRadii(Vector2f radii) { _radii = radii; update(); }
+    void showFiltersCircles(bool show) { _showFilterCircles = show; }
 
     /**
      * Set sigma value for kernel density esitmation.
@@ -193,6 +194,7 @@ private:
     std::vector<Vector2f>   _directions;
     bool                    _showRandomWalk;
     bool                    _showDirections;
+    bool                    _showFilterCircles = true;
 
     Vector2f                _currentPoint;
     Vector2f                _radii;
