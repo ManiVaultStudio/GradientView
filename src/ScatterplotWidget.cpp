@@ -173,7 +173,7 @@ void ScatterplotWidget::setData(const std::vector<Vector2f>* points)
 
     dataBounds.ensureMinimumSize(1e-07f, 1e-07f);
     dataBounds.makeSquare();
-    dataBounds.expand(0.1f);
+    dataBounds.expand(0.01f);
 
     _dataBounds = dataBounds;
 

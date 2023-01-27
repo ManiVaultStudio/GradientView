@@ -72,11 +72,6 @@ namespace
         }
     }
 
-    void indicesToVectors(const std::vector<int>& indices, std::vector<Vector2f>& vec)
-    {
-
-    }
-
     void computeDirection(DataMatrix& dataMatrix, DataMatrix& projMatrix, KnnGraph& knnGraph, int numSteps, std::vector<Vector2f>& directions)
     {
         for (int p = 0; p < dataMatrix.rows(); p++)
@@ -670,10 +665,12 @@ timer.mark("Ranking");
             _projectionViews[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
         }
         // Set selected gradient view
-        if (_selectedDimension > 0)
+        if (_selectedDimension >= 0)
         {
+            qDebug() << "SEL DIM:" << _selectedDimension;
             const auto dimValues = _dataMatrix(Eigen::all, _selectedDimension);
-            _selectedView->setScalars(dimValues, _selectedPoint);
+            std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
+            _selectedView->setScalars(dimV, _selectedPoint);
             _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
         }
 
@@ -844,7 +841,7 @@ void ScatterplotPlugin::computeStaticData()
     _knnIndex.addData(_dataMatrix);
 
     _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
-    //_knnGraph.build(_dataMatrix, _knnIndex, 10);
+
     if (_dataMatrix.rows() < 5000 && _useSharedDistances)
     {
         _sourceKnnGraph.build(_dataMatrix, _knnIndex, 100);
@@ -1210,21 +1207,23 @@ void ScatterplotPlugin::onLineClicked(int dim)
     qDebug() << "Dim: " << dim;
     _selectedDimension = dim;
 
-    const auto dimValues = _dataMatrix(Eigen::all, _selectedDimension);
+    //const auto dimValues = _dataMatrix(Eigen::all, _selectedDimension);
 
-    float minV = *std::min_element(dimValues.begin(), dimValues.end());
-    float maxV = *std::max_element(dimValues.begin(), dimValues.end());
+    //float minV = *std::min_element(dimValues.begin(), dimValues.end());
+    //float maxV = *std::max_element(dimValues.begin(), dimValues.end());
 
-    std::vector<Vector3f> colors(_positions.size());
-    for (int i = 0; i < dimValues.size(); i++)
-    {
-        float dimValue = dimValues[i] / (maxV - minV);
+    //std::vector<Vector3f> colors(_positions.size());
+    //for (int i = 0; i < dimValues.size(); i++)
+    //{
+    //    float dimValue = dimValues[i] / (maxV - minV);
 
-        colors[i] = (i == _selectedPoint) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
-    }
-    _selectedView->setColors(colors);
+    //    colors[i] = (i == _selectedPoint) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
+    //}
+    //_selectedView->setColors(colors);
 
     _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
+
+    onPointSelection();
 }
 
 QIcon ScatterplotPluginFactory::getIcon(const QColor& color /*= Qt::black*/) const

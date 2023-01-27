@@ -36,7 +36,7 @@ ProjectionView::ProjectionView() :
     //setMinimumHeight(200);
 
     _pointRenderer.setPointScaling(Relative);
-    _pointRenderer.setPointSize(1.50f);
+    _pointRenderer.setPointSize(2.5f);
 
     QSurfaceFormat surfaceFormat;
 
