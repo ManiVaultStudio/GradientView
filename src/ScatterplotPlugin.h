@@ -98,7 +98,7 @@ public: // Point colors
      * Load color from clusters dataset
      * @param clusters Smart pointer to clusters dataset
      */
-    void loadColors(const Dataset<Clusters>& clusters);
+    //void loadColors(const Dataset<Clusters>& clusters);
 
 public: // Miscellaneous
 
@@ -112,6 +112,9 @@ protected:
 
     /** Updates the window title (displays the name of the view and the GUI name of the loaded points dataset) */
     void updateWindowTitle();
+
+    /** Updates the scalar range in the color map */
+    void updateColorMapActionScalarRange();
 
 public:
 
@@ -195,6 +198,7 @@ protected:
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;
+    ColorMapAction              _colorMapAction;            /** Color map action */
 };
 
 // =============================================================================

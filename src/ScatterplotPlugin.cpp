@@ -142,7 +142,8 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _selectedDimension(-1),
     _numFloodSteps(10),
     _filterType(filters::FilterType::SPATIAL_PEAK),
-    _overlayType(OverlayType::NONE)
+    _overlayType(OverlayType::NONE),
+    _colorMapAction(this, "Color map", util::ColorMap::Type::OneDimensional, "RdYlBu", "RdYlBu")
 {
     setObjectName("GradientExplorer");
 
@@ -217,11 +218,11 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
 
                 if (candidateDataset->getNumPoints() == _positionDataset->getNumPoints()) {
 
-                    // The number of points is equal, so offer the option to use the points dataset as source for points colors
-                    dropRegions << new DropWidget::DropRegion(this, "Point color", QString("Colorize %1 points with %2").arg(_positionDataset->getGuiName(), candidateDataset->getGuiName()), "palette", true, [this, candidateDataset]() {
-                        _settingsAction.getColoringAction().addColorDataset(candidateDataset);
-                        _settingsAction.getColoringAction().setCurrentColorDataset(candidateDataset);
-                    });
+                    //// The number of points is equal, so offer the option to use the points dataset as source for points colors
+                    //dropRegions << new DropWidget::DropRegion(this, "Point color", QString("Colorize %1 points with %2").arg(_positionDataset->getGuiName(), candidateDataset->getGuiName()), "palette", true, [this, candidateDataset]() {
+                    //    _settingsAction.getColoringAction().addColorDataset(candidateDataset);
+                    //    _settingsAction.getColoringAction().setCurrentColorDataset(candidateDataset);
+                    //});
 
                     // The number of points is equal, so offer the option to use the points dataset as source for points size
                     dropRegions << new DropWidget::DropRegion(this, "Point size", QString("Size %1 points with %2").arg(_positionDataset->getGuiName(), candidateDataset->getGuiName()), "ruler-horizontal", true, [this, candidateDataset]() {
@@ -238,40 +239,40 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
             }
         }
 
-        // Cluster dataset is about to be dropped
-        if (dataType == ClusterType) {
+        //// Cluster dataset is about to be dropped
+        //if (dataType == ClusterType) {
 
-            // Get clusters dataset from the core
-            auto candidateDataset  = _core->requestDataset<Clusters>(datasetId);
-            
-            // Establish drop region description
-            const auto description  = QString("Color points by %1").arg(candidateDataset->getGuiName());
+        //    // Get clusters dataset from the core
+        //    auto candidateDataset  = _core->requestDataset<Clusters>(datasetId);
+        //    
+        //    // Establish drop region description
+        //    const auto description  = QString("Color points by %1").arg(candidateDataset->getGuiName());
 
-            // Only allow user to color by clusters when there is a positions dataset loaded
-            if (_positionDataset.isValid()) {
+        //    // Only allow user to color by clusters when there is a positions dataset loaded
+        //    if (_positionDataset.isValid()) {
 
-                if (_settingsAction.getColoringAction().hasColorDataset(candidateDataset)) {
+        //        if (_settingsAction.getColoringAction().hasColorDataset(candidateDataset)) {
 
-                    // The clusters dataset is already loaded
-                    dropRegions << new DropWidget::DropRegion(this, "Color", description, "palette", true, [this, candidateDataset]() {
-                        _settingsAction.getColoringAction().setCurrentColorDataset(candidateDataset);
-                    });
-                }
-                else {
+        //            // The clusters dataset is already loaded
+        //            dropRegions << new DropWidget::DropRegion(this, "Color", description, "palette", true, [this, candidateDataset]() {
+        //                _settingsAction.getColoringAction().setCurrentColorDataset(candidateDataset);
+        //            });
+        //        }
+        //        else {
 
-                    // Use the clusters set for points color
-                    dropRegions << new DropWidget::DropRegion(this, "Color", description, "palette", true, [this, candidateDataset]() {
-                        _settingsAction.getColoringAction().addColorDataset(candidateDataset);
-                        _settingsAction.getColoringAction().setCurrentColorDataset(candidateDataset);
-                    });
-                }
-            }
-            else {
+        //            // Use the clusters set for points color
+        //            dropRegions << new DropWidget::DropRegion(this, "Color", description, "palette", true, [this, candidateDataset]() {
+        //                _settingsAction.getColoringAction().addColorDataset(candidateDataset);
+        //                _settingsAction.getColoringAction().setCurrentColorDataset(candidateDataset);
+        //            });
+        //        }
+        //    }
+        //    else {
 
-                // Only allow user to color by clusters when there is a positions dataset loaded
-                dropRegions << new DropWidget::DropRegion(this, "No points data loaded", "Clusters can only be visualized in concert with points data", "exclamation-circle", false);
-            }
-        }
+        //        // Only allow user to color by clusters when there is a positions dataset loaded
+        //        dropRegions << new DropWidget::DropRegion(this, "No points data loaded", "Clusters can only be visualized in concert with points data", "exclamation-circle", false);
+        //    }
+        //}
 
         return dropRegions;
     });
@@ -543,6 +544,11 @@ void ScatterplotPlugin::init()
     //    selectPoints();
     //});
 
+    getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
+    for (int i = 0; i < getProjectionViews().size(); i++)
+        if (getProjectionViews()[i] != nullptr)
+            getProjectionViews()[i]->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
+
     _eventListener.setEventCore(Application::core());
     _eventListener.addSupportedEventType(static_cast<std::uint32_t>(EventType::DataSelectionChanged));
     _eventListener.registerDataEventByType(PointType, std::bind(&ScatterplotPlugin::onDataEvent, this, std::placeholders::_1));
@@ -561,6 +567,20 @@ void ScatterplotPlugin::init()
 
     // Do an initial update of the window title
     updateWindowTitle();
+}
+
+void ScatterplotPlugin::updateColorMapActionScalarRange()
+{
+    // Get the color map range from the scatter plot widget
+    const auto colorMapRange = getScatterplotWidget().getColorMapRange();
+    const auto colorMapRangeMin = colorMapRange.x;
+    const auto colorMapRangeMax = colorMapRange.y;
+
+    // Get reference to color map range action
+    auto& colorMapRangeAction = _colorMapAction.getSettingsAction().getHorizontalAxisAction().getRangeAction();
+
+    // Initialize the color map range action with the color map range from the scatter plot 
+    colorMapRangeAction.initialize(colorMapRangeMin, colorMapRangeMax, colorMapRangeMin, colorMapRangeMax, colorMapRangeMin, colorMapRangeMax);
 }
 
 void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
@@ -602,8 +622,12 @@ timer.start();
         {
             compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, _selectedPoint, _numFloodSteps, floodFill);
 
-            getScatterplotWidget().setColorMap(_settingsAction.getColoringAction().getColorMapAction().getColorMapImage());
-            _scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
+            getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
+            for (int i = 0; i < getProjectionViews().size(); i++)
+                if (getProjectionViews()[i] != nullptr)
+                    getProjectionViews()[i]->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
+            _selectedView->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
+            //_scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
             getScatterplotWidget().setScalarEffect(PointEffect::Color);
         }
 timer.mark("Floodfill");
@@ -854,7 +878,7 @@ void ScatterplotPlugin::loadData(const Datasets& datasets)
     _positionDataset = datasets.first();
 
     // And set the coloring mode to constant
-    _settingsAction.getColoringAction().getColorByAction().setCurrentIndex(1);
+    //_settingsAction.getColoringAction().getColorByAction().setCurrentIndex(1);
 }
 
 void ScatterplotPlugin::createSubset(const bool& fromSourceData /*= false*/, const QString& name /*= ""*/)
@@ -942,39 +966,39 @@ void ScatterplotPlugin::loadColors(const Dataset<Points>& points, const std::uin
     getWidget().update();
 }
 
-void ScatterplotPlugin::loadColors(const Dataset<Clusters>& clusters)
-{
-    // Only proceed with valid clusters and position dataset
-    if (!clusters.isValid() || !_positionDataset.isValid())
-        return;
-
-    // Mapping from local to global indices
-    std::vector<std::uint32_t> globalIndices;
-
-    // Get global indices from the position dataset
-    _positionDataset->getGlobalIndices(globalIndices);
-
-    // Generate color buffer for global and local colors
-    std::vector<Vector3f> globalColors(globalIndices.back() + 1);
-    std::vector<Vector3f> localColors(_positions.size());
-
-    // Loop over all clusters and populate global colors
-    for (const auto& cluster : clusters->getClusters())
-        for (const auto& index : cluster.getIndices())
-            globalColors[globalIndices[index]] = Vector3f(cluster.getColor().redF(), cluster.getColor().greenF(), cluster.getColor().blueF());
-
-    std::int32_t localColorIndex = 0;
-
-    // Loop over all global indices and find the corresponding local color
-    for (const auto& globalIndex : globalIndices)
-        localColors[localColorIndex++] = globalColors[globalIndex];
-
-    // Apply colors to scatter plot widget without modification
-    _scatterPlotWidget->setColors(localColors);
-
-    // Render
-    getWidget().update();
-}
+//void ScatterplotPlugin::loadColors(const Dataset<Clusters>& clusters)
+//{
+//    // Only proceed with valid clusters and position dataset
+//    if (!clusters.isValid() || !_positionDataset.isValid())
+//        return;
+//
+//    // Mapping from local to global indices
+//    std::vector<std::uint32_t> globalIndices;
+//
+//    // Get global indices from the position dataset
+//    _positionDataset->getGlobalIndices(globalIndices);
+//
+//    // Generate color buffer for global and local colors
+//    std::vector<Vector3f> globalColors(globalIndices.back() + 1);
+//    std::vector<Vector3f> localColors(_positions.size());
+//
+//    // Loop over all clusters and populate global colors
+//    for (const auto& cluster : clusters->getClusters())
+//        for (const auto& index : cluster.getIndices())
+//            globalColors[globalIndices[index]] = Vector3f(cluster.getColor().redF(), cluster.getColor().greenF(), cluster.getColor().blueF());
+//
+//    std::int32_t localColorIndex = 0;
+//
+//    // Loop over all global indices and find the corresponding local color
+//    for (const auto& globalIndex : globalIndices)
+//        localColors[localColorIndex++] = globalColors[globalIndex];
+//
+//    // Apply colors to scatter plot widget without modification
+//    _scatterPlotWidget->setColors(localColors);
+//
+//    // Render
+//    getWidget().update();
+//}
 
 ScatterplotWidget& ScatterplotPlugin::getScatterplotWidget()
 {

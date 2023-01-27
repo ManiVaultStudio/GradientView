@@ -55,8 +55,8 @@ public:
     void setBackgroundColor(QColor color);
 
     /** Get/set coloring mode */
-    ColoringMode getColoringMode() const;
-    void setColoringMode(const ColoringMode& coloringMode);
+    //ColoringMode getColoringMode() const;
+    //void setColoringMode(const ColoringMode& coloringMode);
 
     ///** Get reference to the pixel selection tool */
     //PixelSelectionTool& getPixelSelectionTool();
@@ -151,7 +151,7 @@ signals:
      * Signals that the coloring mode changed
      * @param coloringMode Signals that the coloring mode has changed
      */
-    void coloringModeChanged(const ColoringMode& coloringMode);
+    //void coloringModeChanged(const ColoringMode& coloringMode);
 
     /** Signals that the density computation has started */
     void densityComputationStarted();
@@ -181,7 +181,7 @@ private:
     bool                    _isInitialized = false;
     RenderMode              _renderMode = SCATTERPLOT;
     QColor                  _backgroundColor;
-    ColoringMode            _coloringMode = ColoringMode::Constant;
+    //ColoringMode            _coloringMode = ColoringMode::Constant;
     PointRenderer           _pointRenderer;
     CellRenderer            _cellRenderer;
     DensityRenderer         _densityRenderer;
