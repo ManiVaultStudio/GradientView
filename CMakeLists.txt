@@ -111,6 +111,8 @@ set(AUX
     src/GradientExplorerPlugin.json
 )
 
+find_package(CUDA 12.0 REQUIRED)
+
 set(SOURCES ${PLUGIN} ${UI} ${Actions} ${Models} ${Compute})
 
 source_group(Plugin FILES ${PLUGIN})
@@ -124,7 +126,7 @@ source_group(Aux FILES ${AUX})
 include_directories("${INSTALL_DIR}/$<CONFIGURATION>/include/")
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/Eigen/include)
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/faiss/include)
-include_directories("C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.0/include")
+include_directories(${CUDA_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/jcv/include)
 include_directories(${PROJECT_SOURCE_DIR}/thirdparty/annoy/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -146,8 +148,6 @@ endif(MSVC)
 set(HDPS_LINK_LIBRARY "${INSTALL_DIR}/$<CONFIGURATION>/lib/${CMAKE_SHARED_LIBRARY_PREFIX}HDPS_Public${LIB_LINK_SUFFIX}")
 set(POINTDATA_LINK_LIBRARY "${INSTALL_DIR}/$<CONFIGURATION>/lib/${CMAKE_SHARED_LIBRARY_PREFIX}PointData${LIB_LINK_SUFFIX}") 
 set(CLUSTERDATA_LINK_LIBRARY "${INSTALL_DIR}/$<CONFIGURATION>/lib/${CMAKE_SHARED_LIBRARY_PREFIX}ClusterData${LIB_LINK_SUFFIX}") 
-
-find_package(CUDA 12.0 REQUIRED)
 
 message(STATUS "${MKL_LIBRARIES}")
 target_link_libraries(${PROJECT} Qt6::Widgets)
