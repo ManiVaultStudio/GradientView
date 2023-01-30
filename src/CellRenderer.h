@@ -1,7 +1,6 @@
 #pragma once
 
 #include "renderers/Renderer.h"
-#include "SelectionListener.h"
 
 #include "graphics/BufferObject.h"
 
