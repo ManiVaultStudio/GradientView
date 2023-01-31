@@ -2,6 +2,8 @@
 
 #include "PluginAction.h"
 
+#include "actions/GroupAction.h"
+
 class OverlayAction : public PluginAction
 {
 protected: // Widget
@@ -27,26 +29,25 @@ public:
      */
 
 public: // Action getters
-    //DecimalAction& getInnerFilterSizeAction() { return _innerFilterSizeAction; }
-    //DecimalAction& getOuterFilterSizeAction() { return _outerFilterSizeAction; }
-
-    //IntegralAction& getHDInnerFilterSizeAction() { return _hdInnerFilterSizeAction; }
-    //IntegralAction& getHDOuterFilterSizeAction() { return _hdOuterFilterSizeAction; }
     IntegralAction& getFloodDecimalAction() { return _floodDecimal; }
     IntegralAction& getFloodStepsAction() { return _floodStepsAction; }
     ToggleAction& getSharedDistAction() { return _sharedDistAction; }
 
+    TriggerAction& getFloodOverlayAction() { return _floodOverlayAction; }
+    TriggerAction& getDimensionOverlayAction() { return _dimensionOverlayAction; }
+    TriggerAction& getDimensionalityOverlayAction() { return _dimensionalityOverlayAction; }
+
+    //GroupAction& getOverlayGroupAction() { return _overlayGroupAction; }
 
 protected:
     IntegralAction                      _floodDecimal;
     IntegralAction                      _floodStepsAction;
     ToggleAction                        _sharedDistAction;
 
-    QVector<TriggersAction::Trigger>    _triggers;
+    TriggerAction                       _floodOverlayAction;
+    TriggerAction                       _dimensionOverlayAction;
+    TriggerAction                       _dimensionalityOverlayAction;
 
-    //DecimalAction       _innerFilterSizeAction;
-    //DecimalAction       _outerFilterSizeAction;
-
-    //IntegralAction      _hdInnerFilterSizeAction;
-    //IntegralAction      _hdOuterFilterSizeAction;
+    //QVector<TriggersAction::Trigger>    _triggers;
+    //GroupAction _overlayGroupAction;
 };

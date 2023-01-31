@@ -299,22 +299,8 @@ void ScatterplotPlugin::init()
     _filterLabel->setFont(font);
 
     gradientViewLayout->addWidget(_filterLabel);
-
-    //dimensionViewsLayout->addWidget(_projectionViews[0], 50);
-    //dimensionViewsLayout->addWidget(_projectionViews[1], 50);
     gradientViewLayout->addWidget(_projectionViews[0], 50);
     gradientViewLayout->addWidget(_projectionViews[1], 50);
-    //gradientViewLayout->addLayout(dimensionViewsLayout, 50);
-
-    // Filter layout
-    QVBoxLayout* filterLayout = new QVBoxLayout();
-    QPushButton* spatialPeakFilter = new QPushButton("Spatial Peak Filter");
-    QPushButton* hdPeakFilter = new QPushButton("HD Peak Filter");
-
-    //gradientViewLayout->addWidget(filtersLabel);
-    //filterLayout->addWidget(spatialPeakFilter);
-    //filterLayout->addWidget(hdPeakFilter);
-    //settingsLayout->addLayout(filterLayout);
 
     // Dimension selection
     QLabel* dimensionSelectionLabel = new QLabel("Dimension Selection");

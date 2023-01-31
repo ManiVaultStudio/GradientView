@@ -10,7 +10,11 @@ OverlayAction::OverlayAction(ScatterplotPlugin* scatterplotPlugin) :
     PluginAction(scatterplotPlugin, "Filter"),
     _floodDecimal(this, "Flood nodes", 10, 500, 10, 10),
     _floodStepsAction(this, "Flood steps", 3, 50, 10, 10),
-    _sharedDistAction(this, "Shared distances", false, false)
+    _sharedDistAction(this, "Shared distances", false, false),
+    _floodOverlayAction(this, "Flood Steps"),
+    _dimensionOverlayAction(this, "Top Dimension Values"),
+    _dimensionalityOverlayAction(this, "Local Dimensionality")
+    //_overlayGroupAction(this, true)
 {
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("image"));
 
@@ -30,28 +34,44 @@ OverlayAction::OverlayAction(ScatterplotPlugin* scatterplotPlugin) :
         scatterplotPlugin->useSharedDistances(enabled);
     });
 
-    _triggers << TriggersAction::Trigger("Flood Steps", "Color flood points by closeness to seed point in HD space");
-    _triggers << TriggersAction::Trigger("Top Dimension Values", "Color flood points by values of top ranked dimension");
-    _triggers << TriggersAction::Trigger("Local Dimensionality", "Color flood points by local intrinsic dimensionality");
-    _triggers << TriggersAction::Trigger("Directions", "Show major eigenvector directions over flood points");
-
-    auto overlayGroupAction = new GroupAction(&scatterplotPlugin->getWidget(), true);
-    overlayGroupAction->setText("Flood Nodes Overlay");
-    overlayGroupAction->setShowLabels(false);
-
-    TriggersAction* overlayTriggers = new TriggersAction(overlayGroupAction, "Overlay Triggers", _triggers);
-
-    connect(overlayTriggers, &TriggersAction::triggered, this, [scatterplotPlugin](int32_t triggerIndex)
+    // Overlay buttons
+    connect(&_floodOverlayAction, &TriggerAction::triggered, this, [scatterplotPlugin](bool enabled)
     {
-        scatterplotPlugin->getScatterplotWidget().showDirections(false);
-        switch (triggerIndex)
-        {
-        case 0: scatterplotPlugin->setOverlayType(OverlayType::NONE); break;
-        case 1: scatterplotPlugin->setOverlayType(OverlayType::DIM_VALUES); break;
-        case 2: scatterplotPlugin->setOverlayType(OverlayType::LOCAL_DIMENSIONALITY); break;
-        case 3: {scatterplotPlugin->setOverlayType(OverlayType::DIRECTIONS); scatterplotPlugin->getScatterplotWidget().showDirections(true); break; }
-        }
+        scatterplotPlugin->setOverlayType(OverlayType::NONE);
+        scatterplotPlugin->onPointSelection();
     });
+    connect(&_dimensionOverlayAction, &TriggerAction::triggered, this, [scatterplotPlugin](bool enabled)
+    {
+        scatterplotPlugin->setOverlayType(OverlayType::DIM_VALUES);
+        scatterplotPlugin->onPointSelection();
+    });
+    connect(&_dimensionalityOverlayAction, &TriggerAction::triggered, this, [scatterplotPlugin](bool enabled)
+    {
+        scatterplotPlugin->setOverlayType(OverlayType::LOCAL_DIMENSIONALITY);
+        scatterplotPlugin->onPointSelection();
+    });
+
+    //_triggers << TriggersAction::Trigger("Flood Steps", "Color flood points by closeness to seed point in HD space");
+    //_triggers << TriggersAction::Trigger("Top Dimension Values", "Color flood points by values of top ranked dimension");
+    //_triggers << TriggersAction::Trigger("Local Dimensionality", "Color flood points by local intrinsic dimensionality");
+    //_triggers << TriggersAction::Trigger("Directions", "Show major eigenvector directions over flood points");
+
+    //_overlayGroupAction.setText("Flood Nodes Overlay");
+    //_overlayGroupAction.setShowLabels(false);
+
+    //TriggersAction* overlayTriggers = new TriggersAction(&_overlayGroupAction, "Overlay Triggers", _triggers);
+
+    //connect(overlayTriggers, &TriggersAction::triggered, this, [scatterplotPlugin](int32_t triggerIndex)
+    //{
+    //    scatterplotPlugin->getScatterplotWidget().showDirections(false);
+    //    switch (triggerIndex)
+    //    {
+    //    case 0: scatterplotPlugin->setOverlayType(OverlayType::NONE); break;
+    //    case 1: scatterplotPlugin->setOverlayType(OverlayType::DIM_VALUES); break;
+    //    case 2: scatterplotPlugin->setOverlayType(OverlayType::LOCAL_DIMENSIONALITY); break;
+    //    case 3: {scatterplotPlugin->setOverlayType(OverlayType::DIRECTIONS); scatterplotPlugin->getScatterplotWidget().showDirections(true); break; }
+    //    }
+    //});
 }
 
 QMenu* OverlayAction::getContextMenu()
@@ -89,12 +109,16 @@ OverlayAction::Widget::Widget(QWidget* parent, OverlayAction* overlayAction, con
         layout->addWidget(overlayAction->getFloodDecimalAction().createLabelWidget(this), 0, 0);
         layout->addWidget(overlayAction->getFloodDecimalAction().createWidget(this), 0, 1);
 
-        layout->addWidget(overlayAction->getFloodStepsAction().createLabelWidget(this));
-        layout->addWidget(overlayAction->getFloodStepsAction().createWidget(this));
+        layout->addWidget(overlayAction->getFloodStepsAction().createLabelWidget(this), 1, 0);
+        layout->addWidget(overlayAction->getFloodStepsAction().createWidget(this), 1, 1);
 
-        layout->addWidget(overlayAction->getSharedDistAction().createLabelWidget(this));
-        layout->addWidget(overlayAction->getSharedDistAction().createWidget(this));
+        layout->addWidget(overlayAction->getSharedDistAction().createLabelWidget(this), 2, 0);
+        layout->addWidget(overlayAction->getSharedDistAction().createWidget(this), 2, 1);
 
+        layout->addWidget(new QLabel("Color flood nodes by:", parent), 3, 0);
+        layout->addWidget(overlayAction->getFloodOverlayAction().createWidget(this), 4, 0);
+        layout->addWidget(overlayAction->getDimensionOverlayAction().createWidget(this), 4, 1);
+        layout->addWidget(overlayAction->getDimensionalityOverlayAction().createWidget(this), 4, 2);
 
         auto mainLayout = new QVBoxLayout();
 
