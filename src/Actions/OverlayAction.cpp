@@ -25,6 +25,11 @@ OverlayAction::OverlayAction(ScatterplotPlugin* scatterplotPlugin) :
         scatterplotPlugin->onPointSelection();
     });
 
+    connect(&_sharedDistAction, &ToggleAction::toggled, this, [scatterplotPlugin](bool enabled)
+    {
+        scatterplotPlugin->useSharedDistances(enabled);
+    });
+
     _triggers << TriggersAction::Trigger("Flood Steps", "Color flood points by closeness to seed point in HD space");
     _triggers << TriggersAction::Trigger("Top Dimension Values", "Color flood points by values of top ranked dimension");
     _triggers << TriggersAction::Trigger("Local Dimensionality", "Color flood points by local intrinsic dimensionality");
