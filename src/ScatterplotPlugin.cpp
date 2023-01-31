@@ -138,7 +138,8 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _numFloodSteps(10),
     _filterType(filters::FilterType::SPATIAL_PEAK),
     _overlayType(OverlayType::NONE),
-    _colorMapAction(this, "Color map", util::ColorMap::Type::OneDimensional, "RdYlBu", "RdYlBu")
+    _colorMapAction(this, "Color map", util::ColorMap::Type::OneDimensional, "RdYlBu", "RdYlBu"),
+    _graphTimer(new QTimer(this))
 {
     setObjectName("GradientExplorer");
 
@@ -151,6 +152,8 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _selectedView = new ProjectionView();
 
     connect(_gradientGraph, &GradientGraph::lineClicked, this, &ScatterplotPlugin::onLineClicked);
+    _graphTimer->setSingleShot(true);
+    connect(_graphTimer, &QTimer::timeout, this, &ScatterplotPlugin::computeGraphs);
 
     getWidget().setFocusPolicy(Qt::ClickFocus);
 
@@ -648,6 +651,7 @@ timer.mark("Ranking");
         }
 
         _gradientGraph->setTopDimensions(dimRanking[0], dimRanking[1]);
+
 timer.mark("Filter");
 
         /////////////////////
@@ -660,33 +664,15 @@ timer.mark("Filter");
         }
 
         // Store all flood nodes together
-        std::vector<int> floodNodes(numFloodNodes);
+        _floodNodes.resize(numFloodNodes);
         int n = 0;
         for (int i = 0; i < floodFill.size(); i++)
             for (int j = 0; j < floodFill[i].size(); j++)
-                floodNodes[n++] = floodFill[i][j];
+                _floodNodes[n++] = floodFill[i][j];
 
-        // Binning
-        int binSteps = _bins[0].size();
-
-        for (int d = 0; d < _bins.size(); d++)
-            std::fill(_bins[d].begin(), _bins[d].end(), 0);
-
-#pragma omp parallel for
-        for (int d = 0; d < _bins.size(); d++)
-        {
-            int* const bins_d = &_bins[d][0];
-            float* const norm_d = &_normalizedData[d][0];
-
-            for (int i = 0; i < floodNodes.size(); i++)
-            {
-                const float& f = norm_d[floodNodes[i]];
-                bins_d[(long)(f * binSteps)]++;
-            }
-        }
-
-        _gradientGraph->setBins(_bins);
-timer.mark("Graph");
+        // Start a timer to compute the graphs in 100ms, if the timer is restarted before graphs are not computed
+        _graphTimer->start(100);
+timer.mark("Linearisation");
 
         //////////////////
         std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());
@@ -727,9 +713,9 @@ timer.mark("Graph");
         {
             std::vector<float> dimScalars(_dataMatrix.rows(), 0);
 
-            for (int i = 0; i < floodNodes.size(); i++)
+            for (int i = 0; i < _floodNodes.size(); i++)
             {
-                dimScalars[floodNodes[i]] = _dataMatrix(floodNodes[i], dimRanking[0]);
+                dimScalars[_floodNodes[i]] = _dataMatrix(_floodNodes[i], dimRanking[0]);
             }
             getScatterplotWidget().setScalars(dimScalars);
             break;
@@ -740,9 +726,9 @@ timer.mark("Graph");
 
             if (_localHighDimensionality.empty()) break;
 
-            for (int i = 0; i < floodNodes.size(); i++)
+            for (int i = 0; i < _floodNodes.size(); i++)
             {
-                scalars[floodNodes[i]] = _localHighDimensionality[floodNodes[i]];
+                scalars[_floodNodes[i]] = _localHighDimensionality[_floodNodes[i]];
             }
             getScatterplotWidget().setScalars(scalars);
             break;
@@ -750,11 +736,11 @@ timer.mark("Graph");
         case OverlayType::DIRECTIONS:
         {
             std::vector<float> scalars(_dataMatrix.rows(), 0);
-            std::vector<Vector2f> directions(floodNodes.size() * 2);
+            std::vector<Vector2f> directions(_floodNodes.size() * 2);
 
-            for (int i = 0; i < floodNodes.size(); i++)
+            for (int i = 0; i < _floodNodes.size(); i++)
             {
-                float idx = floodNodes[i];
+                float idx = _floodNodes[i];
                 directions[i * 2 + 0] = _directions[idx * 2 + 0];
                 directions[i * 2 + 1] = _directions[idx * 2 + 1];
                 scalars[idx] = 0.5f;
@@ -767,6 +753,30 @@ timer.mark("Graph");
         }
 timer.finish("Overlay");
     }
+}
+
+void ScatterplotPlugin::computeGraphs()
+{
+    // Binning
+    int binSteps = _bins[0].size();
+
+    for (int d = 0; d < _bins.size(); d++)
+        std::fill(_bins[d].begin(), _bins[d].end(), 0);
+
+#pragma omp parallel for
+    for (int d = 0; d < _bins.size(); d++)
+    {
+        int* const bins_d = &_bins[d][0];
+        float* const norm_d = &_normalizedData[d][0];
+
+        for (int i = 0; i < _floodNodes.size(); i++)
+        {
+            const float& f = norm_d[_floodNodes[i]];
+            bins_d[(long)(f * binSteps)]++;
+        }
+    }
+    qDebug() << "Graphs computed";
+    _gradientGraph->setBins(_bins);
 }
 
 void ScatterplotPlugin::computeStaticData()

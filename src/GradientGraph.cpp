@@ -179,6 +179,7 @@ void GradientGraph::updateChartColors()
 
         _seriesArray[d]->setColor(color);
     }
+
     _chartView->update();
 }
 

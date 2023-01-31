@@ -62,6 +62,8 @@ public:
     void onDataEvent(hdps::DataEvent* dataEvent);
     void onPointSelection();
 
+    void computeGraphs();
+
     void computeStaticData();
 
     /**
@@ -166,6 +168,8 @@ private:
     int                             _selectedDimension;
     QPoint                          _mousePos;
     bool                            _mousePressed = false;
+    std::vector<int>                _floodNodes;
+    QTimer*                         _graphTimer;
 
     // Filters
     QLabel*                         _filterLabel;
