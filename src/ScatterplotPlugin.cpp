@@ -311,19 +311,6 @@ void ScatterplotPlugin::init()
     QPushButton* spatialPeakFilter = new QPushButton("Spatial Peak Filter");
     QPushButton* hdPeakFilter = new QPushButton("HD Peak Filter");
 
-    //connect(spatialPeakFilter, &QPushButton::pressed, this, [this, filterLabel]() {
-    //    setFilterType(filters::FilterType::SPATIAL_PEAK);
-    //    filterLabel->setText("Spatial Peak Ranking");
-    //    getScatterplotWidget().showFiltersCircles(true);
-    //    getScatterplotWidget().update();
-    //});
-    //connect(hdPeakFilter, &QPushButton::pressed, this, [this, filterLabel]() {
-    //    setFilterType(filters::FilterType::HD_PEAK);
-    //    filterLabel->setText("HD Peak Ranking");
-    //    getScatterplotWidget().showFiltersCircles(false);
-    //    getScatterplotWidget().update();
-    //});
-
     //gradientViewLayout->addWidget(filtersLabel);
     //filterLayout->addWidget(spatialPeakFilter);
     //filterLayout->addWidget(hdPeakFilter);

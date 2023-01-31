@@ -27,6 +27,9 @@ public:
      */
 
 public: // Action getters
+    TriggerAction& getSpatialPeakFilterAction() { return _spatialPeakFilterAction; }
+    TriggerAction& getHDPeakFilterAction() { return _hdPeakFilterAction; }
+
     DecimalAction& getInnerFilterSizeAction() { return _innerFilterSizeAction; }
     DecimalAction& getOuterFilterSizeAction() { return _outerFilterSizeAction; }
 
@@ -34,8 +37,8 @@ public: // Action getters
     IntegralAction& getHDOuterFilterSizeAction() { return _hdOuterFilterSizeAction; }
 
 protected:
-    QPushButton         _spatialPeakFilterAction;
-    QPushButton         _hdPeakFilterAction;
+    TriggerAction       _spatialPeakFilterAction;
+    TriggerAction       _hdPeakFilterAction;
 
     DecimalAction       _innerFilterSizeAction;
     DecimalAction       _outerFilterSizeAction;

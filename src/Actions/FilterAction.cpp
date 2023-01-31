@@ -8,8 +8,8 @@
 
 FilterAction::FilterAction(ScatterplotPlugin* scatterplotPlugin) :
     PluginAction(scatterplotPlugin, "Filter"),
-    _spatialPeakFilterAction("Spatial Peak Filter"),
-    _hdPeakFilterAction("HD Peak Filter"),
+    _spatialPeakFilterAction(scatterplotPlugin, "Spatial Peak Filter"),
+    _hdPeakFilterAction(scatterplotPlugin, "HD Peak Filter"),
     _innerFilterSizeAction(scatterplotPlugin, "Inner Filter Radius", 1, 10, 2.5f, 2.5f),
     _outerFilterSizeAction(scatterplotPlugin, "Outer Filter Radius", 2, 20, 5, 5),
     _hdInnerFilterSizeAction(scatterplotPlugin, "HD Inner Filter Size", 1, 10, 5, 5),
@@ -20,13 +20,13 @@ FilterAction::FilterAction(ScatterplotPlugin* scatterplotPlugin) :
     auto& spatialPeakFilter = scatterplotPlugin->getSpatialPeakFilter();
     auto& hdPeakFilter = scatterplotPlugin->getHDPeakFilter();
 
-    connect(&_spatialPeakFilterAction, &QPushButton::pressed, this, [scatterplotPlugin]() {
+    connect(&_spatialPeakFilterAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
         scatterplotPlugin->setFilterType(filters::FilterType::SPATIAL_PEAK);
         scatterplotPlugin->setFilterLabelText("Spatial Peak Ranking");
         scatterplotPlugin->getScatterplotWidget().showFiltersCircles(true);
         scatterplotPlugin->getScatterplotWidget().update();
     });
-    connect(&_hdPeakFilterAction, &QPushButton::pressed, this, [scatterplotPlugin]() {
+    connect(&_hdPeakFilterAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
         scatterplotPlugin->setFilterType(filters::FilterType::HD_PEAK);
         scatterplotPlugin->setFilterLabelText("HD Peak Ranking");
         scatterplotPlugin->getScatterplotWidget().showFiltersCircles(false);
@@ -81,19 +81,22 @@ FilterAction::Widget::Widget(QWidget* parent, FilterAction* filterAction, const 
 
         layout->setContentsMargins(4, 4, 4, 4);
 
-        layout->addWidget(filterAction->getInnerFilterSizeAction().createLabelWidget(this), 0, 0);
+        layout->addWidget(filterAction->getSpatialPeakFilterAction().createWidget(this), 0, 0);
+        layout->addWidget(filterAction->getHDPeakFilterAction().createWidget(this), 0, 1);
+
+        layout->addWidget(filterAction->getInnerFilterSizeAction().createLabelWidget(this), 1, 0);
         QWidget* w = filterAction->getInnerFilterSizeAction().createWidget(this);
         w->setMinimumWidth(200);
-        layout->addWidget(w, 0, 1);
+        layout->addWidget(w, 1, 1);
 
-        layout->addWidget(filterAction->getOuterFilterSizeAction().createLabelWidget(this), 1, 0);
-        layout->addWidget(filterAction->getOuterFilterSizeAction().createWidget(this), 1, 1);
+        layout->addWidget(filterAction->getOuterFilterSizeAction().createLabelWidget(this), 2, 0);
+        layout->addWidget(filterAction->getOuterFilterSizeAction().createWidget(this), 2, 1);
 
-        layout->addWidget(filterAction->getHDInnerFilterSizeAction().createLabelWidget(this));
-        layout->addWidget(filterAction->getHDInnerFilterSizeAction().createWidget(this));
+        layout->addWidget(filterAction->getHDInnerFilterSizeAction().createLabelWidget(this), 3, 0);
+        layout->addWidget(filterAction->getHDInnerFilterSizeAction().createWidget(this), 3, 1);
 
-        layout->addWidget(filterAction->getHDOuterFilterSizeAction().createLabelWidget(this));
-        layout->addWidget(filterAction->getHDOuterFilterSizeAction().createWidget(this));
+        layout->addWidget(filterAction->getHDOuterFilterSizeAction().createLabelWidget(this), 4, 0);
+        layout->addWidget(filterAction->getHDOuterFilterSizeAction().createWidget(this), 4, 1);
 
 
         auto mainLayout = new QVBoxLayout();
