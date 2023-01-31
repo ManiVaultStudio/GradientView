@@ -131,6 +131,7 @@ public:
     void setOverlayType(OverlayType type) { _overlayType = type; }
     void setFilterLabelText(QString text) { _filterLabel->setText(text); }
     void setFilterType(filters::FilterType type);
+    void useSharedDistances(bool useSharedDistances) { _useSharedDistances = useSharedDistances; }
     SettingsAction& getSettingsAction() { return _settingsAction; }
 
 private:
