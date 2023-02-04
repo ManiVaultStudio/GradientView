@@ -30,6 +30,8 @@ public: // Action getters
     TriggerAction& getSpatialPeakFilterAction() { return _spatialPeakFilterAction; }
     TriggerAction& getHDPeakFilterAction() { return _hdPeakFilterAction; }
 
+    ToggleAction& getRestrictToFloodAction() { return _restrictToFloodAction; }
+
     DecimalAction& getInnerFilterSizeAction() { return _innerFilterSizeAction; }
     DecimalAction& getOuterFilterSizeAction() { return _outerFilterSizeAction; }
 
@@ -39,6 +41,8 @@ public: // Action getters
 protected:
     TriggerAction       _spatialPeakFilterAction;
     TriggerAction       _hdPeakFilterAction;
+
+    ToggleAction        _restrictToFloodAction;
 
     DecimalAction       _innerFilterSizeAction;
     DecimalAction       _outerFilterSizeAction;

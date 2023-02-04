@@ -615,6 +615,20 @@ timer.start();
             //_scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
             getScatterplotWidget().setScalarEffect(PointEffect::Color);
         }
+
+        int numFloodNodes = 0;
+        for (int i = 0; i < floodFill.size(); i++)
+        {
+            numFloodNodes += floodFill[i].size();
+        }
+
+        // Store all flood nodes together
+        _floodNodes.resize(numFloodNodes);
+        int n = 0;
+        for (int i = 0; i < floodFill.size(); i++)
+            for (int j = 0; j < floodFill[i].size(); j++)
+                _floodNodes[n++] = floodFill[i][j];
+
 timer.mark("Floodfill");
 
         /////////////////////
@@ -624,9 +638,15 @@ timer.mark("Floodfill");
         switch (_filterType)
         {
         case filters::FilterType::SPATIAL_PEAK:
-            _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, _projMatrix, _projectionSize, dimRanking);
+        {
+            if (_settingsAction.getFilterAction().getRestrictToFloodAction().isChecked())
+                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, _projMatrix, _projectionSize, dimRanking, _floodNodes);
+            else
+                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, _projMatrix, _projectionSize, dimRanking);
             break;
+        }
         case filters::FilterType::HD_PEAK:
+        {
             _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, floodFill, dimRanking);
             break;
         }
@@ -657,18 +677,7 @@ timer.mark("Filter");
         /////////////////////
         // Trace lineage   //
         /////////////////////
-        int numFloodNodes = 0;
-        for (int i = 0; i < floodFill.size(); i++)
-        {
-            numFloodNodes += floodFill[i].size();
-        }
 
-        // Store all flood nodes together
-        _floodNodes.resize(numFloodNodes);
-        int n = 0;
-        for (int i = 0; i < floodFill.size(); i++)
-            for (int j = 0; j < floodFill[i].size(); j++)
-                _floodNodes[n++] = floodFill[i][j];
 
         // Start a timer to compute the graphs in 100ms, if the timer is restarted before graphs are not computed
         _graphTimer->start(100);

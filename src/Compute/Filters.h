@@ -29,6 +29,7 @@ namespace filters
         void setOuterFilterRadius(float size);
 
         void computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const DataMatrix& projMatrix, float projSize, std::vector<int>& dimRanking);
+        void computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const DataMatrix& projMatrix, float projSize, std::vector<int>& dimRanking, const std::vector<int>& mask);
 
     private:
         float _innerFilterRadius;
