@@ -901,14 +901,16 @@ void ScatterplotPlugin::clearMask()
 void ScatterplotPlugin::useSelectionAsMask()
 {
     // Get current selection
-    auto& indices = _positionDataset->getSelectionIndices();
+    // Compute the indices that are selected in this local dataset
+    std::vector<uint32_t> localSelectionIndices;
+    _positionDataset->getLocalSelectionIndices(localSelectionIndices);
 
-    _mask.assign(indices.begin(), indices.end());
+    _mask.assign(localSelectionIndices.begin(), localSelectionIndices.end());
 
     // Set point opacity
     std::vector<float> opacityScalars(_dataMatrix.rows(), 0.1f);
     for (const int maskIndex : _mask)
-        opacityScalars[maskIndex] = 1.0f;
+        opacityScalars[maskIndex] = 0.5f;
     getScatterplotWidget().setPointOpacityScalars(opacityScalars);
 
     _maskedDataMatrix = _dataMatrix(_mask, Eigen::all);
@@ -921,12 +923,12 @@ void ScatterplotPlugin::useSelectionAsMask()
     _maskedProjMatrix = _projMatrix(_mask, Eigen::all);
     //_largeKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 30);
 
-    //if (_maskedDataMatrix.rows() < 5000 && _useSharedDistances)
-    //{
-    //    _sourceKnnGraph.build(_maskedDataMatrix, _knnIndex, 100);
-    //    _knnGraph.build(_sourceKnnGraph, 10, true);
-    //}
-    //else
+    if (_maskedDataMatrix.rows() < 5000)
+    {
+        _maskedSourceKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 100);
+        _maskedKnnGraph.build(_maskedSourceKnnGraph, 10, true);
+    }
+    else
         _maskedKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 10);
 }
 
@@ -1245,10 +1247,15 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
         std::iota(full.begin(), full.end(), 0);
         _selectedPoint = findSelectedPoint(_mask.empty() ? full: _mask);
         _globalSelectedPoint = _mask.empty() ? _selectedPoint : _mask[_selectedPoint];
+        int selectedPoint = _globalSelectedPoint;
+
+        // If we're looking at a subset of the projection, apply subset indirection to selected index
+        if (!_positionDataset->isFull())
+            selectedPoint = _positionDataset->indices[selectedPoint];
 
         // Create vector for target selection indices
         std::vector<std::uint32_t> targetSelectionIndices;
-        targetSelectionIndices.push_back(_globalSelectedPoint);
+        targetSelectionIndices.push_back(selectedPoint);
 
         // Apply the selection indices
         _positionDataset->setSelectionIndices(targetSelectionIndices);

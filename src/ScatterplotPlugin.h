@@ -193,6 +193,7 @@ private:
     DataMatrix                      _maskedProjMatrix;
     knn::Index                      _maskedKnnIndex;
     KnnGraph                        _maskedKnnGraph;
+    KnnGraph                        _maskedSourceKnnGraph;
 
     // Floodfill
     int _numFloodSteps;
