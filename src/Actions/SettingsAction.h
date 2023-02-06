@@ -91,4 +91,6 @@ protected:
     MiscellaneousAction         _miscellaneousAction;
     FilterAction                _filterAction;
     OverlayAction               _overlayAction;
+    TriggerAction               _selectionAsMaskAction;
+    TriggerAction               _clearMaskAction;
 };

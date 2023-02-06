@@ -18,7 +18,9 @@ SettingsAction::SettingsAction(ScatterplotPlugin* scatterplotPlugin) :
     _exportAction(this, "Export to image/video"),
     _miscellaneousAction(scatterplotPlugin),
     _filterAction(scatterplotPlugin),
-    _overlayAction(scatterplotPlugin)
+    _overlayAction(scatterplotPlugin),
+    _selectionAsMaskAction(this, "Selection As Mask"),
+    _clearMaskAction(this, "Clear Mask")
 {
     setText("Settings");
 
@@ -37,6 +39,14 @@ SettingsAction::SettingsAction(ScatterplotPlugin* scatterplotPlugin) :
         ExportImageDialog exportDialog(nullptr, *_scatterplotPlugin);
 
         exportDialog.exec();
+    });
+
+    connect(&_selectionAsMaskAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
+        scatterplotPlugin->useSelectionAsMask();
+    });
+
+    connect(&_clearMaskAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
+        scatterplotPlugin->clearMask();
     });
 }
 
@@ -79,6 +89,8 @@ SettingsAction::Widget::Widget(QWidget* parent, SettingsAction* settingsAction) 
     addStateWidget(&settingsAction->_subsetAction, 3);
     addStateWidget(&settingsAction->_filterAction, 0);
     addStateWidget(&settingsAction->_overlayAction, 0);
+    _toolBarLayout.addWidget(settingsAction->_selectionAsMaskAction.createWidget(this));
+    _toolBarLayout.addWidget(settingsAction->_clearMaskAction.createWidget(this));
 
     _toolBarLayout.addStretch(1);
 

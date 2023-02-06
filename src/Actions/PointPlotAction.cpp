@@ -445,7 +445,7 @@ void PointPlotAction::updateScatterPlotWidgetPointOpacityScalars()
     }
 
     // Set scatter plot point size scalars
-    _scatterplotPlugin->getScatterplotWidget().setPointOpacityScalars(_pointOpacityScalars);
+    //_scatterplotPlugin->getScatterplotWidget().setPointOpacityScalars(_pointOpacityScalars);
 }
 
 PointPlotAction::Widget::Widget(QWidget* parent, PointPlotAction* pointPlotAction, const std::int32_t& widgetFlags) :

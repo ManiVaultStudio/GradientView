@@ -128,6 +128,8 @@ public:
     filters::HDFloodPeakFilter& getHDPeakFilter() { return _hdFloodPeakFilter; }
     float getProjectionSize() { return _projectionSize; }
 
+    void clearMask();
+    void useSelectionAsMask();
     void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataMatrix, _knnIndex, floodNeighbours); }
     void setFloodSteps(int numFloodSteps) { _numFloodSteps = numFloodSteps; }
     void setOverlayType(OverlayType type) { _overlayType = type; }
@@ -165,11 +167,13 @@ private:
 
     // Interaction
     int                             _selectedPoint;
+    int                             _globalSelectedPoint;
     int                             _selectedDimension;
     QPoint                          _mousePos;
     bool                            _mousePressed = false;
     std::vector<int>                _floodNodes;
     QTimer*                         _graphTimer;
+    std::vector<int>                _mask;
 
     // Filters
     QLabel*                         _filterLabel;
@@ -183,6 +187,12 @@ private:
     KnnGraph                        _largeKnnGraph;
     KnnGraph                        _sourceKnnGraph;
     bool                            _useSharedDistances = false;
+
+    // Masked KNN
+    DataMatrix                      _maskedDataMatrix;
+    DataMatrix                      _maskedProjMatrix;
+    knn::Index                      _maskedKnnIndex;
+    KnnGraph                        _maskedKnnGraph;
 
     // Floodfill
     int _numFloodSteps;

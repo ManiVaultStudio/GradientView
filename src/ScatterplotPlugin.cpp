@@ -590,8 +590,8 @@ void ScatterplotPlugin::onPointSelection()
     if (selection->indices.size() > 0)
     {
 timer.start();
-        _selectedPoint = selection->indices[0];
-        Vector2f center = _positions[_selectedPoint];
+        //_selectedPoint = selection->indices[0];
+        Vector2f center = _positions[_globalSelectedPoint];
 
         getScatterplotWidget().setCurrentPosition(center);
         getProjectionViews()[0]->setCurrentPosition(center);
@@ -599,13 +599,17 @@ timer.start();
         _selectedView->setCurrentPosition(center);
         getScatterplotWidget().setFilterRadii(Vector2f(_spatialPeakFilter.getInnerFilterRadius() * _projectionSize, _spatialPeakFilter.getOuterFilterRadius() * _projectionSize));
 
+        KnnGraph& knnGraph = _mask.empty() ? _knnGraph : _maskedKnnGraph;
+        DataMatrix& dataMatrix = _mask.empty() ? _dataMatrix : _maskedDataMatrix;
+        DataMatrix& projMatrix = _mask.empty() ? _projMatrix : _maskedProjMatrix;
+
         //////////////////
         // Do floodfill //
         //////////////////
         std::vector<std::vector<int>> floodFill;
 
         {
-            compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, _selectedPoint, _numFloodSteps, floodFill);
+            compute::doFloodFill(dataMatrix, projMatrix, knnGraph, _selectedPoint, _numFloodSteps, floodFill);
 
             getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
             for (int i = 0; i < getProjectionViews().size(); i++)
@@ -640,15 +644,16 @@ timer.mark("Floodfill");
         case filters::FilterType::SPATIAL_PEAK:
         {
             if (_settingsAction.getFilterAction().getRestrictToFloodAction().isChecked())
-                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, _projMatrix, _projectionSize, dimRanking, _floodNodes);
+                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, dataMatrix, _variances, projMatrix, _projectionSize, dimRanking, _floodNodes);
             else
-                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, _projMatrix, _projectionSize, dimRanking);
+                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, dataMatrix, _variances, projMatrix, _projectionSize, dimRanking);
             break;
         }
         case filters::FilterType::HD_PEAK:
         {
-            _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, floodFill, dimRanking);
+            _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, dataMatrix, _variances, floodFill, dimRanking);
             break;
+        }
         }
 timer.mark("Ranking");
 
@@ -657,7 +662,7 @@ timer.mark("Ranking");
         {
             const auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
             std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
-            _projectionViews[pi]->setScalars(dimV, _selectedPoint);
+            _projectionViews[pi]->setScalars(dimV, _globalSelectedPoint);
             _projectionViews[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
         }
         // Set selected gradient view
@@ -666,7 +671,7 @@ timer.mark("Ranking");
             qDebug() << "SEL DIM:" << _selectedDimension;
             const auto dimValues = _dataMatrix(Eigen::all, _selectedDimension);
             std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
-            _selectedView->setScalars(dimV, _selectedPoint);
+            _selectedView->setScalars(dimV, _globalSelectedPoint);
             _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
         }
 
@@ -684,67 +689,63 @@ timer.mark("Filter");
 timer.mark("Linearisation");
 
         //////////////////
-        std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());
-        for (int w = 0; w < 10; w++)
-        {
-            std::vector<int> lineage;
-            lineage.push_back(_selectedPoint);
-            compute::traceLineage(_dataMatrix, floodFill, _positions, _selectedPoint, lineage);
+        //std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());
+        //for (int w = 0; w < 10; w++)
+        //{
+        //    std::vector<int> lineage;
+        //    lineage.push_back(_selectedPoint);
+        //    compute::traceLineage(_dataMatrix, floodFill, _positions, _selectedPoint, lineage);
 
-            for (int i = 0; i < lineage.size(); i++)
-            {
-                linPoints[w].push_back(_positions[lineage[i]]);
-                //qDebug() << linPoints[w][i].x << linPoints[w][i].y;
-            }
-        }
-        _scatterPlotWidget->setRandomWalks(linPoints);
+        //    for (int i = 0; i < lineage.size(); i++)
+        //    {
+        //        linPoints[w].push_back(_positions[lineage[i]]);
+        //        //qDebug() << linPoints[w][i].x << linPoints[w][i].y;
+        //    }
+        //}
+        //_scatterPlotWidget->setRandomWalks(linPoints);
 
         // Coloring
+        std::vector<float> colorScalars(_dataMatrix.rows(), 0);
+
         switch (_overlayType)
         {
         case OverlayType::NONE:
         {
-            std::vector<float> ccolors(_dataMatrix.rows(), 0);
             for (int i = 0; i < floodFill.size(); i++)
             {
                 for (int j = 0; j < floodFill[i].size(); j++)
                 {
                     int index = floodFill[i][j];
-                    ccolors[index] = 1 - (1.0f/_numFloodSteps) * i;
+                    colorScalars[_mask.empty() ? index : _mask[index]] = 1 - (1.0f/_numFloodSteps) * i;
                 }
             }
 
-            _scatterPlotWidget->setScalars(ccolors);
             _scatterPlotWidget->setColorMapRange(0, 1);
             break;
         }
         case OverlayType::DIM_VALUES:
         {
-            std::vector<float> dimScalars(_dataMatrix.rows(), 0);
-
             for (int i = 0; i < _floodNodes.size(); i++)
             {
-                dimScalars[_floodNodes[i]] = _dataMatrix(_floodNodes[i], dimRanking[0]);
+                int index = !_mask.empty() ? _floodNodes[i] : _mask[_floodNodes[i]];
+                colorScalars[index] = dataMatrix(_floodNodes[i], dimRanking[0]);
             }
-            getScatterplotWidget().setScalars(dimScalars);
             break;
         }
         case OverlayType::LOCAL_DIMENSIONALITY:
         {
-            std::vector<float> scalars(_dataMatrix.rows(), 0);
-
             if (_localHighDimensionality.empty()) break;
 
             for (int i = 0; i < _floodNodes.size(); i++)
             {
-                scalars[_floodNodes[i]] = _localHighDimensionality[_floodNodes[i]];
+                int index = !_mask.empty() ? _floodNodes[i] : _mask[_floodNodes[i]];
+                colorScalars[index] = _localHighDimensionality[_floodNodes[i]];
             }
-            getScatterplotWidget().setScalars(scalars);
             break;
         }
         case OverlayType::DIRECTIONS:
         {
-            std::vector<float> scalars(_dataMatrix.rows(), 0);
+            std::vector<float> scalars(dataMatrix.rows(), 0);
             std::vector<Vector2f> directions(_floodNodes.size() * 2);
 
             for (int i = 0; i < _floodNodes.size(); i++)
@@ -754,12 +755,14 @@ timer.mark("Linearisation");
                 directions[i * 2 + 1] = _directions[idx * 2 + 1];
                 scalars[idx] = 0.5f;
             }
-            getScatterplotWidget().setScalars(scalars);
             getScatterplotWidget().setDirections(directions);
 
             break;
         }
         }
+
+        getScatterplotWidget().setScalars(colorScalars);
+
 timer.finish("Overlay");
     }
 }
@@ -808,6 +811,10 @@ void ScatterplotPlugin::computeStaticData()
     else
         _dataMatrix = dataMatrix;
 
+    // Set mask to include all points
+    //_mask.resize(_dataMatrix.rows());
+    //std::iota(_mask.begin(), _mask.end(), 0);
+
     std::cout << "Number of enabled dimensions in the dataset : " << _dataMatrix.cols() << std::endl;
 
     timer.mark("Data preparation");
@@ -844,10 +851,21 @@ void ScatterplotPlugin::computeStaticData()
 
     timer.mark("Computing KNN graph");
 
-    _localSpatialDimensionality.clear();
-    _localHighDimensionality.clear();
+    //_localSpatialDimensionality.clear();
+    //_localHighDimensionality.clear();
 
-    timer.mark("Local dimensionality");
+    //timer.mark("Local dimensionality");
+
+    //compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _localHighDimensionality);
+    //getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
+    //getScatterplotWidget().setColorMapRange(0, 1);
+    //getScatterplotWidget().setScalars(_localHighDimensionality);
+
+    //Dataset<Points> localDims = _core->addDataset("Points", "Dimensionality");
+
+    //localDims->setData(_localHighDimensionality.data(), _localHighDimensionality.size(), 1);
+
+    //_core->notifyDatasetAdded(localDims);
 
     //computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
     //getScatterplotWidget().setDirections(_directions);
@@ -869,6 +887,47 @@ void ScatterplotPlugin::computeStaticData()
     _gradientGraph->setNumDimensions(enabledDimensions.size());
 
     timer.finish("Graph init");
+}
+
+void ScatterplotPlugin::clearMask()
+{
+    _mask.clear();
+
+    // Set point opacity
+    std::vector<float> opacityScalars(_dataMatrix.rows(), 1.0f);
+    getScatterplotWidget().setPointOpacityScalars(opacityScalars);
+}
+
+void ScatterplotPlugin::useSelectionAsMask()
+{
+    // Get current selection
+    auto& indices = _positionDataset->getSelectionIndices();
+
+    _mask.assign(indices.begin(), indices.end());
+
+    // Set point opacity
+    std::vector<float> opacityScalars(_dataMatrix.rows(), 0.1f);
+    for (const int maskIndex : _mask)
+        opacityScalars[maskIndex] = 1.0f;
+    getScatterplotWidget().setPointOpacityScalars(opacityScalars);
+
+    _maskedDataMatrix = _dataMatrix(_mask, Eigen::all);
+    if (_maskedDataMatrix.rows() < 5000)
+        _maskedKnnIndex.create(_maskedDataMatrix.cols(), knn::Metric::MANHATTAN);
+    else
+        _maskedKnnIndex.create(_maskedDataMatrix.cols(), knn::Metric::EUCLIDEAN);
+    _maskedKnnIndex.addData(_maskedDataMatrix);
+
+    _maskedProjMatrix = _projMatrix(_mask, Eigen::all);
+    //_largeKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 30);
+
+    //if (_maskedDataMatrix.rows() < 5000 && _useSharedDistances)
+    //{
+    //    _sourceKnnGraph.build(_maskedDataMatrix, _knnIndex, 100);
+    //    _knnGraph.build(_sourceKnnGraph, 10, true);
+    //}
+    //else
+        _maskedKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 10);
 }
 
 void ScatterplotPlugin::loadData(const Datasets& datasets)
@@ -1151,30 +1210,45 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
         if (!_positionDataset.isValid())
             return QObject::eventFilter(target, event);
 
-        const auto w = _scatterPlotWidget->width();
-        const auto h = _scatterPlotWidget->height();
-        const auto size = w < h ? w : h;
+        // Define function finding out which points are selected or not
+        auto findSelectedPoint = [this, bounds](std::vector<int> mask) -> int
+        {
+            const auto w = _scatterPlotWidget->width();
+            const auto h = _scatterPlotWidget->height();
+            const auto size = w < h ? w : h;
 
-        // Loop over all points and establish whether they are selected or not
-        int closestIndex = 0;
-        float minDist = std::numeric_limits<float>::max();
-        for (std::uint32_t i = 0; i < _positions.size(); i++) {
-            const auto pointUV = Vector2f((_positions[i].x - bounds.getLeft()) / bounds.getWidth(), (bounds.getTop() - _positions[i].y) / bounds.getHeight());
-            const auto uvOffset = Vector2f((w - size) / 2.0f, (h - size) / 2.0f);
-            const auto uv = uvOffset + Vector2f(pointUV.x * size, pointUV.y * size);
+            int closestIndex = 0;
+            float minDist = std::numeric_limits<float>::max();
 
-            Vector2f diff = uv - Vector2f(_mousePos.x(), _mousePos.y());
-            float sqrDist = diff.x * diff.x + diff.y * diff.y;
-            if (sqrDist < minDist)
+            for (int i = 0; i < mask.size(); i++)
+            //for (const int maskIndex : mask)
             {
-                closestIndex = i;
-                minDist = sqrDist;
+                int maskIndex = mask[i];
+                const Vector2f& position = _positions[maskIndex];
+                const auto pointUV = Vector2f((position.x - bounds.getLeft()) / bounds.getWidth(), (bounds.getTop() - position.y) / bounds.getHeight());
+                const auto uvOffset = Vector2f((w - size) / 2.0f, (h - size) / 2.0f);
+                const auto uv = uvOffset + Vector2f(pointUV.x * size, pointUV.y * size);
+
+                Vector2f diff = uv - Vector2f(_mousePos.x(), _mousePos.y());
+                float sqrDist = diff.x * diff.x + diff.y * diff.y;
+                if (sqrDist < minDist)
+                {
+                    closestIndex = i;
+                    minDist = sqrDist;
+                }
             }
-        }
+            return closestIndex;
+        };
+
+        // Loop over either all points or only the masked points and establish whether they are selected or not
+        std::vector<int> full(_dataMatrix.rows());
+        std::iota(full.begin(), full.end(), 0);
+        _selectedPoint = findSelectedPoint(_mask.empty() ? full: _mask);
+        _globalSelectedPoint = _mask.empty() ? _selectedPoint : _mask[_selectedPoint];
 
         // Create vector for target selection indices
         std::vector<std::uint32_t> targetSelectionIndices;
-        targetSelectionIndices.push_back(closestIndex);
+        targetSelectionIndices.push_back(_globalSelectedPoint);
 
         // Apply the selection indices
         _positionDataset->setSelectionIndices(targetSelectionIndices);
