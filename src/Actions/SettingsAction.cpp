@@ -15,10 +15,11 @@ SettingsAction::SettingsAction(ScatterplotPlugin* scatterplotPlugin) :
     _positionAction(scatterplotPlugin),
     _subsetAction(scatterplotPlugin),
     _plotAction(scatterplotPlugin),
-    _exportAction(this, "Export to image/video"),
+    _exportImageAction(this, "Export to image/video"),
     _miscellaneousAction(scatterplotPlugin),
     _filterAction(scatterplotPlugin),
     _overlayAction(scatterplotPlugin),
+    _exportAction(scatterplotPlugin),
     _selectionAsMaskAction(this, "Selection As Mask"),
     _clearMaskAction(this, "Clear Mask")
 {
@@ -32,10 +33,10 @@ SettingsAction::SettingsAction(ScatterplotPlugin* scatterplotPlugin) :
 
     updateEnabled();
 
-    _exportAction.setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("camera"));
-    _exportAction.setDefaultWidgetFlags(TriggerAction::Icon);
+    _exportImageAction.setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("camera"));
+    _exportImageAction.setDefaultWidgetFlags(TriggerAction::Icon);
 
-    connect(&_exportAction, &TriggerAction::triggered, this, [this]() {
+    connect(&_exportImageAction, &TriggerAction::triggered, this, [this]() {
         ExportImageDialog exportDialog(nullptr, *_scatterplotPlugin);
 
         exportDialog.exec();
@@ -65,6 +66,7 @@ QMenu* SettingsAction::getContextMenu()
     menu->addSeparator();
     menu->addMenu(_filterAction.getContextMenu());
     menu->addMenu(_overlayAction.getContextMenu());
+    menu->addMenu(_exportAction.getContextMenu());
 
     return menu;
 }
@@ -89,6 +91,7 @@ SettingsAction::Widget::Widget(QWidget* parent, SettingsAction* settingsAction) 
     addStateWidget(&settingsAction->_subsetAction, 3);
     addStateWidget(&settingsAction->_filterAction, 0);
     addStateWidget(&settingsAction->_overlayAction, 0);
+    addStateWidget(&settingsAction->_exportAction, 0);
     _toolBarLayout.addWidget(settingsAction->_selectionAsMaskAction.createWidget(this));
     _toolBarLayout.addWidget(settingsAction->_clearMaskAction.createWidget(this));
 

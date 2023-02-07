@@ -9,6 +9,7 @@
 #include "MiscellaneousAction.h"
 #include "FilterAction.h"
 #include "OverlayAction.h"
+#include "ExportAction.h"
 
 #include "actions/WidgetActionStateWidget.h"
 
@@ -78,19 +79,21 @@ public:
     PositionAction& getPositionAction() { return _positionAction; }
     SubsetAction& getSubsetAction() { return _subsetAction; }
     PlotAction& getPlotAction() { return _plotAction; }
-    TriggerAction& getExportAction() { return _exportAction; }
+    TriggerAction& getExportImageAction() { return _exportImageAction; }
     MiscellaneousAction& getMiscellaneousAction() { return _miscellaneousAction; }
     FilterAction& getFilterAction() { return _filterAction; }
+    ExportAction& getExportAction() { return _exportAction; }
 
 protected:
     RenderModeAction            _renderModeAction;
     PositionAction              _positionAction;
     SubsetAction                _subsetAction;
     PlotAction                  _plotAction;
-    TriggerAction               _exportAction;
+    TriggerAction               _exportImageAction;
     MiscellaneousAction         _miscellaneousAction;
     FilterAction                _filterAction;
     OverlayAction               _overlayAction;
+    ExportAction                _exportAction;
     TriggerAction               _selectionAsMaskAction;
     TriggerAction               _clearMaskAction;
 };

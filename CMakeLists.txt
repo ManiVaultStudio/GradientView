@@ -73,6 +73,8 @@ set(Actions
     src/Actions/FilterAction.cpp
     src/Actions/OverlayAction.h
     src/Actions/OverlayAction.cpp
+    src/Actions/ExportAction.h
+    src/Actions/ExportAction.cpp
 )
 
 set(Models

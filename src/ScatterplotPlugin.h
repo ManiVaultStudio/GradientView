@@ -145,6 +145,10 @@ private:
 
     bool eventFilter(QObject* target, QEvent* event);
 
+public:
+    void exportRankings();
+    void exportFloodnodes();
+
 private slots:
     void onLineClicked(int dim);
 
