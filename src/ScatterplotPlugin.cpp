@@ -1258,7 +1258,10 @@ void ScatterplotPlugin::exportRankings()
         switch (_filterType)
         {
         case filters::FilterType::SPATIAL_PEAK:
-            _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i]);
+            if (_settingsAction.getFilterAction().getRestrictToFloodAction().isChecked())
+                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i], _floodNodes);
+            else
+                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i]);
             break;
         case filters::FilterType::HD_PEAK:
             std::vector<std::vector<int>> floodFill;
