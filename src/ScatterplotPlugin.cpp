@@ -1259,9 +1259,28 @@ void ScatterplotPlugin::exportRankings()
         {
         case filters::FilterType::SPATIAL_PEAK:
             if (_settingsAction.getFilterAction().getRestrictToFloodAction().isChecked())
-                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i], _floodNodes);
+            {
+                std::vector<std::vector<int>> floodFill;
+                compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, _numFloodSteps, floodFill);
+
+                int numFloodNodes = 0;
+                for (int j = 0; j < floodFill.size(); j++)
+                {
+                    numFloodNodes += floodFill[j].size();
+                }
+
+                // Store all flood nodes together
+                std::vector<int> floodNodes;
+                floodNodes.resize(numFloodNodes);
+                int n = 0;
+                for (int j = 0; j < floodFill.size(); j++)
+                    for (int k = 0; k < floodFill[j].size(); k++)
+                        floodNodes[n++] = floodFill[j][k];
+
+                _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i], floodNodes);
+            }
             else
-                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i]);
+                _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i]);
             break;
         case filters::FilterType::HD_PEAK:
             std::vector<std::vector<int>> floodFill;
