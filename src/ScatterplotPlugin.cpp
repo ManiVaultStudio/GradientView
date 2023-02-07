@@ -678,7 +678,7 @@ timer.mark("Linearisation");
         {
             for (int i = 0; i < _floodNodes.size(); i++)
             {
-                int index = !_mask.empty() ? _floodNodes[i] : _mask[_floodNodes[i]];
+                int index = _mask.empty() ? _floodNodes[i] : _mask[_floodNodes[i]];
                 colorScalars[index] = dataMatrix(_floodNodes[i], dimRanking[0]);
             }
             break;
@@ -689,7 +689,7 @@ timer.mark("Linearisation");
 
             for (int i = 0; i < _floodNodes.size(); i++)
             {
-                int index = !_mask.empty() ? _floodNodes[i] : _mask[_floodNodes[i]];
+                int index = _mask.empty() ? _floodNodes[i] : _mask[_floodNodes[i]];
                 colorScalars[index] = _localHighDimensionality[_floodNodes[i]];
             }
             break;
