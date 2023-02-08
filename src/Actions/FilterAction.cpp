@@ -13,8 +13,8 @@ FilterAction::FilterAction(ScatterplotPlugin* scatterplotPlugin) :
     _restrictToFloodAction(scatterplotPlugin, "Restrict to flood nodes", true, true),
     _innerFilterSizeAction(scatterplotPlugin, "Inner Filter Radius", 1, 10, 2.5f, 2.5f),
     _outerFilterSizeAction(scatterplotPlugin, "Outer Filter Radius", 2, 20, 5, 5),
-    _hdInnerFilterSizeAction(scatterplotPlugin, "HD Inner Filter Size", 1, 10, 5, 5),
-    _hdOuterFilterSizeAction(scatterplotPlugin, "HD Outer Filter Size", 2, 10, 10, 10)
+    _hdInnerFilterSizeAction(scatterplotPlugin, "HD Inner Filter Size", 1, 10, 5, 5)
+    //_hdOuterFilterSizeAction(scatterplotPlugin, "HD Outer Filter Size", 2, 10, 10, 10)
 {
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("bullseye"));
 
@@ -48,7 +48,7 @@ FilterAction::FilterAction(ScatterplotPlugin* scatterplotPlugin) :
     });
 
     connect(&_hdInnerFilterSizeAction, &IntegralAction::valueChanged, [&hdPeakFilter](int value) { hdPeakFilter.setInnerFilterSize(value); });
-    connect(&_hdOuterFilterSizeAction, &IntegralAction::valueChanged, [&hdPeakFilter](int value) { hdPeakFilter.setOuterFilterSize(value); });
+    //connect(&_hdOuterFilterSizeAction, &IntegralAction::valueChanged, [&hdPeakFilter](int value) { hdPeakFilter.setOuterFilterSize(value); });
 }
 
 QMenu* FilterAction::getContextMenu()
@@ -67,6 +67,14 @@ QMenu* FilterAction::getContextMenu()
     addActionToMenu(&_outerFilterSizeAction);
 
     return menu;
+}
+
+void FilterAction::setFloodSteps(int numSteps)
+{
+    if (_hdInnerFilterSizeAction.getValue() > numSteps - 1)
+        _hdInnerFilterSizeAction.setValue(numSteps - 1);
+
+    _hdInnerFilterSizeAction.setMaximum(numSteps-1);
 }
 
 FilterAction::Widget::Widget(QWidget* parent, FilterAction* filterAction, const std::int32_t& widgetFlags) :
@@ -98,9 +106,8 @@ FilterAction::Widget::Widget(QWidget* parent, FilterAction* filterAction, const 
         layout->addWidget(filterAction->getHDInnerFilterSizeAction().createLabelWidget(this), 4, 0);
         layout->addWidget(filterAction->getHDInnerFilterSizeAction().createWidget(this), 4, 1);
 
-        layout->addWidget(filterAction->getHDOuterFilterSizeAction().createLabelWidget(this), 5, 0);
-        layout->addWidget(filterAction->getHDOuterFilterSizeAction().createWidget(this), 5, 1);
-
+        //layout->addWidget(filterAction->getHDOuterFilterSizeAction().createLabelWidget(this), 5, 0);
+        //layout->addWidget(filterAction->getHDOuterFilterSizeAction().createWidget(this), 5, 1);
 
         auto mainLayout = new QVBoxLayout();
 
@@ -130,8 +137,8 @@ FilterAction::Widget::Widget(QWidget* parent, FilterAction* filterAction, const 
         layout->addWidget(filterAction->getHDInnerFilterSizeAction().createLabelWidget(this));
         layout->addWidget(filterAction->getHDInnerFilterSizeAction().createWidget(this));
 
-        layout->addWidget(filterAction->getHDOuterFilterSizeAction().createLabelWidget(this));
-        layout->addWidget(filterAction->getHDOuterFilterSizeAction().createWidget(this));
+        //layout->addWidget(filterAction->getHDOuterFilterSizeAction().createLabelWidget(this));
+        //layout->addWidget(filterAction->getHDOuterFilterSizeAction().createWidget(this));
 
         setLayout(layout);
     }

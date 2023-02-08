@@ -131,7 +131,12 @@ public:
     void clearMask();
     void useSelectionAsMask();
     void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataMatrix, _knnIndex, floodNeighbours); }
-    void setFloodSteps(int numFloodSteps) { _numFloodSteps = numFloodSteps; }
+    void setFloodSteps(int numFloodSteps)
+    {
+        _numFloodSteps = numFloodSteps;
+        _settingsAction.getFilterAction().setFloodSteps(numFloodSteps);
+        getHDPeakFilter().setFloodSteps(numFloodSteps);
+    }
     void setOverlayType(OverlayType type) { _overlayType = type; }
     void setFilterLabelText(QString text) { _filterLabel->setText(text); }
     void setFilterType(filters::FilterType type);

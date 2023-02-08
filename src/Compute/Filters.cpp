@@ -199,8 +199,8 @@ namespace filters
     }
 
     HDFloodPeakFilter::HDFloodPeakFilter() :
-        _innerFilterSize(5),
-        _outerFilterSize(10)
+        _innerFilterSize(5)
+        //_outerFilterSize(10)
     {
 
     }
@@ -210,9 +210,14 @@ namespace filters
         _innerFilterSize = size;
     }
 
-    void HDFloodPeakFilter::setOuterFilterSize(int size)
+    //void HDFloodPeakFilter::setOuterFilterSize(int size)
+    //{
+    //    _outerFilterSize = size;
+    //}
+
+    void HDFloodPeakFilter::setFloodSteps(int numSteps)
     {
-        _outerFilterSize = size;
+        _floodSteps = numSteps;
     }
 
     void HDFloodPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const std::vector<std::vector<int>>& floodPoints, std::vector<int>& dimRanking)
@@ -226,7 +231,7 @@ namespace filters
         {
             nearIndices.insert(nearIndices.end(), floodPoints[wave].begin(), floodPoints[wave].end());
         }
-        for (int wave = _innerFilterSize; wave < _outerFilterSize; wave++)
+        for (int wave = _innerFilterSize; wave < _floodSteps - _innerFilterSize; wave++)
         {
             farIndices.insert(farIndices.end(), floodPoints[wave].begin(), floodPoints[wave].end());
         }

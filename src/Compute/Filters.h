@@ -42,11 +42,12 @@ namespace filters
         HDFloodPeakFilter();
 
         void setInnerFilterSize(int size);
-        void setOuterFilterSize(int size);
+        //void setOuterFilterSize(int size);
+        void setFloodSteps(int numSteps);
 
         void computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const std::vector<std::vector<int>>& floodPoints, std::vector<int>& dimRanking);
     private:
         int _innerFilterSize;
-        int _outerFilterSize;
+        int _floodSteps;
     };
 }

@@ -27,6 +27,8 @@ public:
      */
 
 public: // Action getters
+    void setFloodSteps(int numSteps);
+
     TriggerAction& getSpatialPeakFilterAction() { return _spatialPeakFilterAction; }
     TriggerAction& getHDPeakFilterAction() { return _hdPeakFilterAction; }
 
@@ -36,7 +38,7 @@ public: // Action getters
     DecimalAction& getOuterFilterSizeAction() { return _outerFilterSizeAction; }
 
     IntegralAction& getHDInnerFilterSizeAction() { return _hdInnerFilterSizeAction; }
-    IntegralAction& getHDOuterFilterSizeAction() { return _hdOuterFilterSizeAction; }
+    //IntegralAction& getHDOuterFilterSizeAction() { return _hdOuterFilterSizeAction; }
 
 protected:
     TriggerAction       _spatialPeakFilterAction;
@@ -48,5 +50,5 @@ protected:
     DecimalAction       _outerFilterSizeAction;
 
     IntegralAction      _hdInnerFilterSizeAction;
-    IntegralAction      _hdOuterFilterSizeAction;
+    //IntegralAction      _hdOuterFilterSizeAction;
 };

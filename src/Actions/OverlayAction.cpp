@@ -9,7 +9,7 @@
 OverlayAction::OverlayAction(ScatterplotPlugin* scatterplotPlugin) :
     PluginAction(scatterplotPlugin, "Filter"),
     _floodDecimal(this, "Flood nodes", 10, 500, 10, 10),
-    _floodStepsAction(this, "Flood steps", 3, 50, 10, 10),
+    _floodStepsAction(this, "Flood steps", 2, 50, 10, 10),
     _sharedDistAction(this, "Shared distances", false, false),
     _floodOverlayAction(this, "Flood Steps"),
     _dimensionOverlayAction(this, "Top Dimension Values"),
