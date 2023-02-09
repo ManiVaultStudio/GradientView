@@ -45,31 +45,83 @@ using namespace hdps::util;
 
 namespace
 {
-    void convertToEigenMatrix(hdps::Dataset<Points> dataset, DataMatrix& dataMatrix)
+    void convertToEigenMatrix(hdps::Dataset<Points> dataset, hdps::Dataset<Points> sourceDataset, DataMatrix& dataMatrix)
     {
+        // Compute num points
+        std::vector<bool> enabledDims = sourceDataset->getDimensionsPickerAction().getEnabledDimensions();
+        int numPoints = sourceDataset->getNumPoints();
+        int numDimensions = sourceDataset->getNumDimensions();
+        int numEnabledDims =  std::count(enabledDims.begin(), enabledDims.end(), true);
+
+        DataMatrix fullDataMatrix;
+        fullDataMatrix.resize(numPoints, numEnabledDims);
+
+        int col = 0;
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (!enabledDims[d]) continue;
+
+            std::vector<float> dimData;
+            sourceDataset->extractDataForDimension(dimData, d);
+            for (int i = 0; i < numPoints; i++)
+                fullDataMatrix(i, col) = dimData[i];
+
+            col++;
+        }
+
+        // If the dataset was a subset or subset chain, take only a portion of the matrix by indexing
+        if (!dataset->isFull())
+        {
+            // FIXME Might need to change this into getIndicesIntoFullDataset,
+            // because now it also goes down the subset chain of the non-derived data
+            std::vector<uint32_t> indices;
+            dataset->getGlobalIndices(indices);
+
+            dataMatrix = fullDataMatrix(indices, Eigen::all);
+        }
+        else
+            dataMatrix = fullDataMatrix;
+    }
+
+    void convertToEigenMatrixProjection(hdps::Dataset<Points> dataset, DataMatrix& dataMatrix)
+    {
+        hdps::Dataset<Points> fullDataset = dataset->getFullDataset<Points>();
+
         // Compute num points
         std::vector<bool> enabledDims = dataset->getDimensionsPickerAction().getEnabledDimensions();
         int numPoints = dataset->getNumPoints();
+        int numPointsOfFull = fullDataset->getNumPoints();
         int numDimensions = dataset->getNumDimensions();
-        int numEnabledDims =  std::count(enabledDims.begin(), enabledDims.end(), true);
+        int numEnabledDims = std::count(enabledDims.begin(), enabledDims.end(), true);
 
-        dataMatrix.resize(numPoints, numEnabledDims);
+        DataMatrix fullDataMatrix;
+        fullDataMatrix.resize(numPointsOfFull, numEnabledDims);
 
-        if (dataset->isFull())
+        int col = 0;
+        for (int d = 0; d < numDimensions; d++)
         {
-            int col = 0;
-            for (int d = 0; d < numDimensions; d++)
-            {
-                if (!enabledDims[d]) continue;
+            if (!enabledDims[d]) continue;
 
-                std::vector<float> dimData;
-                dataset->extractDataForDimension(dimData, d);
-                for (int i = 0; i < numPoints; i++)
-                    dataMatrix(i, col) = dimData[i];
+            std::vector<float> dimData;
+            fullDataset->extractDataForDimension(dimData, d);
+            for (int i = 0; i < numPointsOfFull; i++)
+                fullDataMatrix(i, col) = dimData[i];
 
-                col++;
-            }
+            col++;
         }
+
+        // If the dataset was a subset or subset chain, take only a portion of the matrix by indexing
+        if (!dataset->isFull())
+        {
+            // FIXME Might need to change this into getIndicesIntoFullDataset,
+            // because now it also goes down the subset chain of the non-derived data
+            std::vector<uint32_t> indices;
+            dataset->getGlobalIndices(indices);
+
+            dataMatrix = fullDataMatrix(indices, Eigen::all);
+        }
+        else
+            dataMatrix = fullDataMatrix;
     }
 
     void computeDirection(DataMatrix& dataMatrix, DataMatrix& projMatrix, KnnGraph& knnGraph, int numSteps, std::vector<Vector2f>& directions)
@@ -748,19 +800,12 @@ void ScatterplotPlugin::computeStaticData()
     timer.start();
 
     std::cout << "Start conversion" << std::endl;
-    DataMatrix dataMatrix;
-    convertToEigenMatrix(_positionSourceDataset, dataMatrix);
-    convertToEigenMatrix(_positionDataset, _fullProjMatrix);
+    convertToEigenMatrix(_positionDataset, _positionSourceDataset, _dataMatrix);
+    convertToEigenMatrixProjection(_positionDataset, _fullProjMatrix);
 
     int xDim = _settingsAction.getPositionAction().getDimensionX();
     int yDim = _settingsAction.getPositionAction().getDimensionY();
     _projMatrix = _fullProjMatrix(Eigen::all, std::vector<int> { xDim, yDim });
-
-    // Subsample based on subset or full data
-    if (!_positionDataset->isFull())
-        _dataMatrix = dataMatrix(_positionDataset->indices, Eigen::all);
-    else
-        _dataMatrix = dataMatrix;
 
     // Set mask to include all points
     //_mask.resize(_dataMatrix.rows());
