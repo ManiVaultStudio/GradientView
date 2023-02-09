@@ -226,7 +226,7 @@ namespace filters
         {
             nearIndices.insert(nearIndices.end(), floodPoints[wave].begin(), floodPoints[wave].end());
         }
-        for (int wave = _innerFilterSize; wave < numFloodSteps - _innerFilterSize; wave++)
+        for (int wave = _innerFilterSize; wave < numFloodSteps - 1; wave++)
         {
             farIndices.insert(farIndices.end(), floodPoints[wave].begin(), floodPoints[wave].end());
         }

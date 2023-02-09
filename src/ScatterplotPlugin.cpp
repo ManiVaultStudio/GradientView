@@ -602,7 +602,7 @@ timer.mark("Floodfill");
         }
         case filters::FilterType::HD_PEAK:
         {
-            _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, dataMatrix, _variances, floodFill, dimRanking);
+            _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, dataMatrix, _variances, floodFill, _numFloodSteps, dimRanking);
             break;
         }
         }
@@ -1285,7 +1285,7 @@ void ScatterplotPlugin::exportRankings()
         case filters::FilterType::HD_PEAK:
             std::vector<std::vector<int>> floodFill;
             compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, _numFloodSteps, floodFill);
-            _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, floodFill, perPointDimRankings[i]);
+            _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, floodFill, _numFloodSteps, perPointDimRankings[i]);
             break;
         }
     }
