@@ -43,6 +43,7 @@ public:
     void setCurrentPosition(Vector2f pos) { _currentPoint = pos; update(); }
 
     void setProjectionName(QString name);
+    void setSourcePointSize(float sourcePointSize) { _pointRenderer.setPointSize(sourcePointSize / 4); }
 
     /** Assign a color map image to the point renderer */
     void setColorMap(const QImage& colorMapImage);

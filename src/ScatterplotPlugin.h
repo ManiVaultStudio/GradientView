@@ -123,6 +123,7 @@ public:
     /** Get reference to the scatter plot widget */
     ScatterplotWidget& getScatterplotWidget();
     std::vector<ProjectionView*>& getProjectionViews() { return _projectionViews; }
+    ProjectionView*& getSelectedView() { return _selectedView; }
 
     filters::SpatialPeakFilter& getSpatialPeakFilter() { return _spatialPeakFilter; }
     filters::HDFloodPeakFilter& getHDPeakFilter() { return _hdFloodPeakFilter; }

@@ -4,6 +4,7 @@
 #include "Application.h"
 
 #include "ScatterplotPlugin.h"
+#include "ProjectionView.h"
 #include "ScatterplotWidget.h"
 #include "DataHierarchyItem.h"
 
@@ -264,6 +265,10 @@ void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
 
     // Fill with ones for constant point size
     std::fill(_pointSizeScalars.begin(), _pointSizeScalars.end(), _sizeAction.getMagnitudeAction().getValue());
+
+    _scatterplotPlugin->getProjectionViews()[0]->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
+    _scatterplotPlugin->getProjectionViews()[1]->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
+    _scatterplotPlugin->getSelectedView()->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
 
     // Modulate point size by selection
     if (_sizeAction.isSourceSelection()) {
