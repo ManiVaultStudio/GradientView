@@ -119,7 +119,7 @@ namespace hdps
             }
         }
 
-        void doFloodFill(const DataMatrix& highDim, const DataMatrix& spatialMap, const KnnGraph& knnGraph, int selectedPoint, int numSteps, std::vector<std::vector<int>>& floodFill)
+        void doFloodFill(const DataMatrix& highDim, const KnnGraph& knnGraph, int selectedPoint, int numSteps, std::vector<std::vector<int>>& floodFill)
         {
             int numDimensions = highDim.cols();
 

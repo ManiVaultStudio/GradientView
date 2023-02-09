@@ -77,7 +77,7 @@ namespace
         for (int p = 0; p < dataMatrix.rows(); p++)
         {
             std::vector<std::vector<int>> floodFill;
-            compute::doFloodFill(dataMatrix, projMatrix, knnGraph, p, numSteps, floodFill);
+            compute::doFloodFill(dataMatrix, knnGraph, p, numSteps, floodFill);
 
             int depth = 3;
             int numNodes = 0;
@@ -560,7 +560,7 @@ timer.start();
         std::vector<std::vector<int>> floodFill;
 
         {
-            compute::doFloodFill(dataMatrix, projMatrix, knnGraph, _selectedPoint, _numFloodSteps, floodFill);
+            compute::doFloodFill(dataMatrix, knnGraph, _selectedPoint, _numFloodSteps, floodFill);
 
             getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
             for (int i = 0; i < getProjectionViews().size(); i++)
@@ -1261,7 +1261,7 @@ void ScatterplotPlugin::exportRankings()
             if (_settingsAction.getFilterAction().getRestrictToFloodAction().isChecked())
             {
                 std::vector<std::vector<int>> floodFill;
-                compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, _numFloodSteps, floodFill);
+                compute::doFloodFill(_dataMatrix, _knnGraph, i, _numFloodSteps, floodFill);
 
                 int numFloodNodes = 0;
                 for (int j = 0; j < floodFill.size(); j++)
@@ -1284,7 +1284,7 @@ void ScatterplotPlugin::exportRankings()
             break;
         case filters::FilterType::HD_PEAK:
             std::vector<std::vector<int>> floodFill;
-            compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, _numFloodSteps, floodFill);
+            compute::doFloodFill(_dataMatrix, _knnGraph, i, _numFloodSteps, floodFill);
             _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, floodFill, _numFloodSteps, perPointDimRankings[i]);
             break;
         }
@@ -1299,7 +1299,7 @@ void ScatterplotPlugin::exportFloodnodes()
     for (int p = 0; p < _dataMatrix.rows(); p++)
     {
         std::vector<std::vector<int>> floodFill;
-        compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, p, _numFloodSteps, floodFill);
+        compute::doFloodFill(_dataMatrix, _knnGraph, p, _numFloodSteps, floodFill);
 
         int numFloodNodes = 0;
         for (int i = 0; i < floodFill.size(); i++)
