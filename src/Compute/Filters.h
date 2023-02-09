@@ -43,11 +43,9 @@ namespace filters
 
         void setInnerFilterSize(int size);
         //void setOuterFilterSize(int size);
-        void setFloodSteps(int numSteps);
 
-        void computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const std::vector<std::vector<int>>& floodPoints, std::vector<int>& dimRanking);
+        void computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const std::vector<std::vector<int>>& floodPoints, int numFloodSteps, std::vector<int>& dimRanking);
     private:
         int _innerFilterSize;
-        int _floodSteps;
     };
 }

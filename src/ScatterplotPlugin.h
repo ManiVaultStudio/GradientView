@@ -135,7 +135,6 @@ public:
     {
         _numFloodSteps = numFloodSteps;
         _settingsAction.getFilterAction().setFloodSteps(numFloodSteps);
-        getHDPeakFilter().setFloodSteps(numFloodSteps);
     }
     void setOverlayType(OverlayType type) { _overlayType = type; }
     void setFilterLabelText(QString text) { _filterLabel->setText(text); }
