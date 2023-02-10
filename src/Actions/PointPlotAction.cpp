@@ -124,7 +124,7 @@ PointPlotAction::PointPlotAction(ScatterplotPlugin* scatterplotPlugin) :
         {
             case ScalarSourceModel::DefaultRow::Constant:
             {
-                _opacityAction.getMagnitudeAction().setValue(50.0f);
+                _opacityAction.getMagnitudeAction().setValue(100.0f);
                 _opacityAction.getSourceAction().getOffsetAction().setValue(0.0f);
                 _focusSelection.setChecked(false);
 
@@ -351,7 +351,9 @@ void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
 void PointPlotAction::updateScatterPlotWidgetPointOpacityScalars()
 {
     // Enable the opacity magnitude action in constant mode
-    //_opacityAction.getMagnitudeAction().setEnabled(_opacityAction.isConstant());
+    _opacityAction.getMagnitudeAction().setEnabled(!_scatterplotPlugin->hasMaskApplied());
+
+    if (_scatterplotPlugin->hasMaskApplied()) return;
 
     // Number of points
     const auto numberOfPoints = _scatterplotPlugin->getPositionDataset()->getNumPoints();
@@ -450,7 +452,7 @@ void PointPlotAction::updateScatterPlotWidgetPointOpacityScalars()
     }
 
     // Set scatter plot point size scalars
-    //_scatterplotPlugin->getScatterplotWidget().setPointOpacityScalars(_pointOpacityScalars);
+    _scatterplotPlugin->getScatterplotWidget().setPointOpacityScalars(_pointOpacityScalars);
 }
 
 PointPlotAction::Widget::Widget(QWidget* parent, PointPlotAction* pointPlotAction, const std::int32_t& widgetFlags) :

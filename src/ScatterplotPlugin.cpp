@@ -792,9 +792,9 @@ void ScatterplotPlugin::useSelectionAsMask()
     _mask.assign(localSelectionIndices.begin(), localSelectionIndices.end());
 
     // Set point opacity
-    std::vector<float> opacityScalars(_dataMatrix.rows(), 0.1f);
+    std::vector<float> opacityScalars(_dataMatrix.rows(), 0.2f);
     for (const int maskIndex : _mask)
-        opacityScalars[maskIndex] = 0.5f;
+        opacityScalars[maskIndex] = 1.0f;
     getScatterplotWidget().setPointOpacityScalars(opacityScalars);
 
     _maskedDataMatrix = _dataMatrix(_mask, Eigen::all);

@@ -137,6 +137,7 @@ public:
         _numFloodSteps = numFloodSteps;
         _settingsAction.getFilterAction().setFloodSteps(numFloodSteps);
     }
+    bool hasMaskApplied() { return !_mask.empty(); }
     void setOverlayType(OverlayType type) { _overlayType = type; }
     void setFilterLabelText(QString text) { _filterLabel->setText(text); }
     void setFilterType(filters::FilterType type);
