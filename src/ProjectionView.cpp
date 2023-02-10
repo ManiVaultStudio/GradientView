@@ -241,7 +241,7 @@ void ProjectionView::paintGL()
         font.setPointSize(font.pointSize() * 2);
         painter.setFont(font);
         painter.setPen(QPen(Qt::white));
-        painter.drawText(12, 30, _projectionName);
+        painter.drawText(12, 30, "Dim: " + _projectionName);
 
         Matrix3f orthoM = createProjectionMatrix(_dataBounds);
 

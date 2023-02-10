@@ -323,6 +323,7 @@ void ScatterplotPlugin::init()
     font.setPointSize(font.pointSize() * 2);
     _filterLabel->setFont(font);
 
+    gradientViewLayout->setContentsMargins(6, 0, 6, 0);
     gradientViewLayout->addWidget(_filterLabel);
     gradientViewLayout->addWidget(_projectionViews[0], 50);
     gradientViewLayout->addWidget(_projectionViews[1], 50);
@@ -332,6 +333,11 @@ void ScatterplotPlugin::init()
     dimensionSelectionLabel->setFont(font);
     gradientViewLayout->addWidget(dimensionSelectionLabel);
     gradientViewLayout->addWidget(_selectedView, 50);
+
+    // Expression graph
+    QLabel* sortedExpressionGraphLabel = new QLabel("Sorted Expression Graph");
+    sortedExpressionGraphLabel->setFont(font);
+    gradientViewLayout->addWidget(sortedExpressionGraphLabel);
     gradientViewLayout->addWidget(_gradientGraph, 70);
 
     settingsLayout->addWidget(groupsAction->createWidget(&getWidget()), 40);
