@@ -1175,6 +1175,7 @@ void ScatterplotPlugin::onLineClicked(int dim)
     _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
 
     onPointSelection();
+    updateViews();
 }
 
 void ScatterplotPlugin::exportRankings()
