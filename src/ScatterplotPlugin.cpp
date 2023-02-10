@@ -549,7 +549,7 @@ timer.mark("Ranking");
         // Set appropriate coloring of gradient view, FIXME use colormap later
         for (int pi = 0; pi < _projectionViews.size(); pi++)
         {
-            const auto dimValues = dataMatrix(Eigen::all, dimRanking[pi]);
+            const auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
             std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
             _projectionViews[pi]->setShownDimension(dimRanking[pi]);
             _projectionViews[pi]->setScalars(dimV, _globalSelectedPoint);
@@ -559,7 +559,7 @@ timer.mark("Ranking");
         if (_selectedDimension >= 0)
         {
             qDebug() << "SEL DIM:" << _selectedDimension;
-            const auto dimValues = dataMatrix(Eigen::all, _selectedDimension);
+            const auto dimValues = _dataMatrix(Eigen::all, _selectedDimension);
             std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
             _selectedView->setShownDimension(_selectedDimension);
             _selectedView->setScalars(dimV, _globalSelectedPoint);
