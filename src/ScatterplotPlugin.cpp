@@ -388,16 +388,12 @@ void ScatterplotPlugin::init()
     //}
 
     auto leftPanel = new QVBoxLayout();
-    //leftPanel->addLayout(settingsLayout, 10);
     leftPanel->addWidget(_scatterPlotWidget, 90);
 
     auto centralPanel = new QHBoxLayout();
     centralPanel->addLayout(leftPanel, 80);
     centralPanel->addLayout(gradientViewLayout, 20);
 
-    //plotLayout->addWidget(_scatterPlotWidget, 60);
-    //plotLayout->addLayout(gradientViewLayout, 30);
-    //plotLayout->addLayout(settingsLayout, 30);
     layout->addLayout(centralPanel, 100);
 
     auto bottomToolbarWidget = new QWidget();

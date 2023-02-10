@@ -109,8 +109,8 @@ RenderModeAction::Widget::Widget(QWidget* parent, RenderModeAction* renderModeAc
     layout->setSpacing(3);
 
     layout->addWidget(renderModeAction->_scatterPlotAction.createWidget(this, ToggleAction::PushButton));
-    layout->addWidget(renderModeAction->_densityPlotAction.createWidget(this, ToggleAction::PushButton));
-    layout->addWidget(renderModeAction->_contourPlotAction.createWidget(this, ToggleAction::PushButton));
+    //layout->addWidget(renderModeAction->_densityPlotAction.createWidget(this, ToggleAction::PushButton));
+    //layout->addWidget(renderModeAction->_contourPlotAction.createWidget(this, ToggleAction::PushButton));
     layout->addWidget(renderModeAction->_cellPlotAction.createWidget(this, ToggleAction::PushButton));
 
     if (widgetFlags & PopupLayout) {

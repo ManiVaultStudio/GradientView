@@ -60,8 +60,8 @@ QMenu* SettingsAction::getContextMenu()
     menu->addSeparator();
     menu->addMenu(_positionAction.getContextMenu());
     menu->addSeparator();
-    menu->addMenu(_subsetAction.getContextMenu());
-    menu->addSeparator();
+    //menu->addMenu(_subsetAction.getContextMenu());
+    //menu->addSeparator();
     menu->addMenu(_miscellaneousAction.getContextMenu());
     menu->addSeparator();
     menu->addMenu(_filterAction.getContextMenu());
@@ -88,7 +88,7 @@ SettingsAction::Widget::Widget(QWidget* parent, SettingsAction* settingsAction) 
     addStateWidget(&settingsAction->_renderModeAction, 4);
     addStateWidget(&settingsAction->_plotAction, 7);
     addStateWidget(&settingsAction->_positionAction, 10);
-    addStateWidget(&settingsAction->_subsetAction, 3);
+    //addStateWidget(&settingsAction->_subsetAction, 3);
     addStateWidget(&settingsAction->_filterAction, 0);
     addStateWidget(&settingsAction->_overlayAction, 0);
     addStateWidget(&settingsAction->_exportAction, 0);
