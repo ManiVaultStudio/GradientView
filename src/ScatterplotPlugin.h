@@ -147,6 +147,7 @@ private:
     void updateData();
     void calculatePositions(const Points& points);
     void updateSelection();
+    void updateViews();
 
     bool eventFilter(QObject* target, QEvent* event);
 
@@ -183,6 +184,7 @@ private:
     std::vector<int>                _floodNodes;
     QTimer*                         _graphTimer;
     std::vector<int>                _mask;
+    int                             _selectedViewIndex = 0;
 
     // Filters
     QLabel*                         _filterLabel;

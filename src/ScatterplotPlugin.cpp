@@ -203,6 +203,11 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     }
     _selectedView = new ProjectionView();
 
+    // Connect signals from views
+    connect(_projectionViews[0], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 1; updateViews(); });
+    connect(_projectionViews[1], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 2; updateViews(); });
+    connect(_selectedView, &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 3; updateViews(); });
+
     connect(_gradientGraph, &GradientGraph::lineClicked, this, &ScatterplotPlugin::onLineClicked);
     _graphTimer->setSingleShot(true);
     connect(_graphTimer, &QTimer::timeout, this, &ScatterplotPlugin::computeGraphs);
@@ -663,8 +668,9 @@ timer.mark("Ranking");
         // Set appropriate coloring of gradient view, FIXME use colormap later
         for (int pi = 0; pi < _projectionViews.size(); pi++)
         {
-            const auto dimValues = _dataMatrix(Eigen::all, dimRanking[pi]);
+            const auto dimValues = dataMatrix(Eigen::all, dimRanking[pi]);
             std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
+            _projectionViews[pi]->setShownDimension(dimRanking[pi]);
             _projectionViews[pi]->setScalars(dimV, _globalSelectedPoint);
             _projectionViews[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
         }
@@ -672,8 +678,9 @@ timer.mark("Ranking");
         if (_selectedDimension >= 0)
         {
             qDebug() << "SEL DIM:" << _selectedDimension;
-            const auto dimValues = _dataMatrix(Eigen::all, _selectedDimension);
+            const auto dimValues = dataMatrix(Eigen::all, _selectedDimension);
             std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
+            _selectedView->setShownDimension(_selectedDimension);
             _selectedView->setScalars(dimV, _globalSelectedPoint);
             _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
         }
@@ -1138,6 +1145,29 @@ void ScatterplotPlugin::updateSelection()
     _scatterPlotWidget->setHighlights(highlights, static_cast<std::int32_t>(selection->indices.size()));
 }
 
+void ScatterplotPlugin::updateViews()
+{
+    _projectionViews[0]->selectView(false);
+    _projectionViews[1]->selectView(false);
+    _selectedView->selectView(false);
+
+    ProjectionView* selectedView = nullptr;
+    if (_selectedViewIndex == 1) selectedView = _projectionViews[0];
+    else if (_selectedViewIndex == 2) selectedView = _projectionViews[1];
+    else if (_selectedViewIndex == 3) selectedView = _selectedView;
+
+    if (selectedView != nullptr)
+    {
+        selectedView->selectView(true);
+
+        int selectedDimension = selectedView->getShownDimension();
+        const auto dimValues = _dataMatrix(Eigen::all, selectedDimension);
+        std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
+        getScatterplotWidget().setScalars(dimV);
+        //setProjectionName(_enabledDimNames[_selectedDimension]);
+    }
+}
+
 void ScatterplotPlugin::setFilterType(filters::FilterType type)
 {
     _filterType = type;
@@ -1181,6 +1211,9 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
         qDebug() << "Mouse button press";
 
         _mousePressed = true;
+
+        _selectedViewIndex = 0;
+        updateViews();
 
         break;
     }

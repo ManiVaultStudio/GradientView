@@ -41,6 +41,8 @@ public:
     void setColors(const std::vector<Vector3f>& colors);
 
     void setCurrentPosition(Vector2f pos) { _currentPoint = pos; update(); }
+    int getShownDimension() { return _shownDimension; }
+    void setShownDimension(int dimension) { _shownDimension = dimension; }
 
     void setProjectionName(QString name);
     void setSourcePointSize(float sourcePointSize) { _pointRenderer.setPointSize(sourcePointSize / 4); }
@@ -61,15 +63,23 @@ public:
      */
     void setPointOpacityScalars(const std::vector<float>& pointOpacityScalars);
 
+    void selectView(bool selected)
+    {
+        _clicked = selected;
+        update();
+    }
 
 signals:
     void initialized();
+    void viewSelected();
 
 protected:
     void initializeGL()         Q_DECL_OVERRIDE;
     void resizeGL(int w, int h) Q_DECL_OVERRIDE;
     void paintGL()              Q_DECL_OVERRIDE;
     void cleanup();
+
+    bool eventFilter(QObject* target, QEvent* event);
 
 private:
     PointRenderer _pointRenderer;
@@ -83,4 +93,7 @@ private:
     Vector2f                _currentPoint;
 
     bool          _isInitialized = false;
+
+    bool            _clicked = false;
+    int             _shownDimension = 0;
 };

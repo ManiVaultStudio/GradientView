@@ -7,6 +7,8 @@
 
 #include <QSize>
 #include <QPainter>
+#include <QEvent>
+#include <QMouseEvent>
 
 namespace
 {
@@ -62,6 +64,9 @@ ProjectionView::ProjectionView() :
     surfaceFormat.setSamples(16);
 
     setFormat(surfaceFormat);
+
+    setFocusPolicy(Qt::ClickFocus);
+    installEventFilter(this);
 }
 
 ProjectionView::~ProjectionView()
@@ -101,7 +106,7 @@ void ProjectionView::setScalars(const std::vector<float>& scalars, int selectedP
 {
     _pointRenderer.setColorChannelScalars(scalars);
     _pointRenderer.setScalarEffect(Color);
-
+    
     update();
 }
 
@@ -230,12 +235,13 @@ void ProjectionView::paintGL()
 
             _pointRenderer.render();
         }
+        painter.endNativePainting();
+
         QFont font = painter.font();
         font.setPointSize(font.pointSize() * 2);
         painter.setFont(font);
+        painter.setPen(QPen(Qt::white));
         painter.drawText(30, 30, _projectionName);
-
-        painter.endNativePainting();
 
         Matrix3f orthoM = createProjectionMatrix(_dataBounds);
 
@@ -258,6 +264,15 @@ void ProjectionView::paintGL()
         painter.setBrush(Qt::red);
         painter.drawEllipse(QPointF(cp.x, cp.y), 5, 5);
         painter.setBrush(Qt::BrushStyle::NoBrush);
+
+        // Render clicked frame
+        if (_clicked)
+        {
+            QPen pen(Qt::green);
+            pen.setWidth(10);
+            painter.setPen(pen);
+            painter.drawRect(0, 0, width(), height());
+        }
 
         painter.end();
     }
@@ -295,4 +310,29 @@ void ProjectionView::cleanup()
 
     makeCurrent();
     _pointRenderer.destroy();
+}
+
+bool ProjectionView::eventFilter(QObject* target, QEvent* event)
+{
+    auto shouldPaint = false;
+
+    switch (event->type())
+    {
+    case QEvent::MouseButtonPress:
+    {
+        auto mouseEvent = static_cast<QMouseEvent*>(event);
+
+        qDebug() << "Mouse button press";
+        _clicked = true;
+
+        emit viewSelected();
+
+        break;
+    }
+
+    default:
+        break;
+    }
+
+    return QObject::eventFilter(target, event);
 }
