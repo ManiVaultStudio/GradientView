@@ -128,14 +128,18 @@ FilterAction::Widget::Widget(QWidget* parent, FilterAction* filterAction, const 
 
         layout->setContentsMargins(0, 0, 0, 0);
 
-        layout->addWidget(filterAction->getInnerFilterSizeAction().createLabelWidget(this));
-        layout->addWidget(filterAction->getInnerFilterSizeAction().createWidget(this));
+        // Big widget to force all other actions to become pop-ups
+        QWidget* w = new QWidget();
+        w->setMinimumWidth(2000);
+        layout->addWidget(w);
+        //layout->addWidget(filterAction->getInnerFilterSizeAction().createLabelWidget(this));
+        //layout->addWidget(filterAction->getInnerFilterSizeAction().createWidget(this));
 
-        layout->addWidget(filterAction->getOuterFilterSizeAction().createLabelWidget(this));
-        layout->addWidget(filterAction->getOuterFilterSizeAction().createWidget(this));
+        //layout->addWidget(filterAction->getOuterFilterSizeAction().createLabelWidget(this));
+        //layout->addWidget(filterAction->getOuterFilterSizeAction().createWidget(this));
 
-        layout->addWidget(filterAction->getHDInnerFilterSizeAction().createLabelWidget(this));
-        layout->addWidget(filterAction->getHDInnerFilterSizeAction().createWidget(this));
+        //layout->addWidget(filterAction->getHDInnerFilterSizeAction().createLabelWidget(this));
+        //layout->addWidget(filterAction->getHDInnerFilterSizeAction().createWidget(this));
 
         //layout->addWidget(filterAction->getHDOuterFilterSizeAction().createLabelWidget(this));
         //layout->addWidget(filterAction->getHDOuterFilterSizeAction().createWidget(this));
