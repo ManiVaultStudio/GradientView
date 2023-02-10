@@ -294,41 +294,6 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
             }
         }
 
-        //// Cluster dataset is about to be dropped
-        //if (dataType == ClusterType) {
-
-        //    // Get clusters dataset from the core
-        //    auto candidateDataset  = _core->requestDataset<Clusters>(datasetId);
-        //    
-        //    // Establish drop region description
-        //    const auto description  = QString("Color points by %1").arg(candidateDataset->getGuiName());
-
-        //    // Only allow user to color by clusters when there is a positions dataset loaded
-        //    if (_positionDataset.isValid()) {
-
-        //        if (_settingsAction.getColoringAction().hasColorDataset(candidateDataset)) {
-
-        //            // The clusters dataset is already loaded
-        //            dropRegions << new DropWidget::DropRegion(this, "Color", description, "palette", true, [this, candidateDataset]() {
-        //                _settingsAction.getColoringAction().setCurrentColorDataset(candidateDataset);
-        //            });
-        //        }
-        //        else {
-
-        //            // Use the clusters set for points color
-        //            dropRegions << new DropWidget::DropRegion(this, "Color", description, "palette", true, [this, candidateDataset]() {
-        //                _settingsAction.getColoringAction().addColorDataset(candidateDataset);
-        //                _settingsAction.getColoringAction().setCurrentColorDataset(candidateDataset);
-        //            });
-        //        }
-        //    }
-        //    else {
-
-        //        // Only allow user to color by clusters when there is a positions dataset loaded
-        //        dropRegions << new DropWidget::DropRegion(this, "No points data loaded", "Clusters can only be visualized in concert with points data", "exclamation-circle", false);
-        //    }
-        //}
-
         return dropRegions;
     });
 
@@ -372,76 +337,6 @@ void ScatterplotPlugin::init()
     settingsLayout->addWidget(groupsAction->createWidget(&getWidget()), 40);
 
     //// Overlay options
-    // 
-    //// Export options
-    //{
-    //    auto exportGroupAction = new GroupAction(&getWidget(), false);
-    //    exportGroupAction->setText("Export");
-    //    exportGroupAction->setShowLabels(false);
-
-    //    QVector<TriggersAction::Trigger> triggers;
-    //    triggers << TriggersAction::Trigger("Export rankings", "");
-    //    triggers << TriggersAction::Trigger("Export flood nodes", "");
-
-    //    TriggersAction* exportTriggers = new TriggersAction(exportGroupAction, "Export Triggers", triggers);
-
-    //    connect(exportTriggers, &TriggersAction::triggered, this, [this](int32_t triggerIndex)
-    //    {
-    //        switch (triggerIndex)
-    //        {
-    //        case 0: // Export rankings
-    //        {
-    //            std::vector<std::vector<int>> perPointDimRankings(_dataMatrix.rows());
-    //            for (int i = 0; i < _dataMatrix.rows(); i++)
-    //            {
-    //                switch (_filterType)
-    //                {
-    //                case filters::FilterType::SPATIAL_PEAK:
-    //                    _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i]);
-    //                    break;
-    //                case filters::FilterType::HD_PEAK:
-    //                    std::vector<std::vector<int>> floodFill;
-    //                    compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, i, _numFloodSteps, floodFill);
-    //                    _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, floodFill, perPointDimRankings[i]);
-    //                    break;
-    //                }
-    //            }
-
-    //            writeDimensionRanking(perPointDimRankings, _enabledDimNames);
-    //            break;
-    //        }
-    //        case 1: // Export flood nodes
-    //        {
-    //            std::vector<std::vector<int>> perPointFloodNodes(_dataMatrix.rows());
-    //            for (int p = 0; p < _dataMatrix.rows(); p++)
-    //            {
-    //                std::vector<std::vector<int>> floodFill;
-    //                compute::doFloodFill(_dataMatrix, _projMatrix, _knnGraph, p, _numFloodSteps, floodFill);
-
-    //                int numFloodNodes = 0;
-    //                for (int i = 0; i < floodFill.size(); i++)
-    //                {
-    //                    numFloodNodes += floodFill[i].size();
-    //                }
-
-    //                // Store all flood nodes together
-    //                perPointFloodNodes[p].resize(numFloodNodes);
-    //                int n = 0;
-    //                for (int i = 0; i < floodFill.size(); i++)
-    //                {
-    //                    for (int j = 0; j < floodFill[i].size(); j++)
-    //                    {
-    //                        perPointFloodNodes[p][n++] = floodFill[i][j];
-    //                    }
-    //                }
-    //            }
-
-    //            writeFloodNodes(perPointFloodNodes);
-    //            break;
-    //        }
-    //        }
-    //    });
-
     //    groupsAction->addGroupAction(exportGroupAction);
     //}
 
@@ -519,20 +414,6 @@ void ScatterplotPlugin::init()
 
     // Update the data when the scatter plot widget is initialized
     connect(_scatterPlotWidget, &ScatterplotWidget::initialized, this, &ScatterplotPlugin::updateData);
-
-    //// Update the selection when the pixel selection tool selected area changed
-    //connect(&_scatterPlotWidget->getPixelSelectionTool(), &PixelSelectionTool::areaChanged, [this]() {
-    //    if (_scatterPlotWidget->getPixelSelectionTool().isNotifyDuringSelection())
-    //        selectPoints();
-    //});
-
-    //// Update the selection when the pixel selection process ended
-    //connect(&_scatterPlotWidget->getPixelSelectionTool(), &PixelSelectionTool::ended, [this]() {
-    //    if (_scatterPlotWidget->getPixelSelectionTool().isNotifyDuringSelection())
-    //        return;
-
-    //    selectPoints();
-    //});
 
     getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
     for (int i = 0; i < getProjectionViews().size(); i++)
@@ -1032,40 +913,6 @@ void ScatterplotPlugin::loadColors(const Dataset<Points>& points, const std::uin
     // Render
     getWidget().update();
 }
-
-//void ScatterplotPlugin::loadColors(const Dataset<Clusters>& clusters)
-//{
-//    // Only proceed with valid clusters and position dataset
-//    if (!clusters.isValid() || !_positionDataset.isValid())
-//        return;
-//
-//    // Mapping from local to global indices
-//    std::vector<std::uint32_t> globalIndices;
-//
-//    // Get global indices from the position dataset
-//    _positionDataset->getGlobalIndices(globalIndices);
-//
-//    // Generate color buffer for global and local colors
-//    std::vector<Vector3f> globalColors(globalIndices.back() + 1);
-//    std::vector<Vector3f> localColors(_positions.size());
-//
-//    // Loop over all clusters and populate global colors
-//    for (const auto& cluster : clusters->getClusters())
-//        for (const auto& index : cluster.getIndices())
-//            globalColors[globalIndices[index]] = Vector3f(cluster.getColor().redF(), cluster.getColor().greenF(), cluster.getColor().blueF());
-//
-//    std::int32_t localColorIndex = 0;
-//
-//    // Loop over all global indices and find the corresponding local color
-//    for (const auto& globalIndex : globalIndices)
-//        localColors[localColorIndex++] = globalColors[globalIndex];
-//
-//    // Apply colors to scatter plot widget without modification
-//    _scatterPlotWidget->setColors(localColors);
-//
-//    // Render
-//    getWidget().update();
-//}
 
 ScatterplotWidget& ScatterplotPlugin::getScatterplotWidget()
 {
