@@ -115,7 +115,7 @@ public:
     void createScreenshot(std::int32_t width, std::int32_t height, const QString& fileName, const QColor& backgroundColor);
 
     void setRandomWalks(const std::vector<std::vector<Vector2f>>& randomWalks);
-
+    void setProjectionName(QString name) { _projectionName = name; }
     void setDirections(const std::vector<Vector2f>& directions);
 
 protected:
@@ -195,6 +195,8 @@ private:
     bool                    _showRandomWalk;
     bool                    _showDirections;
     bool                    _showFilterCircles = true;
+
+    QString                 _projectionName;
 
     Vector2f                _currentPoint;
     Vector2f                _radii;

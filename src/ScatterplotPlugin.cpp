@@ -1011,7 +1011,12 @@ void ScatterplotPlugin::updateViews()
         const auto dimValues = _dataMatrix(Eigen::all, selectedDimension);
         std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
         getScatterplotWidget().setScalars(dimV);
+        getScatterplotWidget().setProjectionName("Dimension View: " + _enabledDimNames[selectedDimension]);
         //setProjectionName(_enabledDimNames[_selectedDimension]);
+    }
+    else
+    {
+        getScatterplotWidget().setProjectionName("Floodfill View");
     }
 }
 

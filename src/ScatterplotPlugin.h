@@ -176,8 +176,8 @@ private:
     float                           _projectionSize = 0;
 
     // Interaction
-    int                             _selectedPoint;
-    int                             _globalSelectedPoint;
+    int                             _selectedPoint = 0;
+    int                             _globalSelectedPoint = 0;
     int                             _selectedDimension;
     QPoint                          _mousePos;
     bool                            _mousePressed = false;

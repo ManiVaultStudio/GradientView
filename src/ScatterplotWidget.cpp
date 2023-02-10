@@ -504,6 +504,12 @@ void ScatterplotWidget::paintGL()
         }
         painter.endNativePainting();
         
+        QFont font = painter.font();
+        font.setPointSize(font.pointSize() * 3);
+        painter.setFont(font);
+        painter.setPen(QPen(Qt::white));
+        painter.drawText(14, 40, _projectionName);
+
         // Draw random walks
         // [Bounds to -1, 1]
         Matrix3f orthoM = createProjectionMatrix(_dataBounds);
