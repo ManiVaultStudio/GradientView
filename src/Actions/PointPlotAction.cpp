@@ -12,7 +12,7 @@ using namespace gui;
 
 PointPlotAction::PointPlotAction(ScatterplotPlugin* scatterplotPlugin) :
     PluginAction(scatterplotPlugin, "Point"),
-    _sizeAction(scatterplotPlugin, "Point size", 0.0, 100.0, DEFAULT_POINT_SIZE, DEFAULT_POINT_SIZE),
+    _sizeAction(scatterplotPlugin, "Point size", 0.0, 40.0, DEFAULT_POINT_SIZE, DEFAULT_POINT_SIZE),
     _opacityAction(scatterplotPlugin, "Point opacity", 0.0, 100.0, DEFAULT_POINT_OPACITY, DEFAULT_POINT_OPACITY),
     _pointSizeScalars(),
     _pointOpacityScalars(),
