@@ -307,15 +307,12 @@ ScatterplotPlugin::~ScatterplotPlugin()
 void ScatterplotPlugin::init()
 {
     auto layout = new QVBoxLayout();
-    auto settingsLayout = new QHBoxLayout();
     auto gradientViewLayout = new QVBoxLayout();
     auto dimensionViewsLayout = new QHBoxLayout();
 
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     layout->addWidget(_settingsAction.createWidget(&getWidget()));
-
-    auto groupsAction = new GroupsAction(&getWidget());
 
     _filterLabel = new QLabel();
     _filterLabel->setText("Spatial Peak Ranking");
@@ -339,8 +336,6 @@ void ScatterplotPlugin::init()
     sortedExpressionGraphLabel->setFont(font);
     gradientViewLayout->addWidget(sortedExpressionGraphLabel);
     gradientViewLayout->addWidget(_gradientGraph, 70);
-
-    settingsLayout->addWidget(groupsAction->createWidget(&getWidget()), 40);
 
     //// Overlay options
     //    groupsAction->addGroupAction(exportGroupAction);
