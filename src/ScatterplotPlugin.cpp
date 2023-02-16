@@ -599,6 +599,7 @@ timer.mark("Linearisation");
         {
         case OverlayType::NONE:
         {
+            _scatterPlotWidget->setColoredBy("Colored by - Flood fill step");
             for (int i = 0; i < floodFill.size(); i++)
             {
                 for (int j = 0; j < floodFill[i].size(); j++)
@@ -613,6 +614,7 @@ timer.mark("Linearisation");
         }
         case OverlayType::DIM_VALUES:
         {
+            _scatterPlotWidget->setColoredBy("Colored by - Dim: " + _enabledDimNames[dimRanking[0]]);
             for (int i = 0; i < _floodNodes.size(); i++)
             {
                 int index = _mask.empty() ? _floodNodes[i] : _mask[_floodNodes[i]];
@@ -622,6 +624,7 @@ timer.mark("Linearisation");
         }
         case OverlayType::LOCAL_DIMENSIONALITY:
         {
+            _scatterPlotWidget->setColoredBy("Colored by - Local Dimensionality");
             if (_localHighDimensionality.empty()) break;
 
             for (int i = 0; i < _floodNodes.size(); i++)

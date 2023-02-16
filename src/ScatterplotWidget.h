@@ -116,6 +116,7 @@ public:
 
     void setRandomWalks(const std::vector<std::vector<Vector2f>>& randomWalks);
     void setProjectionName(QString name) { _projectionName = name; }
+    void setColoredBy(QString coloredBy) { _coloredBy = coloredBy; }
     void setDirections(const std::vector<Vector2f>& directions);
 
 protected:
@@ -197,6 +198,7 @@ private:
     bool                    _showFilterCircles = true;
 
     QString                 _projectionName;
+    QString                 _coloredBy;
 
     Vector2f                _currentPoint;
     Vector2f                _radii;

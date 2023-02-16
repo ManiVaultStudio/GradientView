@@ -505,10 +505,14 @@ void ScatterplotWidget::paintGL()
         painter.endNativePainting();
         
         QFont font = painter.font();
-        font.setPointSize(font.pointSize() * 3);
+        font.setPointSize(24);
         painter.setFont(font);
         painter.setPen(QPen(Qt::white));
         painter.drawText(14, 40, _projectionName);
+
+        font.setPointSize(16);
+        painter.setFont(font);
+        painter.drawText(14, 70, _coloredBy);
 
         // Draw random walks
         // [Bounds to -1, 1]
