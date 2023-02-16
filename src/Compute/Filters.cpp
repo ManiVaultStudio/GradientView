@@ -173,15 +173,15 @@ namespace filters
 
         findPointsInRadius(center, _innerFilterRadius * projSize, projMatrix, circleIndices[0]);
         // Apply mask
-        std::vector<int> maskedIndicesInner;
-        maskPoints(circleIndices[0], mask, maskedIndicesInner);
-        computeDimensionAverage(dataMatrix, maskedIndicesInner, averages[0]);
+        //std::vector<int> maskedIndicesInner;
+        //maskPoints(circleIndices[0], mask, maskedIndicesInner);
+        computeDimensionAverage(dataMatrix, circleIndices[0], averages[0]);
 
         findPointsInRadius(center, _outerFilterRadius * projSize, projMatrix, circleIndices[1]);
         // Apply mask
-        std::vector<int> maskedIndicesOuter;
-        maskPoints(circleIndices[1], mask, maskedIndicesOuter);
-        computeDimensionAverage(dataMatrix, maskedIndicesOuter, averages[1]);
+        //std::vector<int> maskedIndicesOuter;
+        //maskPoints(circleIndices[1], mask, maskedIndicesOuter);
+        computeDimensionAverage(dataMatrix, circleIndices[1], averages[1]);
 
         std::vector<float> diffAverages(numDimensions);
         for (int d = 0; d < numDimensions; d++)
