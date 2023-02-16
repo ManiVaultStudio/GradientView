@@ -616,7 +616,7 @@ timer.mark("Linearisation");
             for (int i = 0; i < _floodNodes.size(); i++)
             {
                 int index = _mask.empty() ? _floodNodes[i] : _mask[_floodNodes[i]];
-                colorScalars[index] = dataMatrix(_floodNodes[i], dimRanking[0]);
+                colorScalars[index] = _normalizedData[dimRanking[0]][index];
             }
             break;
         }
