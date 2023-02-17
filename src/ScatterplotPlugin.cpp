@@ -1012,6 +1012,7 @@ void ScatterplotPlugin::updateViews()
         std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
         getScatterplotWidget().setScalars(dimV);
         getScatterplotWidget().setProjectionName("Dimension View: " + _enabledDimNames[selectedDimension]);
+        getScatterplotWidget().setColoredBy("");
         //setProjectionName(_enabledDimNames[_selectedDimension]);
     }
     else
