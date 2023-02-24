@@ -1240,10 +1240,11 @@ void ScatterplotPlugin::exportFloodnodes()
         }
 
         // Store all flood nodes together
-        perPointFloodNodes[p].resize(numFloodNodes);
+        perPointFloodNodes[p].resize(numFloodNodes + floodFill.size());
         int n = 0;
         for (int i = 0; i < floodFill.size(); i++)
         {
+            perPointFloodNodes[p][n++] = -1;
             for (int j = 0; j < floodFill[i].size(); j++)
             {
                 perPointFloodNodes[p][n++] = floodFill[i][j];
