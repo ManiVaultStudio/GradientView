@@ -46,6 +46,24 @@ QMenu* PlotAction::getContextMenu()
     return new QMenu("Plot");
 }
 
+void PlotAction::fromVariantMap(const QVariantMap& variantMap)
+{
+    WidgetAction::fromVariantMap(variantMap);
+
+    _pointPlotAction.fromParentVariantMap(variantMap);
+    _densityPlotAction.fromParentVariantMap(variantMap);
+}
+
+QVariantMap PlotAction::toVariantMap() const
+{
+    QVariantMap variantMap = WidgetAction::toVariantMap();
+
+    _pointPlotAction.insertIntoVariantMap(variantMap);
+    _densityPlotAction.insertIntoVariantMap(variantMap);
+
+    return variantMap;
+}
+
 PlotAction::Widget::Widget(QWidget* parent, PlotAction* plotAction, const std::int32_t& widgetFlags) :
     WidgetActionWidget(parent, plotAction, widgetFlags)
 {

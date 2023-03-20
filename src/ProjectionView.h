@@ -49,6 +49,7 @@ public:
 
     /** Assign a color map image to the point renderer */
     void setColorMap(const QImage& colorMapImage);
+    void setColorMapRange(const float& min, const float& max);
 
     /////
         /**

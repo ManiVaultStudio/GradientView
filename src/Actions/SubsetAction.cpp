@@ -2,6 +2,8 @@
 #include "ScatterplotPlugin.h"
 #include "PointData.h"
 
+#include <Application.h>
+
 #include <QMenu>
 
 using namespace hdps;

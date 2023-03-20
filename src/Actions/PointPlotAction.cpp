@@ -19,6 +19,11 @@ PointPlotAction::PointPlotAction(ScatterplotPlugin* scatterplotPlugin) :
     _focusSelection(this, "Focus selection"),
     _lastOpacitySourceIndex(-1)
 {
+    setSerializationName("PointPlot");
+
+    _sizeAction.setSerializationName("SizeScalar");
+    _opacityAction.setSerializationName("OpacityScalar");
+
     _scatterplotPlugin->getWidget().addAction(&_sizeAction);
     _scatterplotPlugin->getWidget().addAction(&_opacityAction);
 
@@ -453,6 +458,26 @@ void PointPlotAction::updateScatterPlotWidgetPointOpacityScalars()
 
     // Set scatter plot point size scalars
     _scatterplotPlugin->getScatterplotWidget().setPointOpacityScalars(_pointOpacityScalars);
+}
+
+void PointPlotAction::fromVariantMap(const QVariantMap& variantMap)
+{
+    WidgetAction::fromVariantMap(variantMap);
+
+    _sizeAction.fromParentVariantMap(variantMap);
+    _opacityAction.fromParentVariantMap(variantMap);
+    _focusSelection.fromParentVariantMap(variantMap);
+}
+
+QVariantMap PointPlotAction::toVariantMap() const
+{
+    QVariantMap variantMap = WidgetAction::toVariantMap();
+
+    _sizeAction.insertIntoVariantMap(variantMap);
+    _opacityAction.insertIntoVariantMap(variantMap);
+    _focusSelection.insertIntoVariantMap(variantMap);
+
+    return variantMap;
 }
 
 PointPlotAction::Widget::Widget(QWidget* parent, PointPlotAction* pointPlotAction, const std::int32_t& widgetFlags) :

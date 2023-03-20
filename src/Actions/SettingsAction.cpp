@@ -11,6 +11,7 @@ using namespace hdps::gui;
 
 SettingsAction::SettingsAction(ScatterplotPlugin* scatterplotPlugin) :
     PluginAction(scatterplotPlugin, "Settings"),
+    _currentDatasetAction(scatterplotPlugin),
     _renderModeAction(scatterplotPlugin),
     _positionAction(scatterplotPlugin),
     _subsetAction(scatterplotPlugin),
@@ -24,6 +25,7 @@ SettingsAction::SettingsAction(ScatterplotPlugin* scatterplotPlugin) :
     _clearMaskAction(this, "Clear Mask")
 {
     setText("Settings");
+    setSerializationName("Settings");
 
     const auto updateEnabled = [this]() {
         setEnabled(_scatterplotPlugin->getPositionDataset().isValid());
@@ -69,6 +71,30 @@ QMenu* SettingsAction::getContextMenu()
     menu->addMenu(_exportAction.getContextMenu());
 
     return menu;
+}
+
+void SettingsAction::fromVariantMap(const QVariantMap& variantMap)
+{
+    WidgetAction::fromVariantMap(variantMap);
+
+    _currentDatasetAction.fromParentVariantMap(variantMap);
+    _plotAction.fromParentVariantMap(variantMap);
+    _positionAction.fromParentVariantMap(variantMap);
+    //_coloringAction.fromParentVariantMap(variantMap);
+    //_renderModeAction.fromParentVariantMap(variantMap);
+}
+
+QVariantMap SettingsAction::toVariantMap() const
+{
+    QVariantMap variantMap = WidgetAction::toVariantMap();
+
+    _currentDatasetAction.insertIntoVariantMap(variantMap);
+    //_renderModeAction.insertIntoVariantMap(variantMap);
+    _plotAction.insertIntoVariantMap(variantMap);
+    _positionAction.insertIntoVariantMap(variantMap);
+    //_coloringAction.insertIntoVariantMap(variantMap);
+
+    return variantMap;
 }
 
 SettingsAction::Widget::Widget(QWidget* parent, SettingsAction* settingsAction) :

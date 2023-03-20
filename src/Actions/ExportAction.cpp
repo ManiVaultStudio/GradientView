@@ -6,6 +6,8 @@
 #include <QMenu>
 #include <QGroupBox>
 
+using namespace hdps::gui;
+
 ExportAction::ExportAction(ScatterplotPlugin* scatterplotPlugin) :
     PluginAction(scatterplotPlugin, "Export"),
     _exportRankingsAction(scatterplotPlugin, "Export rankings"),

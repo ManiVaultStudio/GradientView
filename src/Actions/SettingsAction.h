@@ -2,6 +2,7 @@
 
 #include "PluginAction.h"
 
+#include "LoadedDatasetsAction.h"
 #include "RenderModeAction.h"
 #include "PlotAction.h"
 #include "PositionAction.h"
@@ -84,7 +85,21 @@ public:
     FilterAction& getFilterAction() { return _filterAction; }
     ExportAction& getExportAction() { return _exportAction; }
 
+public: // Serialization
+    /**
+     * Load plugin from variant map
+     * @param Variant map representation of the plugin
+     */
+    void fromVariantMap(const QVariantMap& variantMap) override;
+
+    /**
+     * Save plugin to variant map
+     * @return Variant map representation of the plugin
+     */
+    QVariantMap toVariantMap() const override;
+
 protected:
+    LoadedDatasetsAction        _currentDatasetAction;
     RenderModeAction            _renderModeAction;
     PositionAction              _positionAction;
     SubsetAction                _subsetAction;

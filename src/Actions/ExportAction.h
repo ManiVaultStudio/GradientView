@@ -4,6 +4,8 @@
 
 #include "actions/GroupAction.h"
 
+using namespace hdps::gui;
+
 class ExportAction : public PluginAction
 {
 protected: // Widget

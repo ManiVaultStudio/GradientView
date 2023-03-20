@@ -417,7 +417,7 @@ void ScatterplotPlugin::init()
         if (getProjectionViews()[i] != nullptr)
             getProjectionViews()[i]->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
 
-    _eventListener.setEventCore(Application::core());
+    //_eventListener.setEventCore(Application::core());
     _eventListener.addSupportedEventType(static_cast<std::uint32_t>(EventType::DataSelectionChanged));
     _eventListener.registerDataEventByType(PointType, std::bind(&ScatterplotPlugin::onDataEvent, this, std::placeholders::_1));
 
@@ -837,7 +837,7 @@ void ScatterplotPlugin::createSubset(const bool& fromSourceData /*= false*/, con
     auto subset = subsetPoints->createSubsetFromSelection(_positionDataset->getGuiName(), _positionDataset);
 
     // Notify others that the subset was added
-    _core->notifyDatasetAdded(subset);
+    events().notifyDatasetAdded(subset);
     
     // And select the subset
     subset->getDataHierarchyItem().select();
@@ -1143,7 +1143,7 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
         _positionDataset->setSelectionIndices(targetSelectionIndices);
 
         // Notify others that the selection changed
-        _core->notifyDatasetSelectionChanged(_positionDataset);
+        events().notifyDatasetSelectionChanged(_positionDataset);
 
         //_explanationWidget->update();
 
@@ -1253,6 +1253,24 @@ void ScatterplotPlugin::exportFloodnodes()
     }
 
     writeFloodNodes(perPointFloodNodes);
+}
+
+void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
+{
+    ViewPlugin::fromVariantMap(variantMap);
+
+    variantMapMustContain(variantMap, "Settings");
+
+    _settingsAction.fromVariantMap(variantMap["Settings"].toMap());
+}
+
+QVariantMap ScatterplotPlugin::toVariantMap() const
+{
+    QVariantMap variantMap = ViewPlugin::toVariantMap();
+
+    _settingsAction.insertIntoVariantMap(variantMap);
+
+    return variantMap;
 }
 
 QIcon ScatterplotPluginFactory::getIcon(const QColor& color /*= Qt::black*/) const

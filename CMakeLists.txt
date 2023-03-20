@@ -75,6 +75,8 @@ set(Actions
     src/Actions/OverlayAction.cpp
     src/Actions/ExportAction.h
     src/Actions/ExportAction.cpp
+    src/Actions/LoadedDatasetsAction.h
+    src/Actions/LoadedDatasetsAction.cpp
 )
 
 set(Models

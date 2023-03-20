@@ -82,7 +82,7 @@ public: // Dimension picking
     void setXDimension(const std::int32_t& dimensionIndex);
     void setYDimension(const std::int32_t& dimensionIndex);
 
-protected: // Data loading
+public: // Data loading
 
     /** Invoked when the position points dataset changes */
     void positionDatasetChanged();
@@ -158,6 +158,19 @@ public:
 
 private slots:
     void onLineClicked(int dim);
+
+public: // Serialization
+    /**
+    * Load plugin from variant map
+    * @param Variant map representation of the plugin
+    */
+    void fromVariantMap(const QVariantMap& variantMap) override;
+
+    /**
+    * Save plugin to variant map
+    * @return Variant map representation of the plugin
+    */
+    QVariantMap toVariantMap() const override;
 
 private:
     // Data

@@ -2,6 +2,8 @@
 
 #include "PluginAction.h"
 
+using namespace hdps::gui;
+
 class FilterAction : public PluginAction
 {
 protected: // Widget

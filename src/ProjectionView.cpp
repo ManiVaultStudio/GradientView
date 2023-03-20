@@ -303,6 +303,13 @@ void ProjectionView::setColorMap(const QImage& colorMapImage)
     update();
 }
 
+void ProjectionView::setColorMapRange(const float& min, const float& max)
+{
+    _pointRenderer.setColorMapRange(min, max);
+
+    update();
+}
+
 void ProjectionView::cleanup()
 {
     qDebug() << "Deleting projection view, performing clean up...";

@@ -1,7 +1,8 @@
 #include "ColorSourceModel.h"
 
-#include "DataHierarchyItem.h"
-#include "Application.h"
+#include <DataHierarchyItem.h>
+#include <Application.h>
+#include <Set.h>
 
 using namespace hdps;
 

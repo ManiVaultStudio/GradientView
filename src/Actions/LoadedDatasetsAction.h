@@ -1,18 +1,18 @@
 #pragma once
 
 #include "PluginAction.h"
-#include "PointPlotAction.h"
-#include "DensityPlotAction.h"
+
+#include "actions/DatasetPickerAction.h"
 
 using namespace hdps::gui;
 
-class PlotAction : public PluginAction
+class LoadedDatasetsAction : public PluginAction
 {
-protected: // Widget
+protected:
 
     class Widget : public WidgetActionWidget {
     public:
-        Widget(QWidget* parent, PlotAction* plotAction, const std::int32_t& widgetFlags);
+        Widget(QWidget* parent, LoadedDatasetsAction* currentDatasetAction, const std::int32_t& widgetFlags);
     };
 
     QWidget* getWidget(QWidget* parent, const std::int32_t& widgetFlags) override {
@@ -20,9 +20,7 @@ protected: // Widget
     };
 
 public:
-    PlotAction(ScatterplotPlugin* scatterplotPlugin);
-
-    QMenu* getContextMenu();
+    LoadedDatasetsAction(ScatterplotPlugin* scatterplotPlugin);
 
 public: // Serialization
 
@@ -38,14 +36,9 @@ public: // Serialization
      */
     QVariantMap toVariantMap() const override;
 
-public: // Action getters
-
-    PointPlotAction& getPointPlotAction() { return _pointPlotAction; }
-    DensityPlotAction& getDensityPlotAction() { return _densityPlotAction; }
-
 protected:
-    PointPlotAction     _pointPlotAction;
-    DensityPlotAction   _densityPlotAction;
+    DatasetPickerAction	    _positionDatasetPickerAction;
+    DatasetPickerAction     _colorDatasetPickerAction;
 
     friend class Widget;
 };
