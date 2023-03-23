@@ -16,6 +16,13 @@ FilterAction::FilterAction(ScatterplotPlugin* scatterplotPlugin) :
     _hdInnerFilterSizeAction(scatterplotPlugin, "HD Inner Filter Size", 1, 10, 5, 5)
     //_hdOuterFilterSizeAction(scatterplotPlugin, "HD Outer Filter Size", 2, 10, 10, 10)
 {
+    setSerializationName("FilterSettings");
+
+    _restrictToFloodAction.setSerializationName("RestrictToFloodNodes");
+    _innerFilterSizeAction.setSerializationName("InnerFilterSize");
+    _outerFilterSizeAction.setSerializationName("OuterFilterSize");
+    _hdInnerFilterSizeAction.setSerializationName("HDInnerFilterSize");
+
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("bullseye"));
 
     auto& spatialPeakFilter = scatterplotPlugin->getSpatialPeakFilter();
@@ -75,6 +82,28 @@ void FilterAction::setFloodSteps(int numSteps)
         _hdInnerFilterSizeAction.setValue(numSteps - 1);
 
     _hdInnerFilterSizeAction.setMaximum(numSteps-1);
+}
+
+void FilterAction::fromVariantMap(const QVariantMap& variantMap)
+{
+    WidgetAction::fromVariantMap(variantMap);
+
+    _innerFilterSizeAction.fromParentVariantMap(variantMap);
+    _outerFilterSizeAction.fromParentVariantMap(variantMap);
+
+    _hdInnerFilterSizeAction.fromParentVariantMap(variantMap);
+}
+
+QVariantMap FilterAction::toVariantMap() const
+{
+    QVariantMap variantMap = WidgetAction::toVariantMap();
+
+    _innerFilterSizeAction.insertIntoVariantMap(variantMap);
+    _outerFilterSizeAction.insertIntoVariantMap(variantMap);
+
+    _hdInnerFilterSizeAction.insertIntoVariantMap(variantMap);
+
+    return variantMap;
 }
 
 FilterAction::Widget::Widget(QWidget* parent, FilterAction* filterAction, const std::int32_t& widgetFlags) :

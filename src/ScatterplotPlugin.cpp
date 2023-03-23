@@ -1262,6 +1262,8 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
     variantMapMustContain(variantMap, "Settings");
 
     _settingsAction.fromVariantMap(variantMap["Settings"].toMap());
+
+    _overlayType = static_cast<OverlayType>(variantMap["OverlayType"].toInt());
 }
 
 QVariantMap ScatterplotPlugin::toVariantMap() const
@@ -1269,6 +1271,8 @@ QVariantMap ScatterplotPlugin::toVariantMap() const
     QVariantMap variantMap = ViewPlugin::toVariantMap();
 
     _settingsAction.insertIntoVariantMap(variantMap);
+
+    variantMap.insert("OverlayType", static_cast<int>(_overlayType));
 
     return variantMap;
 }

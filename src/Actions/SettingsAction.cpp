@@ -80,6 +80,8 @@ void SettingsAction::fromVariantMap(const QVariantMap& variantMap)
     _currentDatasetAction.fromParentVariantMap(variantMap);
     _plotAction.fromParentVariantMap(variantMap);
     _positionAction.fromParentVariantMap(variantMap);
+    _filterAction.fromParentVariantMap(variantMap);
+    _overlayAction.fromParentVariantMap(variantMap);
     //_coloringAction.fromParentVariantMap(variantMap);
     //_renderModeAction.fromParentVariantMap(variantMap);
 }
@@ -92,6 +94,8 @@ QVariantMap SettingsAction::toVariantMap() const
     //_renderModeAction.insertIntoVariantMap(variantMap);
     _plotAction.insertIntoVariantMap(variantMap);
     _positionAction.insertIntoVariantMap(variantMap);
+    _filterAction.insertIntoVariantMap(variantMap);
+    _overlayAction.insertIntoVariantMap(variantMap);
     //_coloringAction.insertIntoVariantMap(variantMap);
 
     return variantMap;

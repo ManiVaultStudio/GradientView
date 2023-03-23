@@ -16,6 +16,16 @@ OverlayAction::OverlayAction(ScatterplotPlugin* scatterplotPlugin) :
     _dimensionalityOverlayAction(this, "Local Dimensionality")
     //_overlayGroupAction(this, true)
 {
+    setSerializationName("OverlaySettings");
+
+    _floodDecimal.setSerializationName("FloodSize");
+    _floodStepsAction.setSerializationName("FloodSteps");
+    _sharedDistAction.setSerializationName("SharedDistance");
+
+    _floodOverlayAction.setSerializationName("FloodOverlay");
+    _dimensionOverlayAction.setSerializationName("DimensionOverlay");
+    _dimensionalityOverlayAction.setSerializationName("DimensionalityOverlay");
+
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("image"));
 
     connect(&_floodDecimal, &IntegralAction::valueChanged, this, [scatterplotPlugin](int32_t value)
@@ -91,6 +101,34 @@ QMenu* OverlayAction::getContextMenu()
     addActionToMenu(&_sharedDistAction);
 
     return menu;
+}
+
+void OverlayAction::fromVariantMap(const QVariantMap& variantMap)
+{
+    WidgetAction::fromVariantMap(variantMap);
+
+    _floodDecimal.fromParentVariantMap(variantMap);
+    _floodStepsAction.fromParentVariantMap(variantMap);
+    _sharedDistAction.fromParentVariantMap(variantMap);
+
+    _floodOverlayAction.fromParentVariantMap(variantMap);
+    _dimensionOverlayAction.fromParentVariantMap(variantMap);
+    _dimensionalityOverlayAction.fromParentVariantMap(variantMap);
+}
+
+QVariantMap OverlayAction::toVariantMap() const
+{
+    QVariantMap variantMap = WidgetAction::toVariantMap();
+
+    _floodDecimal.insertIntoVariantMap(variantMap);
+    _floodStepsAction.insertIntoVariantMap(variantMap);
+    _sharedDistAction.insertIntoVariantMap(variantMap);
+
+    _floodOverlayAction.insertIntoVariantMap(variantMap);
+    _dimensionOverlayAction.insertIntoVariantMap(variantMap);
+    _dimensionalityOverlayAction.insertIntoVariantMap(variantMap);
+
+    return variantMap;
 }
 
 OverlayAction::Widget::Widget(QWidget* parent, OverlayAction* overlayAction, const std::int32_t& widgetFlags) :
