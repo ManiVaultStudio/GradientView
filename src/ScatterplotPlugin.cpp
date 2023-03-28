@@ -448,10 +448,10 @@ void ScatterplotPlugin::updateColorMapActionScalarRange()
     const auto colorMapRangeMax = colorMapRange.y;
 
     // Get reference to color map range action
-    auto& colorMapRangeAction = _colorMapAction.getSettingsAction().getHorizontalAxisAction().getRangeAction();
+    const auto& colorMapRangeAction = _colorMapAction.getRangeAction(ColorMapAction::Axis::X);
 
     // Initialize the color map range action with the color map range from the scatter plot 
-    colorMapRangeAction.initialize(colorMapRangeMin, colorMapRangeMax, colorMapRangeMin, colorMapRangeMax, colorMapRangeMin, colorMapRangeMax);
+    _colorMapAction.getDataRangeAction(ColorMapAction::Axis::X).setRange({ colorMapRangeMin, colorMapRangeMax });
 }
 
 void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
