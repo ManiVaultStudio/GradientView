@@ -28,4 +28,6 @@ public:
 private:
     std::vector<std::vector<int>> _neighbours;
     int _numNeighbours;
+
+    friend class ScatterplotPlugin;
 };

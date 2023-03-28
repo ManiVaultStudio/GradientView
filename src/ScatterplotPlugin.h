@@ -212,6 +212,7 @@ private:
     KnnGraph                        _largeKnnGraph;
     KnnGraph                        _sourceKnnGraph;
     bool                            _useSharedDistances = false;
+    bool                            _preloadedKnnGraph = false;
 
     // Masked KNN
     DataMatrix                      _maskedDataMatrix;

@@ -28,6 +28,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QMetaType>
+#include <QVector>
 
 #include <algorithm>
 #include <functional>
@@ -260,6 +261,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
                 // Load as point positions when no dataset is currently loaded
                 dropRegions << new DropWidget::DropRegion(this, "Point position", description, "map-marker-alt", true, [this, candidateDataset]() {
                     _positionDataset = candidateDataset;
+                    positionDatasetChanged();
                 });
             }
             else {
@@ -268,6 +270,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
                     // The number of points is equal, so offer the option to replace the existing points dataset
                     dropRegions << new DropWidget::DropRegion(this, "Point position", description, "map-marker-alt", true, [this, candidateDataset]() {
                         _positionDataset = candidateDataset;
+                        positionDatasetChanged();
                     });
                 }
 
@@ -422,7 +425,7 @@ void ScatterplotPlugin::init()
     _eventListener.registerDataEventByType(PointType, std::bind(&ScatterplotPlugin::onDataEvent, this, std::placeholders::_1));
 
     // Load points when the pointer to the position dataset changes
-    connect(&_positionDataset, &Dataset<Points>::changed, this, &ScatterplotPlugin::positionDatasetChanged);
+    //connect(&_positionDataset, &Dataset<Points>::changed, this, &ScatterplotPlugin::positionDatasetChanged);
 
     // Update points when the position dataset data changes
     //connect(&_positionDataset, &Dataset<Points>::dataChanged, this, &ScatterplotPlugin::updateData);
@@ -723,7 +726,10 @@ void ScatterplotPlugin::computeStaticData()
         _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
     _knnIndex.addData(_dataMatrix);
 
-    _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
+    timer.mark("Computing KNN index");
+
+    if (!_preloadedKnnGraph)
+        _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
 
     if (_dataMatrix.rows() < 5000 && _useSharedDistances)
     {
@@ -1264,6 +1270,34 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
     _settingsAction.fromVariantMap(variantMap["Settings"].toMap());
 
     _overlayType = static_cast<OverlayType>(variantMap["OverlayType"].toInt());
+
+    //qRegisterMetaType<std::vector<std::vector<int>> >("std::vector<std::vector<int>>");
+
+    int numPoints = static_cast<size_t>(variantMap["numPoints"].toInt());
+    int numNeighbours = static_cast<size_t>(variantMap["numNeighbours"].toInt());
+    const auto qneighbours = variantMap["largeKnnGraph"].toMap();
+
+    std::vector<int> linearNeighbours(numPoints * numNeighbours);
+
+    populateDataBufferFromVariantMap(qneighbours, (char*)linearNeighbours.data());
+
+    std::vector<std::vector<int>> neighbours(numPoints, std::vector<int>(numNeighbours));
+    int c = 0;
+    for (int i = 0; i < neighbours.size(); i++)
+    {
+        for (int j = 0; j < neighbours[i].size(); j++)
+        {
+            neighbours[c / numNeighbours][c % numNeighbours] = linearNeighbours[c];
+            c++;
+        }
+    }
+
+    _largeKnnGraph._neighbours = neighbours;
+    _largeKnnGraph._numNeighbours = numNeighbours;
+
+    _preloadedKnnGraph = true;
+
+    positionDatasetChanged();
 }
 
 QVariantMap ScatterplotPlugin::toVariantMap() const
@@ -1273,6 +1307,37 @@ QVariantMap ScatterplotPlugin::toVariantMap() const
     _settingsAction.insertIntoVariantMap(variantMap);
 
     variantMap.insert("OverlayType", static_cast<int>(_overlayType));
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+    qRegisterMetaType<std::vector<std::vector<int>> >("std::vector<std::vector<int>>");
+    const std::vector<std::vector<int>>& neighbours = _largeKnnGraph.getNeighbours();
+    //QVector<QVector<int>> qneighbours(neighbours.size());
+    //for (int i = 0; i < neighbours.size(); i++)
+    //{
+    //    const std::vector<int>& n = neighbours[i];
+    //    qneighbours[i] = QVector<int>(n.begin(), n.end());
+    //}
+
+    //QVector<QVector<int>> s = QVector<QVector<int>>(_largeKnnGraph.getNeighbours());
+    //variantMap.insert("largeKnnGraph", qneighbours);
+    QVariant knnGraphVariant;
+    //knnGraphVariant.setValue<QVector<QVector<int>>>(qneighbours);
+
+    // Linearize data
+    std::vector<int> linearNeighbours(neighbours.size() * neighbours[0].size());
+    int c = 0;
+    for (int i = 0; i < neighbours.size(); i++)
+    {
+        const std::vector<int>& n = neighbours[i];
+        for (int j = 0; j < neighbours[i].size(); j++)
+            linearNeighbours[c++] = neighbours[i][j];
+    }
+
+    QVariantMap qneighbours = rawDataToVariantMap((char*)linearNeighbours.data(), linearNeighbours.size() * sizeof(std::int32_t), true);
+
+    variantMap.insert("largeKnnGraph", qneighbours);
+    variantMap.insert("numPoints", neighbours.size());
+    variantMap.insert("numNeighbours", neighbours[0].size());
 
     return variantMap;
 }

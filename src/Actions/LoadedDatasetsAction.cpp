@@ -70,7 +70,7 @@ void LoadedDatasetsAction::fromVariantMap(const QVariantMap& variantMap)
 
     Dataset pickedDataset = core()->getDataManager().getSet(_positionDatasetPickerAction.getCurrentDatasetGuid());
     _scatterplotPlugin->getPositionDataset() = pickedDataset;
-    _scatterplotPlugin->positionDatasetChanged();
+    //_scatterplotPlugin->positionDatasetChanged();
 }
 
 QVariantMap LoadedDatasetsAction::toVariantMap() const
