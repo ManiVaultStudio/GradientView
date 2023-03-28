@@ -183,6 +183,7 @@ private:
     DataMatrix                      _eigenDataMatrix;
     std::vector<QString>            _enabledDimNames;
     std::vector<float>              _variances;
+    bool                            _dataInitialized = false;
 
     // Projection
     DataMatrix                      _fullProjMatrix;

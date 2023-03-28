@@ -472,6 +472,9 @@ void ScatterplotPlugin::onPointSelection()
 {
     Timer timer;
 
+    if (!_positionDataset.isValid() || !_positionSourceDataset.isValid() || !_dataInitialized)
+        return;
+
     hdps::Dataset<Points> selection = _positionSourceDataset->getSelection();
 
     int numDimensions = _dataMatrix.cols();
@@ -883,6 +886,8 @@ void ScatterplotPlugin::positionDatasetChanged()
     // Do not show the drop indicator if there is a valid point positions dataset
     _dropWidget->setShowDropIndicator(!_positionDataset.isValid());
 
+    _dataInitialized = true;
+
     // Update positions data
     updateData();
 
@@ -928,7 +933,7 @@ ScatterplotWidget& ScatterplotPlugin::getScatterplotWidget()
 void ScatterplotPlugin::updateData()
 {
     // Check if the scatter plot is initialized, if not, don't do anything
-    if (!_scatterPlotWidget->isInitialized())
+    if (!_scatterPlotWidget->isInitialized() || !_dataInitialized)
         return;
     
     // If no dataset has been selected, don't do anything
