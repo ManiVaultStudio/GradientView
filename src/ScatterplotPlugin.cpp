@@ -1271,8 +1271,6 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
 
     _overlayType = static_cast<OverlayType>(variantMap["OverlayType"].toInt());
 
-    //qRegisterMetaType<std::vector<std::vector<int>> >("std::vector<std::vector<int>>");
-
     int numPoints = static_cast<size_t>(variantMap["numPoints"].toInt());
     int numNeighbours = static_cast<size_t>(variantMap["numNeighbours"].toInt());
     const auto qneighbours = variantMap["largeKnnGraph"].toMap();
@@ -1308,20 +1306,7 @@ QVariantMap ScatterplotPlugin::toVariantMap() const
 
     variantMap.insert("OverlayType", static_cast<int>(_overlayType));
 
-    /////////////////////////////////////////////////////////////////////////////////////////
-    qRegisterMetaType<std::vector<std::vector<int>> >("std::vector<std::vector<int>>");
     const std::vector<std::vector<int>>& neighbours = _largeKnnGraph.getNeighbours();
-    //QVector<QVector<int>> qneighbours(neighbours.size());
-    //for (int i = 0; i < neighbours.size(); i++)
-    //{
-    //    const std::vector<int>& n = neighbours[i];
-    //    qneighbours[i] = QVector<int>(n.begin(), n.end());
-    //}
-
-    //QVector<QVector<int>> s = QVector<QVector<int>>(_largeKnnGraph.getNeighbours());
-    //variantMap.insert("largeKnnGraph", qneighbours);
-    QVariant knnGraphVariant;
-    //knnGraphVariant.setValue<QVector<QVector<int>>>(qneighbours);
 
     // Linearize data
     std::vector<int> linearNeighbours(neighbours.size() * neighbours[0].size());
