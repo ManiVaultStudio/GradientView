@@ -251,7 +251,7 @@ namespace hdps
         void CellRenderer::loadShaders()
         {
             bool loaded = true;
-            loaded &= _shader.loadShaderFromFile(":shaders/TrianglePlot.vert", "E:/Work/DelftDrive/Software/Plugins/GradientExplorer/res/shaders/TrianglePlot.frag");
+            loaded &= _shader.loadShaderFromFile(":shaders/TrianglePlot.vert", ":shaders/TrianglePlot.frag");
 
             if (!loaded) {
                 qCritical() << "Failed to load one of the Scatterplot shaders";
