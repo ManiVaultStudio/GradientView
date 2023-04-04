@@ -5,9 +5,9 @@
 
 #include "util/PixelSelectionTool.h"
 
-#include "PointData.h"
-#include "ClusterData.h"
-#include "ColorData.h"
+#include "PointData/PointData.h"
+#include "ColorData/ColorData.h"
+#include "ClusterData/ClusterData.h"
 
 #include "graphics/Vector2f.h"
 #include "graphics/Vector3f.h"

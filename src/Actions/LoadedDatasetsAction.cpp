@@ -1,9 +1,9 @@
 #include "LoadedDatasetsAction.h"
 #include "ScatterplotPlugin.h"
 
-#include "PointData.h"
-#include "ColorData.h"
-#include "ClusterData.h"
+#include "PointData/PointData.h"
+#include "ColorData/ColorData.h"
+#include "ClusterData/ClusterData.h"
 
 #include <QMenu>
 
