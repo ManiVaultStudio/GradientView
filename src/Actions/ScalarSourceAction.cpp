@@ -2,7 +2,7 @@
 #include "Application.h"
 
 #include "ScatterplotPlugin.h"
-#include "PointData.h"
+#include "PointData/PointData.h"
 
 #include <QGridLayout>
 #include <QHBoxLayout>

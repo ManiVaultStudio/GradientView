@@ -9,7 +9,7 @@
 #include <actions/StringAction.h>
 #include <actions/StatusAction.h>
 
-#include <DimensionsPickerAction.h>
+#include <PointData/DimensionsPickerAction.h>
 
 using namespace hdps::gui;
 

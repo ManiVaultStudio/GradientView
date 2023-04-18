@@ -1,6 +1,6 @@
 #include "SubsetAction.h"
 #include "ScatterplotPlugin.h"
-#include "PointData.h"
+#include "PointData/PointData.h"
 
 #include <Application.h>
 
