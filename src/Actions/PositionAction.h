@@ -2,7 +2,7 @@
 
 #include "PluginAction.h"
 
-#include <DimensionPickerAction.h>
+#include <PointData/DimensionPickerAction.h>
 
 #include <QHBoxLayout>
 #include <QLabel>

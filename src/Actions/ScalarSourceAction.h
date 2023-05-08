@@ -4,7 +4,7 @@
 
 #include "ScalarSourceModel.h"
 
-#include <DimensionPickerAction.h>
+#include <PointData/DimensionPickerAction.h>
 
 using namespace hdps::gui;
 
