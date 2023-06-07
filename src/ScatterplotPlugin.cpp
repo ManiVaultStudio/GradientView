@@ -21,6 +21,7 @@
 #include "RandomWalks.h"
 #include "DataTransformations.h"
 #include "Timer.h"
+#include "Export.h"
 
 #include <QtCore>
 #include <QApplication>

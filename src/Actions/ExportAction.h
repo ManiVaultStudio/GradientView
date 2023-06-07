@@ -33,8 +33,10 @@ public:
 public: // Action getters
     TriggerAction& getExportRankingsAction() { return _exportRankingsAction; }
     TriggerAction& getExportFloodnodesAction() { return _exportFloodnodesAction; }
+    TriggerAction& getImportKnnGraphAction() { return _importKnnGraphAction; }
 
 protected:
     TriggerAction       _exportRankingsAction;
     TriggerAction       _exportFloodnodesAction;
+    TriggerAction       _importKnnGraphAction;
 };

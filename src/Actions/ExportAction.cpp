@@ -11,7 +11,8 @@ using namespace hdps::gui;
 ExportAction::ExportAction(ScatterplotPlugin* scatterplotPlugin) :
     PluginAction(scatterplotPlugin, "Export"),
     _exportRankingsAction(scatterplotPlugin, "Export rankings"),
-    _exportFloodnodesAction(scatterplotPlugin, "Export floodnodes")
+    _exportFloodnodesAction(scatterplotPlugin, "Export floodnodes"),
+    _importKnnGraphAction(scatterplotPlugin, "Import KNN Graph")
 {
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("file-export"));
 
@@ -20,6 +21,9 @@ ExportAction::ExportAction(ScatterplotPlugin* scatterplotPlugin) :
     });
     connect(&_exportFloodnodesAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
         scatterplotPlugin->exportFloodnodes();
+    });
+    connect(&_importKnnGraphAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
+        scatterplotPlugin->importKnnGraph();
     });
 }
 
@@ -37,6 +41,7 @@ QMenu* ExportAction::getContextMenu()
 
     addActionToMenu(&_exportRankingsAction);
     addActionToMenu(&_exportFloodnodesAction);
+    addActionToMenu(&_importKnnGraphAction);
 
     return menu;
 }
@@ -58,6 +63,8 @@ ExportAction::Widget::Widget(QWidget* parent, ExportAction* exportAction, const 
         layout->addWidget(exportAction->getExportRankingsAction().createWidget(this), 0, 1);
         layout->addWidget(exportAction->getExportFloodnodesAction().createLabelWidget(this), 1, 0);
         layout->addWidget(exportAction->getExportFloodnodesAction().createWidget(this), 1, 1);
+        layout->addWidget(exportAction->getImportKnnGraphAction().createLabelWidget(this), 2, 0);
+        layout->addWidget(exportAction->getImportKnnGraphAction().createWidget(this), 2, 1);
 
         auto mainLayout = new QVBoxLayout();
 

@@ -103,6 +103,11 @@ set(Compute
     src/Compute/SecondaryDistanceMeasures.cpp
 )
 
+set(Export
+    src/Export/Export.h
+    src/Export/Export.cpp
+)
+
 set(SHADERS
     res/shaders/SelectionTool.frag
     res/shaders/SelectionTool.vert
@@ -117,13 +122,14 @@ set(AUX
 
 find_package(CUDA 12.0 REQUIRED)
 
-set(SOURCES ${PLUGIN} ${UI} ${Actions} ${Models} ${Compute})
+set(SOURCES ${PLUGIN} ${UI} ${Actions} ${Models} ${Compute} ${Export})
 
 source_group(Plugin FILES ${PLUGIN})
 source_group(UI FILES ${UI})
 source_group(Actions FILES ${Actions})
 source_group(Models FILES ${Models})
 source_group(Compute FILES ${Compute})
+source_group(Export FILES ${Export})
 source_group(Shaders FILES ${SHADERS})
 source_group(Aux FILES ${AUX})
 
@@ -139,6 +145,7 @@ target_include_directories(${PROJECT} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(${PROJECT} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/Actions)
 target_include_directories(${PROJECT} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/Models)
 target_include_directories(${PROJECT} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/Compute)
+target_include_directories(${PROJECT} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/Export)
 
 target_compile_features(${PROJECT} PRIVATE cxx_std_17)
 
