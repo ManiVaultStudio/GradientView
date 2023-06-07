@@ -130,23 +130,23 @@ namespace
     {
         for (int p = 0; p < dataMatrix.rows(); p++)
         {
-            std::vector<std::vector<int>> floodFill;
-            compute::doFloodFill(dataMatrix, knnGraph, p, numSteps, floodFill);
+            FloodFill directionsFloodFill(numSteps);
+            directionsFloodFill.compute(knnGraph, p);
 
             int depth = 3;
             int numNodes = 0;
             for (int i = 0; i < depth; i++)
             {
-                numNodes += floodFill[i].size();
+                numNodes += directionsFloodFill.getWaves()[i].size();
             }
 
             Eigen::MatrixXf nodeLocations(numNodes, 2);
             int n = 0;
             for (int i = 0; i < depth; i++)
             {
-                for (int j = 0; j < floodFill[i].size(); j++)
+                for (int j = 0; j < directionsFloodFill.getWaves()[i].size(); j++)
                 {
-                    int index = floodFill[i][j];
+                    int index = directionsFloodFill.getWaves()[i][j];
 
                     nodeLocations(n, 0) = projMatrix(index, 0);
                     nodeLocations(n, 1) = projMatrix(index, 1);
@@ -189,7 +189,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _settingsAction(this),
     _gradientGraph(new GradientGraph()),
     _selectedDimension(-1),
-    _numFloodSteps(10),
+    _floodFill(10),
     _filterType(filters::FilterType::SPATIAL_PEAK),
     _overlayType(OverlayType::NONE),
     _colorMapAction(this, "Color map", util::ColorMap::Type::OneDimensional, "RdYlBu", "RdYlBu"),
@@ -499,11 +499,9 @@ timer.start();
         //////////////////
         // Do floodfill //
         //////////////////
-        std::vector<std::vector<int>> floodFill;
+        _floodFill.compute(knnGraph, _selectedPoint);
 
         {
-            compute::doFloodFill(dataMatrix, knnGraph, _selectedPoint, _numFloodSteps, floodFill);
-
             getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
             for (int i = 0; i < getProjectionViews().size(); i++)
                 if (getProjectionViews()[i] != nullptr)
@@ -512,19 +510,6 @@ timer.start();
             //_scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
             getScatterplotWidget().setScalarEffect(PointEffect::Color);
         }
-
-        int numFloodNodes = 0;
-        for (int i = 0; i < floodFill.size(); i++)
-        {
-            numFloodNodes += floodFill[i].size();
-        }
-
-        // Store all flood nodes together
-        _floodNodes.resize(numFloodNodes);
-        int n = 0;
-        for (int i = 0; i < floodFill.size(); i++)
-            for (int j = 0; j < floodFill[i].size(); j++)
-                _floodNodes[n++] = floodFill[i][j];
 
 timer.mark("Floodfill");
 
@@ -537,14 +522,14 @@ timer.mark("Floodfill");
         case filters::FilterType::SPATIAL_PEAK:
         {
             if (_settingsAction.getFilterAction().getRestrictToFloodAction().isChecked())
-                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, dataMatrix, _variances, projMatrix, _projectionSize, dimRanking, _floodNodes);
+                _spatialPeakFilter.computeDimensionRanking(_selectedPoint, dataMatrix, _variances, projMatrix, _projectionSize, dimRanking, _floodFill.getAllNodes());
             else
                 _spatialPeakFilter.computeDimensionRanking(_selectedPoint, dataMatrix, _variances, projMatrix, _projectionSize, dimRanking);
             break;
         }
         case filters::FilterType::HD_PEAK:
         {
-            _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, dataMatrix, _variances, floodFill, _numFloodSteps, dimRanking);
+            _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, dataMatrix, _variances, _floodFill, dimRanking);
             break;
         }
         }
@@ -607,12 +592,12 @@ timer.mark("Linearisation");
         case OverlayType::NONE:
         {
             _scatterPlotWidget->setColoredBy("Colored by - Flood fill step");
-            for (int i = 0; i < floodFill.size(); i++)
+            for (int i = 0; i < _floodFill.getNumWaves(); i++)
             {
-                for (int j = 0; j < floodFill[i].size(); j++)
+                for (int j = 0; j < _floodFill.getWaves()[i].size(); j++)
                 {
-                    int index = floodFill[i][j];
-                    colorScalars[_mask.empty() ? index : _mask[index]] = 1 - (1.0f/_numFloodSteps) * i;
+                    int index = _floodFill.getWaves()[i][j];
+                    colorScalars[_mask.empty() ? index : _mask[index]] = 1 - (1.0f/_floodFill.getNumWaves()) * i;
                 }
             }
 
@@ -622,9 +607,10 @@ timer.mark("Linearisation");
         case OverlayType::DIM_VALUES:
         {
             _scatterPlotWidget->setColoredBy("Colored by - Dim: " + _enabledDimNames[dimRanking[0]]);
-            for (int i = 0; i < _floodNodes.size(); i++)
+            for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
             {
-                int index = _mask.empty() ? _floodNodes[i] : _mask[_floodNodes[i]];
+                int node = _floodFill.getAllNodes()[i];
+                int index = _mask.empty() ? node : _mask[node];
                 colorScalars[index] = _normalizedData[dimRanking[0]][index];
             }
             break;
@@ -634,21 +620,22 @@ timer.mark("Linearisation");
             _scatterPlotWidget->setColoredBy("Colored by - Local Dimensionality");
             if (_localHighDimensionality.empty()) break;
 
-            for (int i = 0; i < _floodNodes.size(); i++)
+            for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
             {
-                int index = _mask.empty() ? _floodNodes[i] : _mask[_floodNodes[i]];
-                colorScalars[index] = _localHighDimensionality[_floodNodes[i]];
+                int node = _floodFill.getAllNodes()[i];
+                int index = _mask.empty() ? node : _mask[node];
+                colorScalars[index] = _localHighDimensionality[node];
             }
             break;
         }
         case OverlayType::DIRECTIONS:
         {
             std::vector<float> scalars(dataMatrix.rows(), 0);
-            std::vector<Vector2f> directions(_floodNodes.size() * 2);
+            std::vector<Vector2f> directions(_floodFill.getTotalNumNodes() * 2);
 
-            for (int i = 0; i < _floodNodes.size(); i++)
+            for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
             {
-                float idx = _floodNodes[i];
+                float idx = _floodFill.getAllNodes()[i];
                 directions[i * 2 + 0] = _directions[idx * 2 + 0];
                 directions[i * 2 + 1] = _directions[idx * 2 + 1];
                 scalars[idx] = 0.5f;
@@ -679,9 +666,9 @@ void ScatterplotPlugin::computeGraphs()
         int* const bins_d = &_bins[d][0];
         float* const norm_d = &_normalizedData[d][0];
 
-        for (int i = 0; i < _floodNodes.size(); i++)
+        for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
         {
-            const float& f = norm_d[_floodNodes[i]];
+            const float& f = norm_d[_floodFill.getAllNodes()[i]];
             bins_d[(long)(f * binSteps)]++;
         }
     }
@@ -1199,37 +1186,19 @@ void ScatterplotPlugin::exportRankings()
     std::vector<std::vector<int>> perPointDimRankings(_dataMatrix.rows());
     for (int i = 0; i < _dataMatrix.rows(); i++)
     {
+        FloodFill exportFloodFill(_floodFill.getNumWaves());
+        exportFloodFill.compute(_knnGraph, i);
+
         switch (_filterType)
         {
         case filters::FilterType::SPATIAL_PEAK:
             if (_settingsAction.getFilterAction().getRestrictToFloodAction().isChecked())
-            {
-                std::vector<std::vector<int>> floodFill;
-                compute::doFloodFill(_dataMatrix, _knnGraph, i, _numFloodSteps, floodFill);
-
-                int numFloodNodes = 0;
-                for (int j = 0; j < floodFill.size(); j++)
-                {
-                    numFloodNodes += floodFill[j].size();
-                }
-
-                // Store all flood nodes together
-                std::vector<int> floodNodes;
-                floodNodes.resize(numFloodNodes);
-                int n = 0;
-                for (int j = 0; j < floodFill.size(); j++)
-                    for (int k = 0; k < floodFill[j].size(); k++)
-                        floodNodes[n++] = floodFill[j][k];
-
-                _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i], floodNodes);
-            }
+                _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i], exportFloodFill.getAllNodes());
             else
                 _spatialPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, _projMatrix, _projectionSize, perPointDimRankings[i]);
             break;
         case filters::FilterType::HD_PEAK:
-            std::vector<std::vector<int>> floodFill;
-            compute::doFloodFill(_dataMatrix, _knnGraph, i, _numFloodSteps, floodFill);
-            _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, floodFill, _numFloodSteps, perPointDimRankings[i]);
+            _hdFloodPeakFilter.computeDimensionRanking(i, _dataMatrix, _variances, exportFloodFill, perPointDimRankings[i]);
             break;
         }
     }
@@ -1242,24 +1211,18 @@ void ScatterplotPlugin::exportFloodnodes()
     std::vector<std::vector<int>> perPointFloodNodes(_dataMatrix.rows());
     for (int p = 0; p < _dataMatrix.rows(); p++)
     {
-        std::vector<std::vector<int>> floodFill;
-        compute::doFloodFill(_dataMatrix, _knnGraph, p, _numFloodSteps, floodFill);
-
-        int numFloodNodes = 0;
-        for (int i = 0; i < floodFill.size(); i++)
-        {
-            numFloodNodes += floodFill[i].size();
-        }
+        FloodFill exportFloodFill(_floodFill.getNumWaves());
+        exportFloodFill.compute(_knnGraph, p);
 
         // Store all flood nodes together
-        perPointFloodNodes[p].resize(numFloodNodes + floodFill.size());
+        perPointFloodNodes[p].resize(exportFloodFill.getTotalNumNodes() + exportFloodFill.getNumWaves());
         int n = 0;
-        for (int i = 0; i < floodFill.size(); i++)
+        for (int i = 0; i < exportFloodFill.getNumWaves(); i++)
         {
             perPointFloodNodes[p][n++] = -1;
-            for (int j = 0; j < floodFill[i].size(); j++)
+            for (int j = 0; j < exportFloodFill.getWaves()[i].size(); j++)
             {
-                perPointFloodNodes[p][n++] = floodFill[i][j];
+                perPointFloodNodes[p][n++] = exportFloodFill.getWaves()[i][j];
             }
         }
     }

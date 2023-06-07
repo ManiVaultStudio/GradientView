@@ -11,6 +11,8 @@
 #include "GradientGraph.h"
 #include "Filters.h"
 
+#include "Compute/FloodFill.h"
+
 #include <Eigen/Eigen>
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexIVFFlat.h>
@@ -134,7 +136,7 @@ public:
     void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataMatrix, _knnIndex, floodNeighbours); }
     void setFloodSteps(int numFloodSteps)
     {
-        _numFloodSteps = numFloodSteps;
+        _floodFill.setNumWaves(numFloodSteps);
         _settingsAction.getFilterAction().setFloodSteps(numFloodSteps);
     }
     bool hasMaskApplied() { return !_mask.empty(); }
@@ -196,7 +198,6 @@ private:
     int                             _selectedDimension;
     QPoint                          _mousePos;
     bool                            _mousePressed = false;
-    std::vector<int>                _floodNodes;
     QTimer*                         _graphTimer;
     std::vector<int>                _mask;
     int                             _selectedViewIndex = 0;
@@ -223,7 +224,7 @@ private:
     KnnGraph                        _maskedSourceKnnGraph;
 
     // Floodfill
-    int _numFloodSteps;
+    FloodFill                       _floodFill;
 
     // Graph
     GradientGraph*                  _gradientGraph;

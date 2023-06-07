@@ -119,49 +119,6 @@ namespace hdps
             }
         }
 
-        void doFloodFill(const DataMatrix& highDim, const KnnGraph& knnGraph, int selectedPoint, int numSteps, std::vector<std::vector<int>>& floodFill)
-        {
-            int numDimensions = highDim.cols();
-
-            floodFill.resize(numSteps);
-
-            // Set of unique nodes
-            std::vector<bool> visitedNodes(highDim.rows(), false);
-
-            // Perform given number of iterations of floodfill
-            auto currentNodes = std::vector<int>(1, selectedPoint);
-
-            // Start flooding in N steps
-            for (int s = 0; s < numSteps; s++)
-            {
-                floodFill.reserve(currentNodes.size());
-                // Copy current nodes to floodfill storage
-                for (int i = 0; i < currentNodes.size(); i++)
-                {
-                    int node = currentNodes[i];
-                    if (!visitedNodes[node])
-                    {
-                        visitedNodes[node] = true;
-                        floodFill[s].push_back(node);
-                    }
-                    else
-                        currentNodes[i] = -1;
-                }
-
-                // Add neighbours of current nodes to new nodes
-                std::vector<int> newNodes;
-                newNodes.reserve(currentNodes.size() * knnGraph.getNumNeighbours());
-                for (const int& node : currentNodes)
-                {
-                    if (node == -1) continue;
-                    newNodes.insert(newNodes.end(), knnGraph.getNeighbours()[node].begin(), knnGraph.getNeighbours()[node].end());
-                }
-
-                // New nodes become the current indices
-                currentNodes = newNodes;
-            }
-        }
-
         void traceLineage(const DataMatrix& data, const std::vector<std::vector<int>>& floodFill, std::vector<Vector2f>& positions, int seedIndex, std::vector<int>& lineage)
         {
             int numFloodNodes = 0;

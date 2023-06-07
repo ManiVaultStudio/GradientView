@@ -1,5 +1,7 @@
 #include "Filters.h"
 
+#include "FloodFill.h"
+
 #include "graphics/Vector2f.h"
 #include "graphics/Vector3f.h"
 
@@ -215,7 +217,7 @@ namespace filters
     //    _outerFilterSize = size;
     //}
 
-    void HDFloodPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const std::vector<std::vector<int>>& floodPoints, int numFloodSteps, std::vector<int>& dimRanking)
+    void HDFloodPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const FloodFill& floodFill, std::vector<int>& dimRanking)
     {
         int numDimensions = dataMatrix.cols();
 
@@ -224,11 +226,11 @@ namespace filters
 
         for (int wave = 0; wave < _innerFilterSize; wave++)
         {
-            nearIndices.insert(nearIndices.end(), floodPoints[wave].begin(), floodPoints[wave].end());
+            nearIndices.insert(nearIndices.end(), floodFill.getWaves()[wave].begin(), floodFill.getWaves()[wave].end());
         }
-        for (int wave = _innerFilterSize; wave < numFloodSteps - 1; wave++)
+        for (int wave = _innerFilterSize; wave < floodFill.getNumWaves() - 1; wave++)
         {
-            farIndices.insert(farIndices.end(), floodPoints[wave].begin(), floodPoints[wave].end());
+            farIndices.insert(farIndices.end(), floodFill.getWaves()[wave].begin(), floodFill.getWaves()[wave].end());
         }
 
         std::vector<float> nearAverages;

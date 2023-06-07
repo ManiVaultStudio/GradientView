@@ -91,6 +91,8 @@ set(Compute
     src/Compute/LocalDimensionality.cpp
     src/Compute/RandomWalks.h
     src/Compute/RandomWalks.cpp
+    src/Compute/FloodFill.h
+    src/Compute/FloodFill.cpp
     src/Compute/KnnIndex.h
     src/Compute/KnnIndex.cpp
     src/Compute/KnnGraph.h
@@ -140,6 +142,9 @@ source_group(Shaders FILES ${SHADERS})
 source_group(Aux FILES ${AUX})
 
 add_library(${PROJECT} SHARED ${SOURCES} ${SHADERS} ${AUX})
+
+# Disable Windows GDI to avoid FloodFill name conflict
+target_compile_definitions(${PROJECT} PRIVATE NOGDI)
 
 target_include_directories(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(${PROJECT} PRIVATE "${INSTALL_DIR}/$<CONFIGURATION>/include/")

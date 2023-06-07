@@ -10,6 +10,8 @@ using DataMatrix = Eigen::MatrixXf;
 void writeFloodNodes(const std::vector<std::vector<int>>& floodNodes);
 void writeDimensionRanking(const std::vector<std::vector<int>>& ranking, const std::vector<QString>& names);
 
+class FloodFill;
+
 namespace filters
 {
     enum class FilterType
@@ -44,7 +46,7 @@ namespace filters
         void setInnerFilterSize(int size);
         //void setOuterFilterSize(int size);
 
-        void computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const std::vector<std::vector<int>>& floodPoints, int numFloodSteps, std::vector<int>& dimRanking);
+        void computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const FloodFill& floodFill, std::vector<int>& dimRanking);
     private:
         int _innerFilterSize;
     };
