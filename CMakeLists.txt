@@ -103,6 +103,11 @@ set(Compute
     src/Compute/SecondaryDistanceMeasures.cpp
 )
 
+set(IO
+    src/IO/KnnGraphIO.h
+    src/IO/KnnGraphIO.cpp
+)
+
 set(Export
     src/Export/Export.h
     src/Export/Export.cpp
@@ -122,19 +127,21 @@ set(AUX
 
 find_package(CUDA 12.0 REQUIRED)
 
-set(SOURCES ${PLUGIN} ${UI} ${Actions} ${Models} ${Compute} ${Export})
+set(SOURCES ${PLUGIN} ${UI} ${Actions} ${Models} ${Compute} ${IO} ${Export})
 
 source_group(Plugin FILES ${PLUGIN})
 source_group(UI FILES ${UI})
 source_group(Actions FILES ${Actions})
 source_group(Models FILES ${Models})
 source_group(Compute FILES ${Compute})
+source_group(IO FILES ${IO})
 source_group(Export FILES ${Export})
 source_group(Shaders FILES ${SHADERS})
 source_group(Aux FILES ${AUX})
 
 add_library(${PROJECT} SHARED ${SOURCES} ${SHADERS} ${AUX})
 
+target_include_directories(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(${PROJECT} PRIVATE "${INSTALL_DIR}/$<CONFIGURATION>/include/")
 target_include_directories(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/Eigen/include)
 target_include_directories(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/include)

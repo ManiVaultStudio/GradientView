@@ -1,6 +1,7 @@
 #pragma once
 
 #include "KnnIndex.h"
+#include "IO/KnnGraphIO.h"
 
 //#include <cstdlib>
 //#include <stdint.h>
@@ -25,9 +26,21 @@ public:
     void build(const DataMatrix& data, const knn::Index& index, int numNeighbours);
     void build(const KnnGraph& graph, int numNeighbours, bool shared);
 
+    void readFromFile(QString filePath)
+    {
+        KnnGraphImporter::read(filePath, *this);
+    }
+
+    void writeToFile()
+    {
+        KnnGraphExporter::write(*this);
+    }
+
 private:
     std::vector<std::vector<int>> _neighbours;
     int _numNeighbours;
 
     friend class ScatterplotPlugin;
+    friend class KnnGraphImporter;
+    friend class KnnGraphExporter;
 };
