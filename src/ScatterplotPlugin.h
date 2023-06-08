@@ -107,10 +107,10 @@ public: // Point colors
 public: // Miscellaneous
 
     /** Get smart pointer to points dataset for point position */
-    Dataset<Points>& getPositionDataset();
+    Dataset<Points>& getPositionDataset() { return _positionDataset; }
 
     /** Get smart pointer to source of the points dataset for point position (if any) */
-    Dataset<Points>& getPositionSourceDataset();
+    Dataset<Points>& getPositionSourceDataset() { return _positionSourceDataset; }
 
 protected:
 

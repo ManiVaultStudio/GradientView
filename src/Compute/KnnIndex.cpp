@@ -115,10 +115,11 @@ namespace knn
 
     void Index::addData(const DataMatrix& data)
     {
-        int numPoints = data.rows();
-        int numDimensions = data.cols();
+        size_t numPoints = data.rows();
+        size_t numDimensions = data.cols();
 
-        std::vector<float> highDimArray(numPoints * numDimensions);
+        size_t vectorSize = numPoints * numDimensions;
+        std::vector<float> highDimArray(vectorSize);
         bool angular = numDimensions > 200;
         std::cout << "ANGULAR: " << angular;
 
@@ -146,7 +147,7 @@ namespace knn
         }
         else
         {
-            for (int i = 0; i < numPoints; ++i) {
+            for (size_t i = 0; i < numPoints; ++i) {
                 _annoyIndex->add_item(i, highDimArray.data() + (i * numDimensions));
                 if (i % 1000 == 0)
                     std::cout << "Loading objects ...\t object: " << i + 1 << "\tProgress:" << std::fixed << std::setprecision(2) << (double)i / (double)(numPoints + 1) * 100 << "%\r";

@@ -848,16 +848,6 @@ void ScatterplotPlugin::updateWindowTitle()
         getWidget().setWindowTitle(QString("%1: %2").arg(getGuiName(), _positionDataset->getDataHierarchyItem().getFullPathName()));
 }
 
-Dataset<Points>& ScatterplotPlugin::getPositionDataset()
-{
-    return _positionDataset;
-}
-
-Dataset<Points>& ScatterplotPlugin::getPositionSourceDataset()
-{
-    return _positionSourceDataset;
-}
-
 void ScatterplotPlugin::positionDatasetChanged()
 {
     // Only proceed if we have a valid position dataset

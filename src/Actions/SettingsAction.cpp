@@ -27,8 +27,20 @@ SettingsAction::SettingsAction(ScatterplotPlugin* scatterplotPlugin) :
     setText("Settings");
     setSerializationName("Settings");
 
-    const auto updateEnabled = [this]() {
-        setEnabled(_scatterplotPlugin->getPositionDataset().isValid());
+    const auto updateEnabled = [this]()
+    {
+        bool hasDataset = _scatterplotPlugin->getPositionDataset().isValid();
+        _renderModeAction.setEnabled(hasDataset);
+        _positionAction.setEnabled(hasDataset);
+        _subsetAction.setEnabled(hasDataset);
+        _plotAction.setEnabled(hasDataset);
+        _exportImageAction.setEnabled(hasDataset);
+        _miscellaneousAction.setEnabled(hasDataset);
+        _filterAction.setEnabled(hasDataset);
+        _overlayAction.setEnabled(hasDataset);
+        _selectionAsMaskAction.setEnabled(hasDataset);
+        _clearMaskAction.setEnabled(hasDataset);
+        //setEnabled(_scatterplotPlugin->getPositionDataset().isValid());
     };
 
     connect(&scatterplotPlugin->getPositionDataset(), &Dataset<Points>::changed, this, updateEnabled);
