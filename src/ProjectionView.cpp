@@ -105,7 +105,7 @@ void ProjectionView::setData(const std::vector<Vector2f>* points)
 void ProjectionView::setScalars(const std::vector<float>& scalars, int selectedPoint)
 {
     _pointRenderer.setColorChannelScalars(scalars);
-    _pointRenderer.setScalarEffect(Color);
+    _pointRenderer.setScalarEffect(PointEffect::Color);
     
     update();
 }
@@ -124,7 +124,7 @@ void ProjectionView::setScalars(const Eigen::Block<Eigen::MatrixXf, -1, 1, true>
     }
 
     _pointRenderer.setColors(colors);
-    _pointRenderer.setScalarEffect(Color);
+    _pointRenderer.setScalarEffect(PointEffect::Color);
 
     update();
 }
@@ -132,7 +132,7 @@ void ProjectionView::setScalars(const Eigen::Block<Eigen::MatrixXf, -1, 1, true>
 void ProjectionView::setColors(const std::vector<Vector3f>& colors)
 {
     _pointRenderer.setColors(colors);
-    _pointRenderer.setScalarEffect(None);
+    _pointRenderer.setScalarEffect(PointEffect::None);
 
     update();
 }
