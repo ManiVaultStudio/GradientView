@@ -1,8 +1,16 @@
 #include "KnnGraph.h"
 
 #include "SecondaryDistanceMeasures.h"
+#include "IO/KnnGraphIO.h"
 
+#include <algorithm>
 #include <iostream>
+
+KnnGraph::KnnGraph() :
+    _numNeighbours(1)
+{
+
+}
 
 void printIndices(std::string name, idx_t* indices, int k)
 {
@@ -44,215 +52,8 @@ void printDistances(std::string name, float* distances, int k)
     }
 }
 
-//void KnnGraph::build(const DataMatrix& data, BruteIndexM* brute, int k)
-//{
-//    numNeighbours = k;
-//
-//    Matrixi indices;
-//    Eigen::MatrixXf distances;
-//
-//    Eigen::MatrixXf arrayt = data.transpose();
-//    brute->query(arrayt, k + 1, indices, distances);
-//
-//    printf("Indices (5 first results)=: BRUTE\n");
-//    for (int i = 0; i < 5; i++) {
-//        std::cout << "i: " << i << std::endl;
-//        for (int j = 0; j < k; j++)
-//            printf("%5zd ", indices(j, i));
-//        printf("\n");
-//    }
-//
-//    std::cout << "Distances (5 first results): " << "BRUTE" << std::endl;
-//    for (int i = 0; i < 5; i++) {
-//        for (int j = 0; j < k + 1; j++)
-//            printf("%7g ", distances(j, i));
-//        printf("\n");
-//    }
-//
-//    neighbours.resize(data.rows(), std::vector<int>(numNeighbours));
-//
-//    for (int i = 0; i < data.rows(); i++)
-//    {
-//        //if (i % 100 == 0) std::cout << "Querying neighbours: " << i << "/" << data.rows() << std::endl;
-//        for (int j = 0; j < numNeighbours; j++)
-//        {
-//            neighbours[i][j] = indices(j + 1, i);
-//        }
-//    }
-//}
-//
-//void KnnGraph::build(const DataMatrix& data, KdTree* kdTree, int k)
-//{
-//    numNeighbours = k;
-//
-//    Matrixi indices;
-//    Eigen::MatrixXf distances;
-//
-//    Eigen::MatrixXf arrayt = data.transpose();
-//    kdTree->query(arrayt, k+1, indices, distances);
-//
-//    printf("I (5 first results)=\n");
-//    for (int i = 0; i < 5; i++) {
-//        std::cout << "i: " << i << std::endl;
-//        for (int j = 0; j < k; j++)
-//            printf("%5zd ", indices(j, i));
-//        printf("\n");
-//    }
-//
-//    printf("I (5 last results)=\n");
-//    for (int i = data.rows() - 5; i < data.rows(); i++) {
-//        for (int j = 0; j < k; j++)
-//            printf("%5zd ", indices(j, i));
-//        printf("\n");
-//    }
-//
-//    neighbours.resize(data.rows(), std::vector<int>(numNeighbours));
-//
-//    for (int i = 0; i < data.rows(); i++)
-//    {
-//        if (i % 100 == 0) std::cout << "Querying neighbours: " << i << "/" << data.rows() << std::endl;
-//        for (int j = 0; j < numNeighbours; j++)
-//        {
-//            neighbours[i][j] = indices(j + 1, i);
-//        }
-//    }
-//}
-//
-////void KnnGraph::build(const DataMatrix& data, flann::Index<flann::L2<float>>* index, int k)
-////{
-////    numNeighbours = k - 1;
-////
-////    Eigen::MatrixXf arrayt = data.transpose();
-////
-////    std::vector<float> highDimArray(data.rows() * data.cols());
-////    //Eigen::Map<Eigen::MatrixXf>(highDimArray.data(), data.rows(), data.cols()) = data;
-////
-////    int idx = 0;
-////    for (int i = 0; i < data.rows(); i++)
-////    {
-////        for (int d = 0; d < data.cols(); d++)
-////        {
-////            highDimArray[idx++] = data(i, d);
-////        }
-////    }
-////    
-////    std::vector<int> indices(data.rows() * k);
-////    std::vector<float> distances_squared(data.rows() * k);
-////    flann::Matrix<int> indices_mat(indices.data(), data.rows(), k);
-////    flann::Matrix<float> dists_mat(distances_squared.data(), data.rows(), k);
-////
-////    flann::Matrix<float> query(highDimArray.data(), data.rows(), data.cols());
-////
-////    flann::SearchParams flann_params(128);
-////    flann_params.cores = 0; //all cores
-////    index->knnSearch(query, indices_mat, dists_mat, k, flann_params);
-////
-////    neighbours.resize(data.rows(), std::vector<int>(numNeighbours));
-////
-////    for (int i = 0; i < data.rows(); i++)
-////    {
-////        if (i % 100 == 0) std::cout << "Querying neighbours: " << i << "/" << data.rows() << std::endl;
-////        for (int j = 0; j < numNeighbours; j++)
-////        {
-////            neighbours[i][j] = indices_mat[i][j + 1];
-////        }
-////    }
-////}
-//
-//void KnnGraph::build(const DataMatrix& data, faiss::IndexFlat* index, int k)
-//{
-//    std::vector<float> highDimArray(data.rows() * data.cols());
-//    //Eigen::Map<Eigen::MatrixXf>(highDimArray.data(), data.rows(), data.cols()) = data;
-//
-//    int idx = 0;
-//    for (int i = 0; i < data.rows(); i++)
-//    {
-//        for (int d = 0; d < data.cols(); d++)
-//        {
-//            highDimArray[idx++] = data(i, d);
-//        }
-//    }
-//
-//    idx_t* I = new idx_t[(k+1) * data.rows()];
-//    float* D = new float[(k+1) * data.rows()];
-//
-//    index->search(data.rows(), highDimArray.data(), k+1, D, I);
-//
-//    // print results
-//    printIndices("FAISS CPU", I, k);
-//    printDistances("FAISS CPU", D, k);
-//
-//    numNeighbours = k;
-//    neighbours.clear();
-//    neighbours.resize(data.rows(), std::vector<int>(numNeighbours));
-//
-//    for (int i = 0; i < data.rows(); i++)
-//    {
-//        //if (i % 100 == 0) std::cout << "Querying neighbours: " << i << "/" << data.rows() << std::endl;
-//        for (int j = 0; j < numNeighbours; j++)
-//        {
-//            neighbours[i][j] = I[i * (k+1) + j + 1];
-//        }
-//    }
-//
-//    delete[] I;
-//    delete[] D;
-//}
-//
-//void KnnGraph::build(const DataMatrix& data, faiss::IndexIVFFlat* index, int k)
-//{
-//    std::vector<float> highDimArray(data.rows() * data.cols());
-//    //Eigen::Map<Eigen::MatrixXf>(highDimArray.data(), data.rows(), data.cols()) = data;
-//
-//    int idx = 0;
-//    for (int i = 0; i < data.rows(); i++)
-//    {
-//        for (int d = 0; d < data.cols(); d++)
-//        {
-//            highDimArray[idx++] = data(i, d);
-//        }
-//    }
-//
-//    idx_t* I = new idx_t[k * data.rows()];
-//    float* D = new float[k * data.rows()];
-//
-//    index->nprobe = 10;
-//    index->search(data.rows(), highDimArray.data(), k, D, I);
-//
-//    // print results
-//    printf("I (5 first results)=\n");
-//    for (int i = 0; i < 5; i++) {
-//        for (int j = 0; j < k; j++)
-//            printf("%5zd ", I[i * k + j]);
-//        printf("\n");
-//    }
-//
-//    printf("I (5 last results)=\n");
-//    for (int i = data.rows() - 5; i < data.rows(); i++) {
-//        for (int j = 0; j < k; j++)
-//            printf("%5zd ", I[i * k + j]);
-//        printf("\n");
-//    }
-//
-//    numNeighbours = k - 1;
-//    neighbours.clear();
-//    neighbours.resize(data.rows(), std::vector<int>(numNeighbours));
-//
-//    for (int i = 0; i < data.rows(); i++)
-//    {
-//        if (i % 100 == 0) std::cout << "Querying neighbours: " << i << "/" << data.rows() << std::endl;
-//        for (int j = 0; j < numNeighbours; j++)
-//        {
-//            neighbours[i][j] = I[i * k + j + 1];
-//        }
-//    }
-//
-//    delete[] I;
-//    delete[] D;
-//}
-
 // Build KNN sub-graph from bigger graph
-void KnnGraph::build(const KnnGraph& graph, int numNeighbours)
+void KnnGraph::build(const KnnGraph& graph, size_t numNeighbours)
 {
     assert(graph.getNumNeighbours() > numNeighbours);
 
@@ -270,7 +71,7 @@ void KnnGraph::build(const KnnGraph& graph, int numNeighbours)
     }
 }
 
-void KnnGraph::build(const DataMatrix& data, const knn::Index& index, int numNeighbours)
+void KnnGraph::build(const DataMatrix& data, const knn::Index& index, size_t numNeighbours)
 {
     std::vector<int> indices;
     std::vector<float> distances;
@@ -287,10 +88,11 @@ void KnnGraph::build(const DataMatrix& data, const knn::Index& index, int numNei
     _neighbours.clear();
     _neighbours.resize(data.rows(), std::vector<int>(_numNeighbours));
 
+    int progressTick = std::max(1LL, data.rows() / 100);
 #pragma omp parallel for
     for (int i = 0; i < data.rows(); i++)
     {
-        //if (i % 100 == 0) std::cout << "Building graph: " << i << "/" << data.rows() << std::endl;
+        if (i % progressTick == 0) std::cout << "Building graph: " << i << "/" << data.rows() << std::endl;
         for (int j = 0; j < _numNeighbours; j++)
         {
             _neighbours[i][j] = indices[i * k + j + 1];
@@ -298,11 +100,21 @@ void KnnGraph::build(const DataMatrix& data, const knn::Index& index, int numNei
     }
 }
 
-void KnnGraph::build(const KnnGraph& graph, int numNeighbours, bool shared)
+void KnnGraph::build(const KnnGraph& graph, size_t numNeighbours, bool shared)
 {
     _numNeighbours = numNeighbours;
     _neighbours.clear();
     _neighbours.resize(graph.getNeighbours().size(), std::vector<int>(_numNeighbours));
 
     computeSharedNeighboursBitset(graph.getNeighbours(), _neighbours, numNeighbours);
+}
+
+void KnnGraph::readFromFile(QString filePath)
+{
+    KnnGraphImporter::read(filePath, *this);
+}
+
+void KnnGraph::writeToFile()
+{
+    KnnGraphExporter::write(*this);
 }
