@@ -110,11 +110,6 @@ set(IO
     src/IO/KnnGraphIO.cpp
 )
 
-set(Export
-    src/Export/Export.h
-    src/Export/Export.cpp
-)
-
 set(SHADERS
     res/shaders/SelectionTool.frag
     res/shaders/SelectionTool.vert
@@ -129,7 +124,7 @@ set(AUX
 
 find_package(CUDA 12.0 REQUIRED)
 
-set(SOURCES ${PLUGIN} ${UI} ${Actions} ${Models} ${Compute} ${IO} ${Export})
+set(SOURCES ${PLUGIN} ${UI} ${Actions} ${Models} ${Compute} ${IO})
 
 source_group(Plugin FILES ${PLUGIN})
 source_group(UI FILES ${UI})
@@ -137,7 +132,6 @@ source_group(Actions FILES ${Actions})
 source_group(Models FILES ${Models})
 source_group(Compute FILES ${Compute})
 source_group(IO FILES ${IO})
-source_group(Export FILES ${Export})
 source_group(Shaders FILES ${SHADERS})
 source_group(Aux FILES ${AUX})
 
@@ -146,18 +140,14 @@ add_library(${PROJECT} SHARED ${SOURCES} ${SHADERS} ${AUX})
 # Disable Windows GDI to avoid FloodFill name conflict
 target_compile_definitions(${PROJECT} PRIVATE NOGDI)
 
+# Include directories, SYSTEM included to suppress warnings from external libraries
 target_include_directories(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(${PROJECT} PRIVATE "${INSTALL_DIR}/$<CONFIGURATION>/include/")
-target_include_directories(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/Eigen/include)
-target_include_directories(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/include)
-target_include_directories(${PROJECT} PRIVATE ${CUDA_INCLUDE_DIRS})
-target_include_directories(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/jcv/include)
-target_include_directories(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/annoy/include)
-target_include_directories(${PROJECT} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_include_directories(${PROJECT} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/Actions)
-target_include_directories(${PROJECT} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/Models)
-target_include_directories(${PROJECT} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/Compute)
-target_include_directories(${PROJECT} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/Export)
+target_include_directories(${PROJECT} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/Eigen/include)
+target_include_directories(${PROJECT} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/include)
+target_include_directories(${PROJECT} SYSTEM PRIVATE ${CUDA_INCLUDE_DIRS})
+target_include_directories(${PROJECT} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/jcv/include)
+target_include_directories(${PROJECT} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/annoy/include)
 
 target_compile_features(${PROJECT} PRIVATE cxx_std_17)
 
