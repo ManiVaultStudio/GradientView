@@ -27,6 +27,7 @@ set(PLUGIN
     src/CudaCheck.h
     src/Timer.h
     src/Timer.cpp
+    src/Types.h
 )
 
 set(UI
