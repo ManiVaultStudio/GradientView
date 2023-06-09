@@ -181,7 +181,7 @@ namespace hdps
                     dirs[i] = dir;
 
                     float sim = (currentDir.x * dir.x + currentDir.y * dir.y) / (dir.length());
-                    if (sim <= 0) sim = 0.001;
+                    if (sim <= 0) sim = 0.001f;
                     probs[i] = sim;
                     totalProb += sim;
                 }

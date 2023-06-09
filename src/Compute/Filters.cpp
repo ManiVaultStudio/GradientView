@@ -117,8 +117,8 @@ void maskPoints(std::vector<int>& indices, const std::vector<int>& mask, std::ve
 namespace filters
 {
     SpatialPeakFilter::SpatialPeakFilter() :
-        _innerFilterRadius(0.025),
-        _outerFilterRadius(0.05)
+        _innerFilterRadius(0.025f),
+        _outerFilterRadius(0.05f)
     {
 
     }

@@ -77,7 +77,7 @@ namespace hdps
         {
             jcv_diagram diagram;
             memset(&diagram, 0, sizeof(jcv_diagram));
-            jcv_diagram_generate(positions.size(), (jcv_point*) positions.data(), 0, 0, &diagram);
+            jcv_diagram_generate((int) positions.size(), (jcv_point*) positions.data(), 0, 0, &diagram);
 
             const jcv_site* sites = jcv_diagram_get_sites(&diagram);
             for (int i = 0; i < diagram.numsites; ++i)
@@ -136,8 +136,8 @@ namespace hdps
 
             _colorScalarsRange.z = _colorScalarsRange.y - _colorScalarsRange.x;
 
-            if (_colorScalarsRange.z < 1e-07)
-                _colorScalarsRange.z = 1e-07;
+            if (_colorScalarsRange.z < 1e-07f)
+                _colorScalarsRange.z = 1e-07f;
 
             _colorScalars.resize(_triangles.size() * 3);
             for (int i = 0; i < _triangles.size(); i++)
@@ -207,7 +207,7 @@ namespace hdps
 
             if (!_triangles.empty())
             {
-                glDrawArrays(GL_TRIANGLES, 0, _triangles.size() * 3);
+                glDrawArrays(GL_TRIANGLES, 0, (int) _triangles.size() * 3);
             }
             glBindVertexArray(0);
         }

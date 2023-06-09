@@ -79,7 +79,7 @@ void computeSharedNeighboursBitset(const std::vector<std::vector<int>>& neighbou
         for (int j = i + 1; j < neighbours.size(); j++)
         {
             std::bitset<numNodes> intersection = bitsets[i] & bitsets[j];
-            int count = intersection.count();
+            int count = (int) intersection.count();
             simM[i][j] = count;
             simM[j][i] = count;
         }
