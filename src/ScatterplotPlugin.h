@@ -195,6 +195,7 @@ private:
     filters::HDFloodPeakFilter      _hdFloodPeakFilter;
 
     // KNN
+    bool                            _computeOnLoad = false;
     knn::Index                      _knnIndex;
     KnnGraph                        _knnGraph;
     KnnGraph                        _largeKnnGraph;
