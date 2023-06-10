@@ -2,4 +2,4 @@
 
 #include <cstdint>
 
-using bigint = int64_t;
+using bigint = int32_t;

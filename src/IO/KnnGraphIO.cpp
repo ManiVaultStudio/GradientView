@@ -1,6 +1,7 @@
 #include "KnnGraphIO.h"
 
-#include "KnnGraph.h"
+#include "Types.h"
+#include "Compute/KnnGraph.h"
 
 #include <fstream>
 #include <sstream>
@@ -15,31 +16,39 @@ void KnnGraphImporter::read(QString filePath, KnnGraph& graph)
         return;
     }
 
+    std::cout << "Reading KNN file: " << filePath.toStdString() << std::endl;
     auto& neighbours = graph._neighbours;
 
-    int numPoints, numNeighbours;
+    char intType;
+    bigint numPoints;
+    int numNeighbours;
 
-    myfile.read((char*)&numPoints, sizeof(int));
-    myfile.read((char*)&numNeighbours, sizeof(int));
+    //myfile.read((char*)&intType, sizeof(char));
 
+    myfile.read((char*)&numPoints, sizeof(bigint));
+    myfile.read((char*)&numNeighbours, sizeof(bigint));
+    
+    std::cout << "Reading " << numPoints << " points with " << numNeighbours << " neighbours" << std::endl;
     neighbours.resize(numPoints, std::vector<int>(numNeighbours));
     graph._numNeighbours = numNeighbours;
 
     for (int i = 0; i < numPoints; i++)
     {
+        if (i % numPoints / 50 == 0) std::cout << "Reading progress: " << i << "/" << numPoints << std::endl;
         for (int j = 0; j < numNeighbours; j++)
         {
             myfile.read((char*)&neighbours[i][j], sizeof(int));
         }
     }
     myfile.close();
+    std::cout << "KNN graph imported!" << std::endl;
 }
 
 void KnnGraphExporter::write(const KnnGraph& graph)
 {
     const std::vector<std::vector<int>>& neighbours = graph.getNeighbours();
-    int numPoints = neighbours.size();
-    int numNeighbours = graph.getNumNeighbours();
+    uint32_t numPoints = (uint32_t) neighbours.size();
+    uint32_t numNeighbours = (uint32_t) graph.getNumNeighbours();
 
     // Linearize data
     std::vector<int> linearNeighbours(numPoints * numNeighbours);
@@ -65,13 +74,13 @@ void KnnGraphExporter::write(const KnnGraph& graph)
         std::cout << "Cannot open file for writing KNN graph!" << std::endl;
         return;
     }
-    myfile.write((char*)&numPoints, sizeof(int));
-    myfile.write((char*)&numNeighbours, sizeof(int));
+    myfile.write((char*)&numPoints, sizeof(uint32_t));
+    myfile.write((char*)&numNeighbours, sizeof(uint32_t));
 
-    for (int i = 0; i < linearNeighbours.size(); i++)
+    for (size_t i = 0; i < linearNeighbours.size(); i++)
     {
         if (i % 10000 == 0) std::cout << "Progress: " << i << std::endl;
-        myfile.write((char*)&linearNeighbours[i], sizeof(int));
+        myfile.write((char*)&linearNeighbours[i], sizeof(uint32_t));
     }
 
     myfile.close();

@@ -157,6 +157,7 @@ private:
 public:
     void exportRankings();
     void exportFloodnodes();
+    void importKnnGraph();
 
 private slots:
     void onLineClicked(int dim);

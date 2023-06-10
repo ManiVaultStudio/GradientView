@@ -711,24 +711,29 @@ void ScatterplotPlugin::computeStaticData()
 
     timer.mark("Data transformations");
 
-    if (_dataMatrix.rows() < 5000)
-        _knnIndex.create(_dataMatrix.cols(), knn::Metric::MANHATTAN);
-    else
-        _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
-    _knnIndex.addData(_dataMatrix);
-
-    timer.mark("Computing KNN index");
-
-    if (!_preloadedKnnGraph)
-        _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
-
-    if (_dataMatrix.rows() < 5000 && _useSharedDistances)
+    if (_computeOnLoad)
     {
-        _sourceKnnGraph.build(_dataMatrix, _knnIndex, 100);
-        _knnGraph.build(_sourceKnnGraph, 10, true);
+        qDebug() << "Creating index";
+        if (_dataMatrix.rows() < 5000)
+            _knnIndex.create(_dataMatrix.cols(), knn::Metric::MANHATTAN);
+        else
+            _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
+        qDebug() << "Adding data";
+        _knnIndex.addData(_dataMatrix);
+        qDebug() << "Done creating index";
+        timer.mark("Computing KNN index");
+        qDebug() << "Building..";
+        if (!_preloadedKnnGraph)
+            _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
+
+        if (_dataMatrix.rows() < 5000 && _useSharedDistances)
+        {
+            _sourceKnnGraph.build(_dataMatrix, _knnIndex, 100);
+            _knnGraph.build(_sourceKnnGraph, 10, true);
+        }
+        else
+            _knnGraph.build(_largeKnnGraph, 10);
     }
-    else
-        _knnGraph.build(_largeKnnGraph, 10);
 
     timer.mark("Computing KNN graph");
 
@@ -1218,6 +1223,15 @@ void ScatterplotPlugin::exportFloodnodes()
     }
 
     writeFloodNodes(perPointFloodNodes);
+}
+
+void ScatterplotPlugin::importKnnGraph()
+{
+    QString fileName = QFileDialog::getOpenFileName(&getWidget(),
+        tr("Open Knn Graph"), "", tr("KNN Files (*.knn)"));
+
+    _largeKnnGraph.readFromFile(fileName);
+    _knnGraph.build(_largeKnnGraph, 10);
 }
 
 void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
