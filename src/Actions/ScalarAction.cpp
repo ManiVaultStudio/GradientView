@@ -1,5 +1,5 @@
 #include "ScalarAction.h"
-#include "ScalarSourceModel.h"
+#include "Models/ScalarSourceModel.h"
 
 #include "ScatterplotPlugin.h"
 #include "Application.h"

@@ -2,7 +2,7 @@
 
 #include "PluginAction.h"
 
-#include "ScalarSourceModel.h"
+#include "Models/ScalarSourceModel.h"
 
 #include <PointData/DimensionPickerAction.h>
 
