@@ -6,20 +6,18 @@
 
 #include "Common.h"
 
-#include "SettingsAction.h"
+#include "Actions/SettingsAction.h"
 #include "graphics/Vector3f.h"
 #include "GradientGraph.h"
-#include "Filters.h"
-
-#include "Compute/FloodFill.h"
 
 #include <Eigen/Eigen>
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexIVFFlat.h>
 
-#include "KnnIndex.h"
-#include "KnnGraph.h"
-#include "Filters.h"
+#include "Compute/FloodFill.h"
+#include "Compute/KnnIndex.h"
+#include "Compute/KnnGraph.h"
+#include "Compute/Filters.h"
 
 #include <QPoint>
 
@@ -81,36 +79,21 @@ public:
     void createSubset(const bool& fromSourceData = false, const QString& name = "");
 
 public: // Dimension picking
-    void setXDimension(const std::int32_t& dimensionIndex);
-    void setYDimension(const std::int32_t& dimensionIndex);
+    void setXDimension(const std::int32_t& dimensionIndex) { updateData(); }
+    void setYDimension(const std::int32_t& dimensionIndex) { updateData(); }
 
 public: // Data loading
 
     /** Invoked when the position points dataset changes */
     void positionDatasetChanged();
 
-public: // Point colors
-
-    /**
-     * Load color from points dataset
-     * @param points Smart pointer to points dataset
-     * @param dimensionIndex Index of the dimension to load
-     */
-    void loadColors(const Dataset<Points>& points, const std::uint32_t& dimensionIndex);
-
-    /**
-     * Load color from clusters dataset
-     * @param clusters Smart pointer to clusters dataset
-     */
-    //void loadColors(const Dataset<Clusters>& clusters);
-
 public: // Miscellaneous
 
     /** Get smart pointer to points dataset for point position */
-    Dataset<Points>& getPositionDataset() { return _positionDataset; }
+    Dataset<Points>& getPositionDataset()               { return _positionDataset; }
 
     /** Get smart pointer to source of the points dataset for point position (if any) */
-    Dataset<Points>& getPositionSourceDataset() { return _positionSourceDataset; }
+    Dataset<Points>& getPositionSourceDataset()         { return _positionSourceDataset; }
 
 protected:
 
@@ -123,26 +106,24 @@ protected:
 public:
 
     /** Get reference to the scatter plot widget */
-    ScatterplotWidget& getScatterplotWidget();
-    std::vector<ProjectionView*>& getProjectionViews() { return _projectionViews; }
-    ProjectionView*& getSelectedView() { return _selectedView; }
+    ScatterplotWidget& getScatterplotWidget()           { return *_scatterPlotWidget; }
+    std::vector<ProjectionView*>& getProjectionViews()  { return _projectionViews; }
+    ProjectionView*& getSelectedView()                  { return _selectedView; }
 
-    filters::SpatialPeakFilter& getSpatialPeakFilter() { return _spatialPeakFilter; }
-    filters::HDFloodPeakFilter& getHDPeakFilter() { return _hdFloodPeakFilter; }
-    float getProjectionSize() { return _projectionSize; }
+    filters::SpatialPeakFilter& getSpatialPeakFilter()  { return _spatialPeakFilter; }
+    filters::HDFloodPeakFilter& getHDPeakFilter()       { return _hdFloodPeakFilter; }
+    float getProjectionSize()                           { return _projectionSize; }
 
-    void clearMask();
-    void useSelectionAsMask();
     void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataMatrix, _knnIndex, floodNeighbours); }
     void setFloodSteps(int numFloodSteps)
     {
         _floodFill.setNumWaves(numFloodSteps);
         _settingsAction.getFilterAction().setFloodSteps(numFloodSteps);
     }
-    bool hasMaskApplied() { return !_mask.empty(); }
+
     void setOverlayType(OverlayType type) { _overlayType = type; }
     void setFilterLabelText(QString text) { _filterLabel->setText(text); }
-    void setFilterType(filters::FilterType type);
+    void setFilterType(filters::FilterType type) { _filterType = type; }
     void useSharedDistances(bool useSharedDistances) { _useSharedDistances = useSharedDistances; }
     SettingsAction& getSettingsAction() { return _settingsAction; }
 
@@ -161,6 +142,11 @@ public:
 
 private slots:
     void onLineClicked(int dim);
+
+public: // Mask
+    bool hasMaskApplied();
+    void clearMask();
+    void useSelectionAsMask();
 
 public: // Serialization
     /**
@@ -183,7 +169,6 @@ private:
     unsigned int                    _numPoints;                 /** Number of point positions */
     std::vector<std::vector<float>> _normalizedData;
     DataMatrix                      _dataMatrix;
-    DataMatrix                      _eigenDataMatrix;
     std::vector<QString>            _enabledDimNames;
     std::vector<float>              _variances;
     bool                            _dataInitialized = false;

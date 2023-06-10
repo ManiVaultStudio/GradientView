@@ -17,11 +17,11 @@
 #include "widgets/DropWidget.h"
 
 #include <Eigen/Dense>
-#include "LocalDimensionality.h"
-#include "RandomWalks.h"
-#include "DataTransformations.h"
+#include "Compute/LocalDimensionality.h"
+#include "Compute/RandomWalks.h"
+#include "Compute/DataTransformations.h"
 #include "Timer.h"
-#include "Export.h"
+#include "Types.h"
 
 #include <QtCore>
 #include <QApplication>
@@ -30,6 +30,7 @@
 #include <QAction>
 #include <QMetaType>
 #include <QVector>
+#include <QFileDialog>
 
 #include <algorithm>
 #include <functional>
@@ -193,7 +194,8 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _filterType(filters::FilterType::SPATIAL_PEAK),
     _overlayType(OverlayType::NONE),
     _colorMapAction(this, "Color map", util::ColorMap::Type::OneDimensional, "RdYlBu", "RdYlBu"),
-    _graphTimer(new QTimer(this))
+    _graphTimer(new QTimer(this)),
+    _filterLabel(nullptr)
 {
     setObjectName("GradientExplorer");
 
@@ -775,48 +777,9 @@ void ScatterplotPlugin::computeStaticData()
     timer.finish("Graph init");
 }
 
-void ScatterplotPlugin::clearMask()
-{
-    _mask.clear();
 
-    // Set point opacity
-    std::vector<float> opacityScalars(_dataMatrix.rows(), 1.0f);
-    getScatterplotWidget().setPointOpacityScalars(opacityScalars);
-}
 
-void ScatterplotPlugin::useSelectionAsMask()
-{
-    // Get current selection
-    // Compute the indices that are selected in this local dataset
-    std::vector<uint32_t> localSelectionIndices;
-    _positionDataset->getLocalSelectionIndices(localSelectionIndices);
 
-    _mask.assign(localSelectionIndices.begin(), localSelectionIndices.end());
-
-    // Set point opacity
-    std::vector<float> opacityScalars(_dataMatrix.rows(), 0.2f);
-    for (const int maskIndex : _mask)
-        opacityScalars[maskIndex] = 1.0f;
-    getScatterplotWidget().setPointOpacityScalars(opacityScalars);
-
-    _maskedDataMatrix = _dataMatrix(_mask, Eigen::all);
-    if (_maskedDataMatrix.rows() < 5000)
-        _maskedKnnIndex.create(_maskedDataMatrix.cols(), knn::Metric::MANHATTAN);
-    else
-        _maskedKnnIndex.create(_maskedDataMatrix.cols(), knn::Metric::EUCLIDEAN);
-    _maskedKnnIndex.addData(_maskedDataMatrix);
-
-    _maskedProjMatrix = _projMatrix(_mask, Eigen::all);
-    //_largeKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 30);
-
-    if (_maskedDataMatrix.rows() < 5000)
-    {
-        _maskedSourceKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 100);
-        _maskedKnnGraph.build(_maskedSourceKnnGraph, 10, true);
-    }
-    else
-        _maskedKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 10);
-}
 
 void ScatterplotPlugin::loadData(const Datasets& datasets)
 {
@@ -878,39 +841,6 @@ void ScatterplotPlugin::positionDatasetChanged()
     updateWindowTitle();
 
     computeStaticData();
-}
-
-void ScatterplotPlugin::loadColors(const Dataset<Points>& points, const std::uint32_t& dimensionIndex)
-{
-    // Only proceed with valid points dataset
-    if (!points.isValid())
-        return;
-
-    // Generate point scalars for color mapping
-    std::vector<float> scalars;
-
-    if (_positionDataset->getNumPoints() != _numPoints)
-    {
-        qWarning("Number of points used for coloring does not match number of points in data, aborting attempt to color plot");
-        return;
-    }
-
-    // Populate point scalars
-    if (dimensionIndex >= 0)
-        points->extractDataForDimension(scalars, dimensionIndex);
-
-    // Assign scalars and scalar effect
-    std::vector<float> tempScalars(scalars.size(), 0);
-    _scatterPlotWidget->setScalars(tempScalars);
-    _scatterPlotWidget->setScalarEffect(PointEffect::Color);
-
-    // Render
-    getWidget().update();
-}
-
-ScatterplotWidget& ScatterplotPlugin::getScatterplotWidget()
-{
-    return *_scatterPlotWidget;
 }
 
 void ScatterplotPlugin::updateData()
@@ -1015,27 +945,12 @@ void ScatterplotPlugin::updateViews()
     }
 }
 
-void ScatterplotPlugin::setFilterType(filters::FilterType type)
-{
-    _filterType = type;
-}
-
 std::uint32_t ScatterplotPlugin::getNumberOfPoints() const
 {
     if (!_positionDataset.isValid())
         return 0;
 
     return _positionDataset->getNumPoints();
-}
-
-void ScatterplotPlugin::setXDimension(const std::int32_t& dimensionIndex)
-{
-    updateData();
-}
-
-void ScatterplotPlugin::setYDimension(const std::int32_t& dimensionIndex)
-{
-    updateData();
 }
 
 bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
@@ -1081,7 +996,7 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
         if (!_mousePressed)
             break;
 
-        _mousePos = QPoint(mouseEvent->x(), mouseEvent->y());
+        _mousePos = QPoint(mouseEvent->position().x(), mouseEvent->position().y());
 
         hdps::Bounds bounds = _scatterPlotWidget->getBounds();
 
@@ -1234,6 +1149,10 @@ void ScatterplotPlugin::importKnnGraph()
     _knnGraph.build(_largeKnnGraph, 10);
 }
 
+/******************************************************************************
+ * Serialization
+ ******************************************************************************/
+
 void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
 {
     ViewPlugin::fromVariantMap(variantMap);
@@ -1299,6 +1218,63 @@ QVariantMap ScatterplotPlugin::toVariantMap() const
 
     return variantMap;
 }
+
+
+/******************************************************************************
+ * Mask
+ ******************************************************************************/
+
+bool ScatterplotPlugin::hasMaskApplied()
+{
+    return !_mask.empty();
+}
+
+void ScatterplotPlugin::clearMask()
+{
+    _mask.clear();
+
+    // Set point opacity
+    std::vector<float> opacityScalars(_dataMatrix.rows(), 1.0f);
+    getScatterplotWidget().setPointOpacityScalars(opacityScalars);
+}
+
+void ScatterplotPlugin::useSelectionAsMask()
+{
+    // Get current selection
+    // Compute the indices that are selected in this local dataset
+    std::vector<uint32_t> localSelectionIndices;
+    _positionDataset->getLocalSelectionIndices(localSelectionIndices);
+
+    _mask.assign(localSelectionIndices.begin(), localSelectionIndices.end());
+
+    // Set point opacity
+    std::vector<float> opacityScalars(_dataMatrix.rows(), 0.2f);
+    for (const int maskIndex : _mask)
+        opacityScalars[maskIndex] = 1.0f;
+    getScatterplotWidget().setPointOpacityScalars(opacityScalars);
+
+    _maskedDataMatrix = _dataMatrix(_mask, Eigen::all);
+    if (_maskedDataMatrix.rows() < 5000)
+        _maskedKnnIndex.create(_maskedDataMatrix.cols(), knn::Metric::MANHATTAN);
+    else
+        _maskedKnnIndex.create(_maskedDataMatrix.cols(), knn::Metric::EUCLIDEAN);
+    _maskedKnnIndex.addData(_maskedDataMatrix);
+
+    _maskedProjMatrix = _projMatrix(_mask, Eigen::all);
+    //_largeKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 30);
+
+    if (_maskedDataMatrix.rows() < 5000)
+    {
+        _maskedSourceKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 100);
+        _maskedKnnGraph.build(_maskedSourceKnnGraph, 10, true);
+    }
+    else
+        _maskedKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 10);
+}
+
+/******************************************************************************
+ * Factory
+ ******************************************************************************/
 
 QIcon ScatterplotPluginFactory::getIcon(const QColor& color /*= Qt::black*/) const
 {
