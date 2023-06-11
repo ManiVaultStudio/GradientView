@@ -211,6 +211,7 @@ private:
     KnnGraph                        _maskedSourceKnnGraph;
 
     // Floodfill
+    Dataset<Points>                 _floodScalars;
     FloodFill                       _floodFill;
 
     // Graph

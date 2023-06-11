@@ -650,6 +650,10 @@ timer.mark("Linearisation");
 
         getScatterplotWidget().setScalars(colorScalars);
 
+        // Store scalars in floodfill dataset
+        _floodScalars->setData<float>(colorScalars.data(), colorScalars.size(), 1);
+        events().notifyDatasetChanged(_floodScalars);
+
 timer.finish("Overlay");
     }
 }
@@ -1147,6 +1151,10 @@ void ScatterplotPlugin::importKnnGraph()
 
     _largeKnnGraph.readFromFile(fileName);
     _knnGraph.build(_largeKnnGraph, 10);
+
+    _floodScalars = _core->addDataset<Points>("Points", "Flood Nodes");
+
+    events().notifyDatasetAdded(_floodScalars);
 }
 
 /******************************************************************************
