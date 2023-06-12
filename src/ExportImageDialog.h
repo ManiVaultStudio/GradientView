@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ExportImageAction.h"
+#include "Actions/ExportImageAction.h"
 
 #include <QDialog>
 
