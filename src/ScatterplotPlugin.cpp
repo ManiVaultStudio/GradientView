@@ -212,6 +212,15 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     connect(_projectionViews[1], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 2; updateViews(); });
     connect(_selectedView, &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 3; updateViews(); });
 
+    connect(_scatterPlotWidget, &ScatterplotWidget::initialized, this, [this]()
+    {
+        getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
+        getScatterplotWidget().setScalarEffect(PointEffect::Color);
+    });
+    connect(_projectionViews[0], &ProjectionView::initialized, this, [this]() {_projectionViews[0]->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true)); });
+    connect(_projectionViews[1], &ProjectionView::initialized, this, [this]() {_projectionViews[1]->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true)); });
+    connect(_selectedView, &ProjectionView::initialized, this, [this]() {_selectedView->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true)); });
+
     connect(_gradientGraph, &GradientGraph::lineClicked, this, &ScatterplotPlugin::onLineClicked);
     _graphTimer->setSingleShot(true);
     connect(_graphTimer, &QTimer::timeout, this, &ScatterplotPlugin::computeGraphs);
@@ -343,51 +352,6 @@ void ScatterplotPlugin::init()
     gradientViewLayout->addWidget(sortedExpressionGraphLabel);
     gradientViewLayout->addWidget(_gradientGraph, 70);
 
-    //// Overlay options
-    //    groupsAction->addGroupAction(exportGroupAction);
-    //}
-
-    //// Map overlay
-    //{
-    //    auto mapOverlayGroupAction = new GroupAction(&getWidget(), true);
-    //    mapOverlayGroupAction->setText("Map Overlay");
-    //    mapOverlayGroupAction->setShowLabels(false);
-
-    //    QVector<TriggersAction::Trigger> triggers;
-    //    triggers << TriggersAction::Trigger("Show random walks", "");
-    //    triggers << TriggersAction::Trigger("Show directions", "");
-    //    triggers << TriggersAction::Trigger("Show Spatial Local Dimensionality", "");
-    //    triggers << TriggersAction::Trigger("Show HD Local Dimensionality", "");
-
-    //    TriggersAction* overlayTriggers = new TriggersAction(mapOverlayGroupAction, "Map Overlay Triggers", triggers);
-
-    //    connect(overlayTriggers, &TriggersAction::triggered, this, [this](int32_t triggerIndex)
-    //    {
-    //        getScatterplotWidget().showDirections(false);
-    //        switch (triggerIndex)
-    //        {
-    //        case 0: getScatterplotWidget().showRandomWalk(); break;
-    //        case 1: getScatterplotWidget().showDirections(true); break;
-    //        case 2:
-    //        {
-    //            if (_localSpatialDimensionality.empty())
-    //                compute::computeSpatialLocalDimensionality(_dataMatrix, _projMatrix, _localSpatialDimensionality);
-    //            getScatterplotWidget().setScalars(_localSpatialDimensionality);
-    //            break;
-    //        }
-    //        case 3:
-    //        {
-    //            if (_localHighDimensionality.empty())
-    //                compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _localHighDimensionality);
-    //            getScatterplotWidget().setScalars(_localHighDimensionality);
-    //            break;
-    //        }
-    //        }
-    //    });
-
-    //    groupsAction->addGroupAction(mapOverlayGroupAction);
-    //}
-
     auto leftPanel = new QVBoxLayout();
     leftPanel->addWidget(_scatterPlotWidget, 90);
 
@@ -417,11 +381,6 @@ void ScatterplotPlugin::init()
 
     // Update the data when the scatter plot widget is initialized
     connect(_scatterPlotWidget, &ScatterplotWidget::initialized, this, &ScatterplotPlugin::updateData);
-
-    getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
-    for (int i = 0; i < getProjectionViews().size(); i++)
-        if (getProjectionViews()[i] != nullptr)
-            getProjectionViews()[i]->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
 
     //_eventListener.setEventCore(Application::core());
     _eventListener.addSupportedEventType(static_cast<std::uint32_t>(EventType::DataSelectionChanged));
@@ -673,16 +632,6 @@ timer.start();
         // Do floodfill //
         //////////////////
         _floodFill.compute(knnGraph, _selectedPoint);
-
-        {
-            getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
-            for (int i = 0; i < getProjectionViews().size(); i++)
-                if (getProjectionViews()[i] != nullptr)
-                    getProjectionViews()[i]->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
-            _selectedView->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true));
-            //_scatterPlotWidget->setColoringMode(ScatterplotWidget::ColoringMode::Data);
-            getScatterplotWidget().setScalarEffect(PointEffect::Color);
-        }
 
 timer.mark("Floodfill");
 
