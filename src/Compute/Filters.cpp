@@ -46,6 +46,8 @@ void computeDimensionAverage(const DataMatrix& data, const std::vector<int>& ind
     }
 }
 
+#pragma warning(push)
+#pragma warning(disable:4996) // Disable security warning of localtime
 void writeFloodNodes(const std::vector<std::vector<int>>& floodNodes)
 {
     auto t = std::time(nullptr);
@@ -97,6 +99,7 @@ void writeDimensionRanking(const std::vector<std::vector<int>>& ranking, const s
     myfile.close();
     std::cout << "Rankings written to file" << std::endl;
 }
+#pragma warning(pop)
 
 void maskPoints(std::vector<int>& indices, const std::vector<int>& mask, std::vector<int>& intersection)
 {
