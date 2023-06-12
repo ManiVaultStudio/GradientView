@@ -181,10 +181,10 @@ void ScatterplotWidget::setData(const std::vector<Vector2f>* points)
     _pointRenderer.setBounds(_dataBounds);
     _densityRenderer.setBounds(_dataBounds);
     _cellRenderer.setBounds(_dataBounds);
-
-    _pointRenderer.setData(*points);
-    _densityRenderer.setData(points);
-    _cellRenderer.setData(*points);
+    qDebug() << "Point renderer set data";
+    _pointRenderer.setData(*points); qDebug() << "Density renderer set data";
+    _densityRenderer.setData(points); qDebug() << "Cell renderer set data";
+    //_cellRenderer.setData(*points); qDebug() << "Cell renderer done";
 
     switch (_renderMode)
     {
