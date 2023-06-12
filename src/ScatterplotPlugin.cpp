@@ -441,6 +441,12 @@ void ScatterplotPlugin::init()
 
     // Do an initial update of the window title
     updateWindowTitle();
+void ScatterplotPlugin::updateWindowTitle()
+{
+    if (!_positionDataset.isValid())
+        getWidget().setWindowTitle(getGuiName());
+    else
+        getWidget().setWindowTitle(QString("%1: %2").arg(getGuiName(), _positionDataset->getDataHierarchyItem().getFullPathName()));
 }
 
 void ScatterplotPlugin::updateColorMapActionScalarRange()
@@ -457,6 +463,19 @@ void ScatterplotPlugin::updateColorMapActionScalarRange()
     _colorMapAction.getDataRangeAction(ColorMapAction::Axis::X).setRange({ colorMapRangeMin, colorMapRangeMax });
 }
 
+void ScatterplotPlugin::loadData(const Datasets& datasets)
+{
+    // Exit if there is nothing to load
+    if (datasets.isEmpty())
+        return;
+
+    // Load the first dataset
+    _positionDataset = datasets.first();
+
+    // And set the coloring mode to constant
+    //_settingsAction.getColoringAction().getColorByAction().setCurrentIndex(1);
+}
+
 void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
 {
     if (dataEvent->getType() == EventType::DataSelectionChanged)
@@ -469,6 +488,158 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
             }
         }
     }
+}
+
+void ScatterplotPlugin::positionDatasetChanged()
+{
+    // Only proceed if we have a valid position dataset
+    if (!_positionDataset.isValid())
+        return;
+
+    // Reset dataset references
+    _positionSourceDataset.reset();
+
+    // Set position source dataset reference when the position dataset is derived
+    if (_positionDataset->isDerivedData())
+        _positionSourceDataset = _positionDataset->getSourceDataset<Points>();
+
+    // Do not show the drop indicator if there is a valid point positions dataset
+    _dropWidget->setShowDropIndicator(!_positionDataset.isValid());
+
+    _dataInitialized = true;
+
+    // Update positions data
+    updateData();
+
+    // Update the window title to reflect the position dataset change
+    updateWindowTitle();
+
+    computeStaticData();
+}
+
+std::uint32_t ScatterplotPlugin::getNumberOfPoints() const
+{
+    if (!_positionDataset.isValid())
+        return 0;
+
+    return _positionDataset->getNumPoints();
+}
+
+void ScatterplotPlugin::createSubset(const bool& fromSourceData /*= false*/, const QString& name /*= ""*/)
+{
+    auto subsetPoints = fromSourceData ? _positionDataset->getSourceDataset<Points>() : _positionDataset;
+
+    // Create the subset
+    auto subset = subsetPoints->createSubsetFromSelection(_positionDataset->getGuiName(), _positionDataset);
+
+    // Notify others that the subset was added
+    events().notifyDatasetAdded(subset);
+
+    // And select the subset
+    subset->getDataHierarchyItem().select();
+}
+
+void ScatterplotPlugin::computeStaticData()
+{
+    Timer timer;
+    timer.start();
+
+    std::cout << "Start conversion" << std::endl;
+    convertToEigenMatrix(_positionDataset, _positionSourceDataset, _dataMatrix);
+    convertToEigenMatrixProjection(_positionDataset, _fullProjMatrix);
+
+    int xDim = _settingsAction.getPositionAction().getDimensionX();
+    int yDim = _settingsAction.getPositionAction().getDimensionY();
+    _projMatrix = _fullProjMatrix(Eigen::all, std::vector<int> { xDim, yDim });
+
+    // Set mask to include all points
+    //_mask.resize(_dataMatrix.rows());
+    //std::iota(_mask.begin(), _mask.end(), 0);
+
+    std::cout << "Number of enabled dimensions in the dataset : " << _dataMatrix.cols() << std::endl;
+
+    timer.mark("Data preparation");
+    qDebug() << "Standardize..";
+    // Standardize
+    standardizeData(_dataMatrix, _variances);
+    qDebug() << "Normalize..";
+    // Compute normalized data
+    normalizeData(_dataMatrix, _normalizedData);
+
+    _bins.resize(_dataMatrix.cols(), std::vector<int>(30));
+
+    Bounds bounds = _scatterPlotWidget->getBounds();
+    _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
+    std::cout << "Projection size: " << _projectionSize << std::endl;
+
+    timer.mark("Data transformations");
+
+    if (_computeOnLoad)
+    {
+        qDebug() << "Creating index";
+        if (_dataMatrix.rows() < 5000)
+            _knnIndex.create(_dataMatrix.cols(), knn::Metric::MANHATTAN);
+        else
+            _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
+        qDebug() << "Adding data";
+        _knnIndex.addData(_dataMatrix);
+        qDebug() << "Done creating index";
+        timer.mark("Computing KNN index");
+        qDebug() << "Building..";
+        if (!_preloadedKnnGraph)
+            _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
+
+        if (_dataMatrix.rows() < 5000 && _useSharedDistances)
+        {
+            _sourceKnnGraph.build(_dataMatrix, _knnIndex, 100);
+            _knnGraph.build(_sourceKnnGraph, 10, true);
+        }
+        else
+            _knnGraph.build(_largeKnnGraph, 10);
+    }
+
+    timer.mark("Computing KNN graph");
+
+    _largeKnnGraph.writeToFile();
+
+    //_localSpatialDimensionality.clear();
+    //_localHighDimensionality.clear();
+
+    //timer.mark("Local dimensionality");
+
+    //compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _localHighDimensionality);
+    //getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
+    //getScatterplotWidget().setColorMapRange(0, 1);
+    //getScatterplotWidget().setScalars(_localHighDimensionality);
+
+    //Dataset<Points> localDims = _core->addDataset("Points", "Dimensionality");
+
+    //localDims->setData(_localHighDimensionality.data(), _localHighDimensionality.size(), 1);
+
+    //_core->notifyDatasetAdded(localDims);
+
+    //computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
+    //getScatterplotWidget().setDirections(_directions);
+
+    timer.mark("Directions");
+
+    qDebug() << _positionSourceDataset->getDimensionNames().size() << _positionSourceDataset->getNumDimensions();
+
+    // Get enabled dimension names
+    const auto& dimNames = _positionSourceDataset->getDimensionNames();
+    auto enabledDimensions = _positionSourceDataset->getDimensionsPickerAction().getEnabledDimensions();
+
+    _enabledDimNames.clear();
+    for (int i = 0; i < enabledDimensions.size(); i++)
+    {
+        if (enabledDimensions[i])
+            _enabledDimNames.push_back(dimNames[i]);
+    }
+
+    // Set up chart
+    _gradientGraph->setNumDimensions((bigint)enabledDimensions.size());
+
+    timer.finish("Graph init");
 }
 
 void ScatterplotPlugin::onPointSelection()
@@ -658,195 +829,6 @@ timer.finish("Overlay");
     }
 }
 
-void ScatterplotPlugin::computeGraphs()
-{
-    // Binning
-    int binSteps = _bins[0].size();
-
-    for (int d = 0; d < _bins.size(); d++)
-        std::fill(_bins[d].begin(), _bins[d].end(), 0);
-
-#pragma omp parallel for
-    for (int d = 0; d < _bins.size(); d++)
-    {
-        int* const bins_d = &_bins[d][0];
-        float* const norm_d = &_normalizedData[d][0];
-
-        for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
-        {
-            const float& f = norm_d[_floodFill.getAllNodes()[i]];
-            bins_d[(long)(f * binSteps)]++;
-        }
-    }
-    qDebug() << "Graphs computed";
-    _gradientGraph->setBins(_bins);
-}
-
-void ScatterplotPlugin::computeStaticData()
-{
-    Timer timer;
-    timer.start();
-
-    std::cout << "Start conversion" << std::endl;
-    convertToEigenMatrix(_positionDataset, _positionSourceDataset, _dataMatrix);
-    convertToEigenMatrixProjection(_positionDataset, _fullProjMatrix);
-
-    int xDim = _settingsAction.getPositionAction().getDimensionX();
-    int yDim = _settingsAction.getPositionAction().getDimensionY();
-    _projMatrix = _fullProjMatrix(Eigen::all, std::vector<int> { xDim, yDim });
-
-    // Set mask to include all points
-    //_mask.resize(_dataMatrix.rows());
-    //std::iota(_mask.begin(), _mask.end(), 0);
-
-    std::cout << "Number of enabled dimensions in the dataset : " << _dataMatrix.cols() << std::endl;
-
-    timer.mark("Data preparation");
-
-    // Standardize
-    standardizeData(_dataMatrix, _variances);
-
-    // Compute normalized data
-    normalizeData(_dataMatrix, _normalizedData);
-
-    _bins.resize(_dataMatrix.cols(), std::vector<int>(30));
-
-    Bounds bounds = _scatterPlotWidget->getBounds();
-    _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
-    std::cout << "Projection size: " << _projectionSize << std::endl;
-
-    timer.mark("Data transformations");
-
-    if (_computeOnLoad)
-    {
-        qDebug() << "Creating index";
-        if (_dataMatrix.rows() < 5000)
-            _knnIndex.create(_dataMatrix.cols(), knn::Metric::MANHATTAN);
-        else
-            _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
-        qDebug() << "Adding data";
-        _knnIndex.addData(_dataMatrix);
-        qDebug() << "Done creating index";
-        timer.mark("Computing KNN index");
-        qDebug() << "Building..";
-        if (!_preloadedKnnGraph)
-            _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
-
-        if (_dataMatrix.rows() < 5000 && _useSharedDistances)
-        {
-            _sourceKnnGraph.build(_dataMatrix, _knnIndex, 100);
-            _knnGraph.build(_sourceKnnGraph, 10, true);
-        }
-        else
-            _knnGraph.build(_largeKnnGraph, 10);
-    }
-
-    timer.mark("Computing KNN graph");
-
-    //_localSpatialDimensionality.clear();
-    //_localHighDimensionality.clear();
-
-    //timer.mark("Local dimensionality");
-
-    //compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _localHighDimensionality);
-    //getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
-    //getScatterplotWidget().setColorMapRange(0, 1);
-    //getScatterplotWidget().setScalars(_localHighDimensionality);
-
-    //Dataset<Points> localDims = _core->addDataset("Points", "Dimensionality");
-
-    //localDims->setData(_localHighDimensionality.data(), _localHighDimensionality.size(), 1);
-
-    //_core->notifyDatasetAdded(localDims);
-
-    //computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
-    //getScatterplotWidget().setDirections(_directions);
-
-    timer.mark("Directions");
-
-    // Get enabled dimension names
-    const auto& dimNames = _positionSourceDataset->getDimensionNames();
-    auto enabledDimensions = _positionSourceDataset->getDimensionsPickerAction().getEnabledDimensions();
-
-    _enabledDimNames.clear();
-    for (int i = 0; i < enabledDimensions.size(); i++)
-    {
-        if (enabledDimensions[i])
-            _enabledDimNames.push_back(dimNames[i]);
-    }
-
-    // Set up chart
-    _gradientGraph->setNumDimensions(enabledDimensions.size());
-
-    timer.finish("Graph init");
-}
-
-
-
-
-
-void ScatterplotPlugin::loadData(const Datasets& datasets)
-{
-    // Exit if there is nothing to load
-    if (datasets.isEmpty())
-        return;
-
-    // Load the first dataset
-    _positionDataset = datasets.first();
-
-    // And set the coloring mode to constant
-    //_settingsAction.getColoringAction().getColorByAction().setCurrentIndex(1);
-}
-
-void ScatterplotPlugin::createSubset(const bool& fromSourceData /*= false*/, const QString& name /*= ""*/)
-{
-    auto subsetPoints = fromSourceData ? _positionDataset->getSourceDataset<Points>() : _positionDataset;
-
-    // Create the subset
-    auto subset = subsetPoints->createSubsetFromSelection(_positionDataset->getGuiName(), _positionDataset);
-
-    // Notify others that the subset was added
-    events().notifyDatasetAdded(subset);
-    
-    // And select the subset
-    subset->getDataHierarchyItem().select();
-}
-
-void ScatterplotPlugin::updateWindowTitle()
-{
-    if (!_positionDataset.isValid())
-        getWidget().setWindowTitle(getGuiName());
-    else
-        getWidget().setWindowTitle(QString("%1: %2").arg(getGuiName(), _positionDataset->getDataHierarchyItem().getFullPathName()));
-}
-
-void ScatterplotPlugin::positionDatasetChanged()
-{
-    // Only proceed if we have a valid position dataset
-    if (!_positionDataset.isValid())
-        return;
-
-    // Reset dataset references
-    _positionSourceDataset.reset();
-
-    // Set position source dataset reference when the position dataset is derived
-    if (_positionDataset->isDerivedData())
-        _positionSourceDataset = _positionDataset->getSourceDataset<Points>();
-
-    // Do not show the drop indicator if there is a valid point positions dataset
-    _dropWidget->setShowDropIndicator(!_positionDataset.isValid());
-
-    _dataInitialized = true;
-
-    // Update positions data
-    updateData();
-
-    // Update the window title to reflect the position dataset change
-    updateWindowTitle();
-
-    computeStaticData();
-}
-
 void ScatterplotPlugin::updateData()
 {
     // Check if the scatter plot is initialized, if not, don't do anything
@@ -947,14 +929,6 @@ void ScatterplotPlugin::updateViews()
     {
         getScatterplotWidget().setProjectionName("Floodfill View");
     }
-}
-
-std::uint32_t ScatterplotPlugin::getNumberOfPoints() const
-{
-    if (!_positionDataset.isValid())
-        return 0;
-
-    return _positionDataset->getNumPoints();
 }
 
 bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
@@ -1070,7 +1044,36 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
     return QObject::eventFilter(target, event);
 }
 
-void ScatterplotPlugin::onLineClicked(int dim)
+/******************************************************************************
+ * Graphs
+ ******************************************************************************/
+
+void ScatterplotPlugin::computeGraphs()
+{
+    // Binning
+    int numBins = (int)_bins.size();
+    int binSteps = (int)_bins[0].size();
+
+    for (int d = 0; d < numBins; d++)
+        std::fill(_bins[d].begin(), _bins[d].end(), 0);
+
+#pragma omp parallel for
+    for (int d = 0; d < numBins; d++)
+    {
+        int* const bins_d = &_bins[d][0];
+        float* const norm_d = &_normalizedData[d][0];
+
+        for (bigint i = 0; i < _floodFill.getTotalNumNodes(); i++)
+        {
+            const float& f = norm_d[_floodFill.getAllNodes()[i]];
+            bins_d[(bigint)(f * binSteps)]++;
+        }
+    }
+    qDebug() << "Graphs computed";
+    _gradientGraph->setBins(_bins);
+}
+
+void ScatterplotPlugin::onLineClicked(dint dim)
 {
     qDebug() << "Dim: " << dim;
     _selectedDimension = dim;
@@ -1094,6 +1097,10 @@ void ScatterplotPlugin::onLineClicked(int dim)
     onPointSelection();
     updateViews();
 }
+
+/******************************************************************************
+ * Import / Export
+ ******************************************************************************/
 
 void ScatterplotPlugin::exportRankings()
 {
