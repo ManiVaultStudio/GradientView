@@ -400,6 +400,12 @@ void ScatterplotPlugin::init()
 
     // Do an initial update of the window title
     updateWindowTitle();
+
+    _floodScalars = _core->addDataset<Points>("Points", "Flood Nodes");
+
+    events().notifyDatasetAdded(_floodScalars);
+}
+
 void ScatterplotPlugin::updateWindowTitle()
 {
     if (!_positionDataset.isValid())
@@ -1107,10 +1113,6 @@ void ScatterplotPlugin::importKnnGraph()
 
     _largeKnnGraph.readFromFile(fileName);
     _knnGraph.build(_largeKnnGraph, 10);
-
-    _floodScalars = _core->addDataset<Points>("Points", "Flood Nodes");
-
-    events().notifyDatasetAdded(_floodScalars);
 }
 
 /******************************************************************************
