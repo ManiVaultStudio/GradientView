@@ -53,7 +53,7 @@ void printDistances(std::string name, float* distances, int k)
 }
 
 // Build KNN sub-graph from bigger graph
-void KnnGraph::build(const KnnGraph& graph, size_t numNeighbours)
+void KnnGraph::build(const KnnGraph& graph, int numNeighbours)
 {
     assert(graph.getNumNeighbours() > numNeighbours);
 
@@ -71,7 +71,7 @@ void KnnGraph::build(const KnnGraph& graph, size_t numNeighbours)
     }
 }
 
-void KnnGraph::build(const DataMatrix& data, const knn::Index& index, size_t numNeighbours)
+void KnnGraph::build(const DataMatrix& data, const knn::Index& index, int numNeighbours)
 {
     std::vector<int> indices;
     std::vector<float> distances;
@@ -100,7 +100,7 @@ void KnnGraph::build(const DataMatrix& data, const knn::Index& index, size_t num
     }
 }
 
-void KnnGraph::build(const KnnGraph& graph, size_t numNeighbours, bool shared)
+void KnnGraph::build(const KnnGraph& graph, int numNeighbours, bool shared)
 {
     _numNeighbours = numNeighbours;
     _neighbours.clear();

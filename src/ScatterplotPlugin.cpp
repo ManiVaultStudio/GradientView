@@ -135,7 +135,7 @@ namespace
             directionsFloodFill.compute(knnGraph, p);
 
             int depth = 3;
-            int numNodes = 0;
+            bigint numNodes = 0;
             for (int i = 0; i < depth; i++)
             {
                 numNodes += directionsFloodFill.getWaves()[i].size();
@@ -857,8 +857,8 @@ void ScatterplotPlugin::updateData()
     if (_positionDataset.isValid()) {
 
         // Get the selected dimensions to use as X and Y dimension in the plot
-        const auto xDim = _settingsAction.getPositionAction().getDimensionX();
-        const auto yDim = _settingsAction.getPositionAction().getDimensionY();
+        const dint xDim = _settingsAction.getPositionAction().getDimensionX();
+        const dint yDim = _settingsAction.getPositionAction().getDimensionY();
 
         // If one of the dimensions was not set, do not draw anything
         if (xDim < 0 || yDim < 0)
@@ -872,14 +872,14 @@ void ScatterplotPlugin::updateData()
 
         // Pass the 2D points to the scatter plot widget
         _scatterPlotWidget->setData(&_positions);
-        for (int i = 0; i < _projectionViews.size(); i++)
+        for (int i = 0; i < (int) _projectionViews.size(); i++)
             _projectionViews[i]->setData(&_positions);
         _selectedView->setData(&_positions);
 
         updateSelection();
 
         // Update proj matrix
-        _projMatrix = _fullProjMatrix(Eigen::all, std::vector<int> { xDim, yDim });
+        _projMatrix = _fullProjMatrix(Eigen::all, std::vector<dint> { xDim, yDim });
 
         Bounds bounds = _scatterPlotWidget->getBounds();
         _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();

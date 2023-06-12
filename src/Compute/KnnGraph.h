@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Types.h"
 #include "KnnIndex.h"
 
 #include <QString>
@@ -12,19 +13,19 @@ class KnnGraph
 public:
     KnnGraph();
 
-    const std::vector<std::vector<int>>& getNeighbours() const { return _neighbours; }
-    size_t getNumNeighbours() const { return _numNeighbours; }
+    const std::vector<std::vector<nint>>& getNeighbours() const { return _neighbours; }
+    int getNumNeighbours() const { return _numNeighbours; }
 
-    void build(const KnnGraph& graph, size_t numNeighbours);
-    void build(const DataMatrix& data, const knn::Index& index, size_t numNeighbours);
-    void build(const KnnGraph& graph, size_t numNeighbours, bool shared);
+    void build(const KnnGraph& graph, int numNeighbours);
+    void build(const DataMatrix& data, const knn::Index& index, int numNeighbours);
+    void build(const KnnGraph& graph, int numNeighbours, bool shared);
 
     void readFromFile(QString filePath);
     void writeToFile();
 
 private:
-    std::vector<std::vector<int>> _neighbours;
-    size_t _numNeighbours;
+    std::vector<std::vector<nint>> _neighbours;
+    int _numNeighbours;
 
     friend class ScatterplotPlugin;
     friend class KnnGraphImporter;

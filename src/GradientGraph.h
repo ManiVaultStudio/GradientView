@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Types.h"
+
 #include <QWidget>
 
 #include <Eigen/Eigen>
@@ -20,7 +22,7 @@ public:
     LineSeries(QObject* parent, int dim);
 
 signals:
-    void lineClicked(int dim);
+    void lineClicked(dint dim);
 
 private slots:
     void onHover(const QPointF& point, bool state);
@@ -28,7 +30,7 @@ private slots:
 
 private:
     int _penWidth;
-    int _dim;
+    dint _dim;
 };
 
 class GradientGraph : public QWidget
@@ -37,27 +39,27 @@ class GradientGraph : public QWidget
 public:
     GradientGraph();
 
-    void setNumDimensions(int numDimensions);
+    void setNumDimensions(dint numDimensions);
     void setValues(const std::vector<std::vector<float>>& values);
     void setBins(const std::vector<std::vector<int>>& bins);
-    void setTopDimensions(int dimension1, int dimension2);
+    void setTopDimensions(dint dimension1, dint dimension2);
 
     void updateChartColors();
 
 signals:
-    void lineClicked(int dim);
+    void lineClicked(dint dim);
 
 private slots:
-    void onLineClicked(int dim);
+    void onLineClicked(dint dim);
 
 private:
-    int _numDimensions;
+    dint _numDimensions;
     std::vector<LineSeries*> _seriesArray;
     QChart* _chart;
     QChartView* _chartView;
     QValueAxis* _xAxis;
     QValueAxis* _yAxis;
-    int _topDimension1;
-    int _topDimension2;
-    int _selectedDimension;
+    dint _topDimension1;
+    dint _topDimension2;
+    dint _selectedDimension;
 };

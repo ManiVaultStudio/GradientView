@@ -15,20 +15,20 @@ void FloodFill::setNumWaves(int numWaves)
     recompute();
 }
 
-void FloodFill::compute(const KnnGraph& knnGraph, int selectedPoint)
+void FloodFill::compute(const KnnGraph& knnGraph, nint selectedPoint)
 {
     int numNeighbours = knnGraph.getNumNeighbours();
     auto& neighbours = knnGraph.getNeighbours();
-    size_t numPoints = neighbours.size();
+    nint numPoints = neighbours.size();
 
     _waves.clear();
     _waves.resize(_numWaves);
 
     // Set list of nodes to process next, skipping iteration 0 where we just process the seed node
-    std::vector<int> currentNodes = neighbours[selectedPoint];
+    std::vector<nint> currentNodes = neighbours[selectedPoint];
 
     // List of nodes that become the new current nodes
-    std::vector<int> newNodes;
+    std::vector<nint> newNodes;
 
     // List of nodes that have been visited during the process
     std::vector<bool> visitedNodes(numPoints, false);
@@ -45,7 +45,7 @@ void FloodFill::compute(const KnnGraph& knnGraph, int selectedPoint)
 
         // Process list of current nodes, if they hadn't been visited yet, add them to the flood fill,
         // otherwise skip further processing.
-        for (int& currentNode : currentNodes)
+        for (nint& currentNode : currentNodes)
         {
             if (!visitedNodes[currentNode])
             {
@@ -56,11 +56,14 @@ void FloodFill::compute(const KnnGraph& knnGraph, int selectedPoint)
             else
                 currentNode = -1;
         }
+        
+        if (w == _numWaves - 1)
+            continue;
 
         // Add neighbours of just visited current nodes to new nodes
         newNodes.clear();
         newNodes.reserve(currentNodes.size() * numNeighbours);
-        for (const int& node : currentNodes)
+        for (const nint& node : currentNodes)
         {
             // Node was visited before, skip adding neighbours
             if (node == -1) continue;

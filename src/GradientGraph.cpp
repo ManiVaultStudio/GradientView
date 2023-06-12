@@ -7,7 +7,7 @@
 #include <iostream>
 #include <algorithm>
 
-LineSeries::LineSeries(QObject* parent, int dim) :
+LineSeries::LineSeries(QObject* parent, dint dim) :
     QLineSeries(parent),
     _penWidth(2),
     _dim(dim)
@@ -69,7 +69,7 @@ GradientGraph::GradientGraph() :
     setLayout(layout);
 }
 
-void GradientGraph::setNumDimensions(int numDimensions)
+void GradientGraph::setNumDimensions(dint numDimensions)
 {
     _numDimensions = numDimensions;
 
@@ -77,7 +77,7 @@ void GradientGraph::setNumDimensions(int numDimensions)
 
     // Add numDimensions lineseries to the chart
     _chart->removeAllSeries();
-    for (int d = 0; d < _numDimensions; d++)
+    for (dint d = 0; d < _numDimensions; d++)
     {
         // Create series
         _seriesArray[d] = new LineSeries(nullptr, d);
@@ -104,10 +104,10 @@ void GradientGraph::setValues(const std::vector<std::vector<float>>& values)
         float maxVal = *std::max_element(values[d].begin(), values[d].end());
         maxValue = maxVal > maxValue ? maxVal : maxValue;
 
-        int i = 0;
+        size_t i = 0;
         int divisions = 30;
         int step = std::max(1, (int)(values[d].size() / divisions));
-        int size = values[d].size() - 1;
+        size_t size = values[d].size() - 1;
         while (true)
         {
             pointLists[d].append(QPointF(i, values[d][i]));
@@ -161,7 +161,7 @@ void GradientGraph::setBins(const std::vector<std::vector<int>>& bins)
     timer.finish("Graph inner");
 }
 
-void GradientGraph::setTopDimensions(int dimension1, int dimension2)
+void GradientGraph::setTopDimensions(dint dimension1, dint dimension2)
 {
     _topDimension1 = dimension1;
     _topDimension2 = dimension2;
@@ -170,7 +170,7 @@ void GradientGraph::setTopDimensions(int dimension1, int dimension2)
 void GradientGraph::updateChartColors()
 {
     // Replace series values with new values
-    for (int d = 0; d < _seriesArray.size(); d++)
+    for (dint d = 0; d < (dint) _seriesArray.size(); d++)
     {
         QColor color = grey;
         if (d == _topDimension1) color = primary;
@@ -183,7 +183,7 @@ void GradientGraph::updateChartColors()
     _chartView->update();
 }
 
-void GradientGraph::onLineClicked(int dim)
+void GradientGraph::onLineClicked(dint dim)
 {
     emit lineClicked(dim);
     _selectedDimension = dim;

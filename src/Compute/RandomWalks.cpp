@@ -16,7 +16,7 @@ namespace hdps
         {
             // Binary search for u
             int itemFromLeft = 0;
-            int itemFromRight = cdf.size() - 1;
+            int itemFromRight = (int) cdf.size() - 1;
             while (itemFromLeft < itemFromRight)
             {
                 int m = itemFromLeft + (itemFromRight - itemFromLeft) / 2;
@@ -85,7 +85,7 @@ namespace hdps
         {
             int numDimensions = highDim.cols();
 
-            int k = knnGraph.getNumNeighbours();
+            int k = (int) knnGraph.getNumNeighbours();
             int numWalks = 100;
             int numSteps = 10;
 
@@ -121,15 +121,15 @@ namespace hdps
 
         void traceLineage(const DataMatrix& data, const std::vector<std::vector<int>>& floodFill, std::vector<Vector2f>& positions, int seedIndex, std::vector<int>& lineage)
         {
-            int numFloodNodes = 0;
+            bigint numFloodNodes = 0;
             for (int i = 0; i < floodFill.size(); i++)
             {
                 numFloodNodes += floodFill[i].size();
             }
 
             // Store all flood nodes together
-            std::vector<int> floodNodes(numFloodNodes);
-            int n = 0;
+            std::vector<nint> floodNodes(numFloodNodes);
+            nint n = 0;
             for (int i = 0; i < floodFill.size(); i++)
             {
                 for (int j = 0; j < floodFill[i].size(); j++)

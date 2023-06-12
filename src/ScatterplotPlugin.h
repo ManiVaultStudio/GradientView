@@ -4,6 +4,7 @@
 
 #include "util/PixelSelectionTool.h"
 
+#include "Types.h"
 #include "Common.h"
 
 #include "Actions/SettingsAction.h"
@@ -141,7 +142,7 @@ public:
     void importKnnGraph();
 
 private slots:
-    void onLineClicked(int dim);
+    void onLineClicked(dint dim);
 
 public: // Mask
     bool hasMaskApplied();
@@ -166,7 +167,8 @@ private:
     Dataset<Points>                 _positionDataset;           /** Smart pointer to points dataset for point position */
     Dataset<Points>                 _positionSourceDataset;     /** Smart pointer to source of the points dataset for point position (if any) */
     std::vector<hdps::Vector2f>     _positions;                 /** Point positions */
-    unsigned int                    _numPoints;                 /** Number of point positions */
+    nint                            _numPoints;                 /** Number of point positions */
+    
     std::vector<std::vector<float>> _normalizedData;
     DataMatrix                      _dataMatrix;
     std::vector<QString>            _enabledDimNames;
@@ -179,13 +181,13 @@ private:
     float                           _projectionSize = 0;
 
     // Interaction
-    int                             _selectedPoint = 0;
-    int                             _globalSelectedPoint = 0;
-    int                             _selectedDimension;
+    nint                            _selectedPoint = 0;
+    nint                            _globalSelectedPoint = 0;
+    dint                            _selectedDimension;
     QPoint                          _mousePos;
     bool                            _mousePressed = false;
     QTimer*                         _graphTimer;
-    std::vector<int>                _mask;
+    std::vector<nint>               _mask;
     int                             _selectedViewIndex = 0;
 
     // Filters
