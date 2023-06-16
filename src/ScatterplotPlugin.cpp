@@ -585,7 +585,7 @@ void ScatterplotPlugin::computeStaticData()
     }
 
     // Set up chart
-    _gradientGraph->setNumDimensions((bigint)enabledDimensions.size());
+    _gradientGraph->setNumDimensions((bigint)_enabledDimNames.size());
 
     timer.finish("Graph init");
 }
