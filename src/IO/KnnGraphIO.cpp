@@ -34,7 +34,7 @@ void KnnGraphImporter::read(QString filePath, KnnGraph& graph)
 
     for (int i = 0; i < numPoints; i++)
     {
-        if (i % numPoints / 50 == 0) std::cout << "Reading progress: " << i << "/" << numPoints << std::endl;
+        if (i % (numPoints / 50) == 0) std::cout << "Reading progress: " << i << "/" << numPoints << std::endl;
         for (int j = 0; j < numNeighbours; j++)
         {
             myfile.read((char*)&neighbours[i][j], sizeof(int));
