@@ -129,13 +129,13 @@ void ProjectionView::setScalars(const Eigen::Block<Eigen::MatrixXf, -1, 1, true>
     update();
 }
 
-void ProjectionView::setColors(const std::vector<Vector3f>& colors)
-{
-    _pointRenderer.setColors(colors);
-    _pointRenderer.setScalarEffect(PointEffect::None);
-
-    update();
-}
+//void ProjectionView::setColors(const std::vector<Vector3f>& colors)
+//{
+//    _pointRenderer.setColors(colors);
+//    _pointRenderer.setScalarEffect(PointEffect::None);
+//
+//    update();
+//}
 
 void ProjectionView::setProjectionName(QString name)
 {

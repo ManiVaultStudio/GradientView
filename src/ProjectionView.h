@@ -38,7 +38,7 @@ public:
 
     void setScalars(const std::vector<float>& scalars, int selectedPoint);
     void setScalars(const Eigen::Block<Eigen::MatrixXf, -1, 1, true>& scalars, int selectedPoint);
-    void setColors(const std::vector<Vector3f>& colors);
+    //void setColors(const std::vector<Vector3f>& colors);
 
     void setCurrentPosition(Vector2f pos) { _currentPoint = pos; update(); }
     int getShownDimension() { return _shownDimension; }
