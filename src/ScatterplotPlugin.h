@@ -115,6 +115,8 @@ public:
     filters::HDFloodPeakFilter& getHDPeakFilter()       { return _hdFloodPeakFilter; }
     float getProjectionSize()                           { return _projectionSize; }
 
+    void createKnnIndex();
+    void computeKnnGraph();
     void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataMatrix, _knnIndex, floodNeighbours); }
     void setFloodSteps(int numFloodSteps)
     {
@@ -198,6 +200,7 @@ private:
 
     // KNN
     bool                            _computeOnLoad = false;
+    bool                            _graphAvailable = false;
     knn::Index                      _knnIndex;
     KnnGraph                        _knnGraph;
     KnnGraph                        _largeKnnGraph;

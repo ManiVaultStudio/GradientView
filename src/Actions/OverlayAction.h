@@ -44,6 +44,8 @@ public: // Serialization
     QVariantMap toVariantMap() const override;
 
 public: // Action getters
+    TriggerAction& getComputeKnnGraphAction() { return _computeKnnGraphAction; }
+
     IntegralAction& getFloodDecimalAction() { return _floodDecimal; }
     IntegralAction& getFloodStepsAction() { return _floodStepsAction; }
     ToggleAction& getSharedDistAction() { return _sharedDistAction; }
@@ -55,6 +57,8 @@ public: // Action getters
     //GroupAction& getOverlayGroupAction() { return _overlayGroupAction; }
 
 protected:
+    TriggerAction                       _computeKnnGraphAction;
+
     IntegralAction                      _floodDecimal;
     IntegralAction                      _floodStepsAction;
     ToggleAction                        _sharedDistAction;

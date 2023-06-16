@@ -8,6 +8,7 @@
 
 OverlayAction::OverlayAction(ScatterplotPlugin* scatterplotPlugin) :
     PluginAction(scatterplotPlugin, "Filter"),
+    _computeKnnGraphAction(this, "Compute Floods"),
     _floodDecimal(this, "Flood nodes", 10, 500, 10, 10),
     _floodStepsAction(this, "Flood steps", 2, 50, 10, 10),
     _sharedDistAction(this, "Shared distances", false, false),
@@ -27,6 +28,12 @@ OverlayAction::OverlayAction(ScatterplotPlugin* scatterplotPlugin) :
     _dimensionalityOverlayAction.setSerializationName("DimensionalityOverlay");
 
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("image"));
+
+    connect(&_computeKnnGraphAction, &TriggerAction::triggered, this, [scatterplotPlugin](bool enabled)
+    {
+        scatterplotPlugin->createKnnIndex();
+        scatterplotPlugin->computeKnnGraph();
+    });
 
     connect(&_floodDecimal, &IntegralAction::valueChanged, this, [scatterplotPlugin](int32_t value)
     {
@@ -96,6 +103,7 @@ QMenu* OverlayAction::getContextMenu()
         menu->addMenu(actionMenu);
     };
 
+    addActionToMenu(&_computeKnnGraphAction);
     addActionToMenu(&_floodDecimal);
     addActionToMenu(&_floodStepsAction);
     addActionToMenu(&_sharedDistAction);
@@ -144,19 +152,22 @@ OverlayAction::Widget::Widget(QWidget* parent, OverlayAction* overlayAction, con
 
         layout->setContentsMargins(4, 4, 4, 4);
 
-        layout->addWidget(overlayAction->getFloodDecimalAction().createLabelWidget(this), 0, 0);
-        layout->addWidget(overlayAction->getFloodDecimalAction().createWidget(this), 0, 1);
+        layout->addWidget(overlayAction->getComputeKnnGraphAction().createLabelWidget(this), 0, 0);
+        layout->addWidget(overlayAction->getComputeKnnGraphAction().createWidget(this), 0, 1);
 
-        layout->addWidget(overlayAction->getFloodStepsAction().createLabelWidget(this), 1, 0);
-        layout->addWidget(overlayAction->getFloodStepsAction().createWidget(this), 1, 1);
+        layout->addWidget(overlayAction->getFloodDecimalAction().createLabelWidget(this), 1, 0);
+        layout->addWidget(overlayAction->getFloodDecimalAction().createWidget(this), 1, 1);
 
-        layout->addWidget(overlayAction->getSharedDistAction().createLabelWidget(this), 2, 0);
-        layout->addWidget(overlayAction->getSharedDistAction().createWidget(this), 2, 1);
+        layout->addWidget(overlayAction->getFloodStepsAction().createLabelWidget(this), 2, 0);
+        layout->addWidget(overlayAction->getFloodStepsAction().createWidget(this), 2, 1);
 
-        layout->addWidget(new QLabel("Color flood nodes by:", parent), 3, 0);
-        layout->addWidget(overlayAction->getFloodOverlayAction().createWidget(this), 4, 0);
-        layout->addWidget(overlayAction->getDimensionOverlayAction().createWidget(this), 4, 1);
-        layout->addWidget(overlayAction->getDimensionalityOverlayAction().createWidget(this), 4, 2);
+        layout->addWidget(overlayAction->getSharedDistAction().createLabelWidget(this), 3, 0);
+        layout->addWidget(overlayAction->getSharedDistAction().createWidget(this), 3, 1);
+
+        layout->addWidget(new QLabel("Color flood nodes by:", parent), 4, 0);
+        layout->addWidget(overlayAction->getFloodOverlayAction().createWidget(this), 5, 0);
+        layout->addWidget(overlayAction->getDimensionOverlayAction().createWidget(this), 5, 1);
+        layout->addWidget(overlayAction->getDimensionalityOverlayAction().createWidget(this), 5, 2);
 
         auto mainLayout = new QVBoxLayout();
 

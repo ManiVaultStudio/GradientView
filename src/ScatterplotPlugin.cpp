@@ -541,26 +541,9 @@ void ScatterplotPlugin::computeStaticData()
 
     if (_computeOnLoad)
     {
-        qDebug() << "Creating index";
-        if (_dataMatrix.rows() < 5000)
-            _knnIndex.create(_dataMatrix.cols(), knn::Metric::MANHATTAN);
-        else
-            _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
-        qDebug() << "Adding data";
-        _knnIndex.addData(_dataMatrix);
-        qDebug() << "Done creating index";
+        createKnnIndex();
         timer.mark("Computing KNN index");
-        qDebug() << "Building..";
-        if (!_preloadedKnnGraph)
-            _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
-
-        if (_dataMatrix.rows() < 5000 && _useSharedDistances)
-        {
-            _sourceKnnGraph.build(_dataMatrix, _knnIndex, 100);
-            _knnGraph.build(_sourceKnnGraph, 10, true);
-        }
-        else
-            _knnGraph.build(_largeKnnGraph, 10);
+        computeKnnGraph();
     }
 
     timer.mark("Computing KNN graph");
@@ -634,13 +617,6 @@ timer.start();
         DataMatrix& dataMatrix = _mask.empty() ? _dataMatrix : _maskedDataMatrix;
         DataMatrix& projMatrix = _mask.empty() ? _projMatrix : _maskedProjMatrix;
 
-        //////////////////
-        // Do floodfill //
-        //////////////////
-        _floodFill.compute(knnGraph, _selectedPoint);
-
-timer.mark("Floodfill");
-
         /////////////////////
         // Gradient picker //
         /////////////////////
@@ -687,100 +663,98 @@ timer.mark("Ranking");
 
 timer.mark("Filter");
 
-        /////////////////////
-        // Trace lineage   //
-        /////////////////////
-
-
-        // Start a timer to compute the graphs in 100ms, if the timer is restarted before graphs are not computed
-        _graphTimer->start(100);
-timer.mark("Linearisation");
-
         //////////////////
-        //std::vector<std::vector<Vector2f>> linPoints(10, std::vector<Vector2f>());
-        //for (int w = 0; w < 10; w++)
-        //{
-        //    std::vector<int> lineage;
-        //    lineage.push_back(_selectedPoint);
-        //    compute::traceLineage(_dataMatrix, floodFill, _positions, _selectedPoint, lineage);
+        // Do floodfill //
+        //////////////////
 
-        //    for (int i = 0; i < lineage.size(); i++)
-        //    {
-        //        linPoints[w].push_back(_positions[lineage[i]]);
-        //        //qDebug() << linPoints[w][i].x << linPoints[w][i].y;
-        //    }
-        //}
-        //_scatterPlotWidget->setRandomWalks(linPoints);
+        if (_graphAvailable)
+            _floodFill.compute(knnGraph, _selectedPoint);
 
-        // Coloring
+        timer.mark("Floodfill");
+
+        /////////////////////
+        // Coloring        //
+        /////////////////////
         std::vector<float> colorScalars(_dataMatrix.rows(), 0);
 
-        switch (_overlayType)
+        if (_graphAvailable)
         {
-        case OverlayType::NONE:
-        {
-            _scatterPlotWidget->setColoredBy("Colored by - Flood fill step");
-            for (int i = 0; i < _floodFill.getNumWaves(); i++)
+            switch (_overlayType)
             {
-                for (int j = 0; j < _floodFill.getWaves()[i].size(); j++)
+            case OverlayType::NONE:
+            {
+                _scatterPlotWidget->setColoredBy("Colored by - Flood fill step");
+                for (int i = 0; i < _floodFill.getNumWaves(); i++)
                 {
-                    int index = _floodFill.getWaves()[i][j];
-                    colorScalars[_mask.empty() ? index : _mask[index]] = 1 - (1.0f/_floodFill.getNumWaves()) * i;
+                    for (int j = 0; j < _floodFill.getWaves()[i].size(); j++)
+                    {
+                        int index = _floodFill.getWaves()[i][j];
+                        colorScalars[_mask.empty() ? index : _mask[index]] = 1 - (1.0f / _floodFill.getNumWaves()) * i;
+                    }
                 }
-            }
 
-            _scatterPlotWidget->setColorMapRange(0, 1);
-            break;
-        }
-        case OverlayType::DIM_VALUES:
-        {
-            _scatterPlotWidget->setColoredBy("Colored by - Dim: " + _enabledDimNames[dimRanking[0]]);
-            for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
+                _scatterPlotWidget->setColorMapRange(0, 1);
+                break;
+            }
+            case OverlayType::DIM_VALUES:
             {
-                int node = _floodFill.getAllNodes()[i];
-                int index = _mask.empty() ? node : _mask[node];
-                colorScalars[index] = _normalizedData[dimRanking[0]][index];
+                _scatterPlotWidget->setColoredBy("Colored by - Dim: " + _enabledDimNames[dimRanking[0]]);
+                for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
+                {
+                    int node = _floodFill.getAllNodes()[i];
+                    int index = _mask.empty() ? node : _mask[node];
+                    colorScalars[index] = _normalizedData[dimRanking[0]][index];
+                }
+                break;
             }
-            break;
-        }
-        case OverlayType::LOCAL_DIMENSIONALITY:
-        {
-            _scatterPlotWidget->setColoredBy("Colored by - Local Dimensionality");
-            if (_localHighDimensionality.empty()) break;
-
-            for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
+            case OverlayType::LOCAL_DIMENSIONALITY:
             {
-                int node = _floodFill.getAllNodes()[i];
-                int index = _mask.empty() ? node : _mask[node];
-                colorScalars[index] = _localHighDimensionality[node];
-            }
-            break;
-        }
-        case OverlayType::DIRECTIONS:
-        {
-            std::vector<float> scalars(dataMatrix.rows(), 0);
-            std::vector<Vector2f> directions(_floodFill.getTotalNumNodes() * 2);
+                _scatterPlotWidget->setColoredBy("Colored by - Local Dimensionality");
+                if (_localHighDimensionality.empty()) break;
 
-            for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
+                for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
+                {
+                    int node = _floodFill.getAllNodes()[i];
+                    int index = _mask.empty() ? node : _mask[node];
+                    colorScalars[index] = _localHighDimensionality[node];
+                }
+                break;
+            }
+            case OverlayType::DIRECTIONS:
             {
-                float idx = _floodFill.getAllNodes()[i];
-                directions[i * 2 + 0] = _directions[idx * 2 + 0];
-                directions[i * 2 + 1] = _directions[idx * 2 + 1];
-                scalars[idx] = 0.5f;
+                std::vector<float> scalars(dataMatrix.rows(), 0);
+                std::vector<Vector2f> directions(_floodFill.getTotalNumNodes() * 2);
+
+                for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
+                {
+                    float idx = _floodFill.getAllNodes()[i];
+                    directions[i * 2 + 0] = _directions[idx * 2 + 0];
+                    directions[i * 2 + 1] = _directions[idx * 2 + 1];
+                    scalars[idx] = 0.5f;
+                }
+                getScatterplotWidget().setDirections(directions);
+
+                break;
             }
-            getScatterplotWidget().setDirections(directions);
-
-            break;
+            }
         }
-        }
-
+        
         getScatterplotWidget().setScalars(colorScalars);
 
         // Store scalars in floodfill dataset
         _floodScalars->setData<float>(colorScalars.data(), colorScalars.size(), 1);
         events().notifyDatasetChanged(_floodScalars);
 
-timer.finish("Overlay");
+        timer.mark("Overlay");
+
+        /////////////////////
+        // Graphs          //
+        /////////////////////
+
+        // Start a timer to compute the graphs in 100ms, if the timer is restarted before graphs are not computed
+        _graphTimer->start(100);
+
+        timer.finish("Graphs");
     }
 }
 
@@ -1082,6 +1056,40 @@ void ScatterplotPlugin::exportRankings()
     writeDimensionRanking(perPointDimRankings, _enabledDimNames);
 }
 
+/******************************************************************************
+ * Flooding
+ ******************************************************************************/
+
+void ScatterplotPlugin::createKnnIndex()
+{
+    qDebug() << "Creating index";
+    if (_dataMatrix.rows() < 5000)
+        _knnIndex.create(_dataMatrix.cols(), knn::Metric::MANHATTAN);
+    else
+        _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
+    qDebug() << "Adding data";
+    _knnIndex.addData(_dataMatrix);
+    qDebug() << "Done creating index";
+}
+
+void ScatterplotPlugin::computeKnnGraph()
+{
+    qDebug() << "Building KNN Graph..";
+    if (!_preloadedKnnGraph)
+        _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
+
+    if (_dataMatrix.rows() < 5000 && _useSharedDistances)
+    {
+        _sourceKnnGraph.build(_dataMatrix, _knnIndex, 100);
+        _knnGraph.build(_sourceKnnGraph, 10, true);
+    }
+    else
+        _knnGraph.build(_largeKnnGraph, 10);
+
+    _graphAvailable = true;
+    qDebug() << "Done building KNN Graph! Ready for flood-fill.";
+}
+
 void ScatterplotPlugin::exportFloodnodes()
 {
     std::vector<std::vector<int>> perPointFloodNodes(_dataMatrix.rows());
@@ -1113,6 +1121,8 @@ void ScatterplotPlugin::importKnnGraph()
 
     _largeKnnGraph.readFromFile(fileName);
     _knnGraph.build(_largeKnnGraph, 10);
+
+    _graphAvailable = true;
 }
 
 /******************************************************************************
