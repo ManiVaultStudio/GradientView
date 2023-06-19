@@ -2,45 +2,48 @@
 
 void standardizeData(DataMatrix& dataMatrix, std::vector<float>& variances)
 {
-    // Compute means
-    std::vector<float> means(dataMatrix.cols());
-    for (int d = 0; d < dataMatrix.cols(); d++)
+    int numPoints = dataMatrix.rows();
+    int numDimensions = dataMatrix.cols();
+
+    std::vector<float> means(numDimensions);
+    variances.resize(numDimensions);
+
+#pragma omp parallel for
+    for (int d = 0; d < numDimensions; d++)
     {
-        means[d] = 0;
-        for (int i = 0; i < dataMatrix.rows(); i++)
+        // Compute mean
+        float mean = dataMatrix.col(d).mean();
+
+        //mean /= numPoints;
+        means[d] = mean;
+
+        // Compute variance
+        variances[d] = (dataMatrix.col(d).array() - mean).square().sum() / numPoints;
+
+        // If variance is 0, then don't try to divide the data by it
+        if (variances[d] <= 0) continue;
+
+        // Standardize data
+        float invStddev = 1.0f / sqrt(variances[d]);
+
+        for (int i = 0; i < numPoints; i++)
         {
-            means[d] += dataMatrix(i, d);
+            dataMatrix(i, d) -= mean;
+            dataMatrix(i, d) *= invStddev;
         }
-        means[d] /= dataMatrix.rows();
-        std::cout << "Mean " << d << " " << means[d] << std::endl;
     }
 
-    // Compute variances
-    variances.resize(dataMatrix.cols());
-    for (int d = 0; d < dataMatrix.cols(); d++)
-    {
-        variances[d] = 0;
-        for (int i = 0; i < dataMatrix.rows(); i++)
-        {
-            variances[d] += (dataMatrix(i, d) - means[d]) * (dataMatrix(i, d) - means[d]);
-        }
-        variances[d] /= dataMatrix.rows();
+    // Print means and variances
+    for (int d = 0; d < numDimensions; d++)
+        std::cout << "Mean " << d << " " << means[d] << std::endl;
+    for (int d = 0; d < numDimensions; d++)
         std::cout << "Variance " << d << " " << variances[d] << std::endl;
-    }
-    for (int d = 0; d < dataMatrix.cols(); d++)
-    {
-        if (variances[d] <= 0) continue;
-        for (int i = 0; i < dataMatrix.rows(); i++)
-        {
-            dataMatrix(i, d) -= means[d];
-            dataMatrix(i, d) /= sqrt(variances[d]);
-        }
-    }
 }
 
 void normalizeData(const DataMatrix& dataMatrix, std::vector<std::vector<float>>& normalizedData)
 {
     normalizedData.resize(dataMatrix.cols(), std::vector<float>(dataMatrix.rows()));
+#pragma omp parallel for
     for (int d = 0; d < dataMatrix.cols(); d++)
     {
         auto col = dataMatrix.col(d);
