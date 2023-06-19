@@ -56,20 +56,24 @@ namespace
         int numDimensions = sourceDataset->getNumDimensions();
         int numEnabledDims =  std::count(enabledDims.begin(), enabledDims.end(), true);
 
+        // Create list of enabled dimensions
+        std::vector<int> enabledDimensions(numEnabledDims);
+        int col = 0;
+        for (int d = 0; d < numDimensions; d++)
+            enabledDimensions[col++] = d;
+
         DataMatrix fullDataMatrix;
         fullDataMatrix.resize(numPoints, numEnabledDims);
 
-        int col = 0;
-        for (int d = 0; d < numDimensions; d++)
+#pragma omp parallel for
+        for (int d = 0; d < enabledDimensions.size(); d++)
         {
-            if (!enabledDims[d]) continue;
+            int dim = enabledDimensions[d];
 
             std::vector<float> dimData;
-            sourceDataset->extractDataForDimension(dimData, d);
+            sourceDataset->extractDataForDimension(dimData, dim);
             for (int i = 0; i < numPoints; i++)
-                fullDataMatrix(i, col) = dimData[i];
-
-            col++;
+                fullDataMatrix(i, d) = dimData[i];
         }
 
         // If the dataset was a subset or subset chain, take only a portion of the matrix by indexing
@@ -97,20 +101,24 @@ namespace
         int numDimensions = dataset->getNumDimensions();
         int numEnabledDims = std::count(enabledDims.begin(), enabledDims.end(), true);
 
+        // Create list of enabled dimensions
+        std::vector<int> enabledDimensions(numEnabledDims);
+        int col = 0;
+        for (int d = 0; d < numDimensions; d++)
+            enabledDimensions[col++] = d;
+
         DataMatrix fullDataMatrix;
         fullDataMatrix.resize(numPointsOfFull, numEnabledDims);
 
-        int col = 0;
-        for (int d = 0; d < numDimensions; d++)
+#pragma omp parallel for
+        for (int d = 0; d < numEnabledDims; d++)
         {
-            if (!enabledDims[d]) continue;
+            int dim = enabledDimensions[d];
 
             std::vector<float> dimData;
-            fullDataset->extractDataForDimension(dimData, d);
+            fullDataset->extractDataForDimension(dimData, dim);
             for (int i = 0; i < numPointsOfFull; i++)
-                fullDataMatrix(i, col) = dimData[i];
-
-            col++;
+                fullDataMatrix(i, d) = dimData[i];
         }
 
         // If the dataset was a subset or subset chain, take only a portion of the matrix by indexing
