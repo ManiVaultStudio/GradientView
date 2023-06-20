@@ -60,7 +60,8 @@ namespace
         std::vector<int> enabledDimensions(numEnabledDims);
         int col = 0;
         for (int d = 0; d < numDimensions; d++)
-            enabledDimensions[col++] = d;
+            if (enabledDims[d])
+                enabledDimensions[col++] = d;
 
         DataMatrix fullDataMatrix;
         fullDataMatrix.resize(numPoints, numEnabledDims);
@@ -105,7 +106,8 @@ namespace
         std::vector<int> enabledDimensions(numEnabledDims);
         int col = 0;
         for (int d = 0; d < numDimensions; d++)
-            enabledDimensions[col++] = d;
+            if (enabledDims[d])
+                enabledDimensions[col++] = d;
 
         DataMatrix fullDataMatrix;
         fullDataMatrix.resize(numPointsOfFull, numEnabledDims);
