@@ -1270,9 +1270,15 @@ ViewPlugin* ScatterplotPluginFactory::produce()
     return new ScatterplotPlugin(this);
 }
 
-hdps::DataTypes ScatterplotPluginFactory::supportedDataTypes() const
+PluginTriggerActions ScatterplotPluginFactory::getPluginTriggerActions(const hdps::Datasets& datasets) const
 {
-    DataTypes supportedTypes;
-    supportedTypes.append(PointType);
-    return supportedTypes;
+    PluginTriggerActions pluginTriggerActions;
+
+    const auto getInstance = [this]() -> ScatterplotPlugin* {
+        return dynamic_cast<ScatterplotPlugin*>(Application::core()->getPluginManager().requestViewPlugin(getKind()));
+    };
+
+    const auto numberOfDatasets = datasets.count();
+
+    return pluginTriggerActions;
 }
