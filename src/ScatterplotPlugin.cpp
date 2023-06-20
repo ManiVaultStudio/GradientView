@@ -1073,7 +1073,7 @@ void ScatterplotPlugin::exportRankings()
 void ScatterplotPlugin::createKnnIndex()
 {
     qDebug() << "Creating index";
-    if (_dataMatrix.rows() < 5000)
+    if (_dataMatrix.cols() <= 200)
         _knnIndex.create(_dataMatrix.cols(), knn::Metric::MANHATTAN);
     else
         _knnIndex.create(_dataMatrix.cols(), knn::Metric::EUCLIDEAN);
@@ -1088,7 +1088,7 @@ void ScatterplotPlugin::computeKnnGraph()
     if (!_preloadedKnnGraph)
         _largeKnnGraph.build(_dataMatrix, _knnIndex, 30);
 
-    if (_dataMatrix.rows() < 5000 && _useSharedDistances)
+    if (_useSharedDistances)
     {
         _sourceKnnGraph.build(_dataMatrix, _knnIndex, 100);
         _knnGraph.build(_sourceKnnGraph, 10, true);
