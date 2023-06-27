@@ -29,12 +29,14 @@ PositionAction::PositionAction(ScatterplotPlugin* scatterplotPlugin) :
 
     // Update scatter plot when the x-dimension changes
     connect(&_xDimensionPickerAction, &DimensionPickerAction::currentDimensionIndexChanged, [this, scatterplotPlugin](const std::uint32_t& currentDimensionIndex) {
-        scatterplotPlugin->setXDimension(currentDimensionIndex);
+        if (scatterplotPlugin->isDataInitialized())
+            scatterplotPlugin->setXDimension(currentDimensionIndex);
     });
 
     // Update scatter plot when the y-dimension changes
     connect(&_yDimensionPickerAction, &DimensionPickerAction::currentDimensionIndexChanged, [this, scatterplotPlugin](const std::uint32_t& currentDimensionIndex) {
-        scatterplotPlugin->setYDimension(currentDimensionIndex);
+        if (scatterplotPlugin->isDataInitialized())
+            scatterplotPlugin->setYDimension(currentDimensionIndex);
     });
 
     // Set dimension defaults when the position dataset changes

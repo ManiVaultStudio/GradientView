@@ -54,6 +54,8 @@ public:
     ScatterplotPlugin(const PluginFactory* factory);
     ~ScatterplotPlugin() override;
 
+    bool isDataInitialized() { return _dataInitialized; }
+
     void init() override;
 
     void onDataEvent(hdps::DataEvent* dataEvent);
