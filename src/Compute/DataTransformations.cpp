@@ -33,11 +33,11 @@ void standardizeData(DataMatrix& dataMatrix, std::vector<float>& variances)
         }
     }
 
-    // Print means and variances
-    for (int d = 0; d < numDimensions; d++)
-        std::cout << "Mean " << d << " " << means[d] << std::endl;
-    for (int d = 0; d < numDimensions; d++)
-        std::cout << "Variance " << d << " " << variances[d] << std::endl;
+    //// Print means and variances
+    //for (int d = 0; d < numDimensions; d++)
+    //    std::cout << "Mean " << d << " " << means[d] << std::endl;
+    //for (int d = 0; d < numDimensions; d++)
+    //    std::cout << "Variance " << d << " " << variances[d] << std::endl;
 }
 
 void normalizeData(const DataMatrix& dataMatrix, std::vector<std::vector<float>>& normalizedData)
