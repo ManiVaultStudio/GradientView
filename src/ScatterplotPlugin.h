@@ -11,9 +11,7 @@
 #include "graphics/Vector3f.h"
 #include "GradientGraph.h"
 
-#include <Eigen/Eigen>
-#include <faiss/IndexFlat.h>
-#include <faiss/IndexIVFFlat.h>
+#include "DataMatrix.h"
 
 #include "Compute/FloodFill.h"
 #include "Compute/KnnIndex.h"
@@ -24,8 +22,6 @@
 
 using namespace hdps::plugin;
 using namespace hdps::util;
-
-using DataMatrix = Eigen::MatrixXf;
 
 class Points;
 

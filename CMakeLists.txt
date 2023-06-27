@@ -28,6 +28,8 @@ set(PLUGIN
     src/Timer.h
     src/Timer.cpp
     src/Types.h
+    src/DataMatrix.h
+    src/DataMatrix.cpp
 )
 
 set(UI
