@@ -12,6 +12,7 @@
 #include "GradientGraph.h"
 
 #include "DataMatrix.h"
+#include "Logging.h"
 
 #include "Compute/FloodFill.h"
 #include "Compute/KnnIndex.h"
@@ -78,8 +79,8 @@ public:
     void createSubset(const bool& fromSourceData = false, const QString& name = "");
 
 public: // Dimension picking
-    void setXDimension(const std::int32_t& dimensionIndex) { updateData(); }
-    void setYDimension(const std::int32_t& dimensionIndex) { updateData(); }
+    void setXDimension(const std::int32_t& dimensionIndex) { updateProjectionData(); }
+    void setYDimension(const std::int32_t& dimensionIndex) { updateProjectionData(); }
 
 public: // Data loading
 
@@ -129,11 +130,11 @@ public:
     SettingsAction& getSettingsAction() { return _settingsAction; }
 
 private:
-    void updateData();
-    void calculatePositions(const Points& points);
+    void updateProjectionData();
     void updateSelection();
-    void updateViews();
 
+    void updateViewData(std::vector<Vector2f>& positions);
+    void updateViewScalars();
     bool eventFilter(QObject* target, QEvent* event);
 
 public:
@@ -166,9 +167,8 @@ private:
     // Data
     Dataset<Points>                 _positionDataset;           /** Smart pointer to points dataset for point position */
     Dataset<Points>                 _positionSourceDataset;     /** Smart pointer to source of the points dataset for point position (if any) */
-    std::vector<hdps::Vector2f>     _positions;                 /** Point positions */
     nint                            _numPoints;                 /** Number of point positions */
-    
+
     std::vector<std::vector<float>> _normalizedData;
     DataMatrix                      _dataMatrix;
     std::vector<QString>            _enabledDimNames;

@@ -102,7 +102,6 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     ViewPlugin(factory),
     _positionDataset(),
     _positionSourceDataset(),
-    _positions(),
     _numPoints(0),
     _scatterPlotWidget(new ScatterplotWidget()),
     _projectionViews(2, nullptr),
@@ -129,9 +128,9 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _selectedView = new ProjectionView();
 
     // Connect signals from views
-    connect(_projectionViews[0], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 1; updateViews(); });
-    connect(_projectionViews[1], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 2; updateViews(); });
-    connect(_selectedView, &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 3; updateViews(); });
+    connect(_projectionViews[0], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 1; updateViewScalars(); });
+    connect(_projectionViews[1], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 2; updateViewScalars(); });
+    connect(_selectedView, &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 3; updateViewScalars(); });
 
     connect(_scatterPlotWidget, &ScatterplotWidget::initialized, this, [this]()
     {
@@ -301,7 +300,7 @@ void ScatterplotPlugin::init()
     getWidget().setLayout(layout);
 
     // Update the data when the scatter plot widget is initialized
-    connect(_scatterPlotWidget, &ScatterplotWidget::initialized, this, &ScatterplotPlugin::updateData);
+    //connect(_scatterPlotWidget, &ScatterplotWidget::initialized, this, &ScatterplotPlugin::updateProjectionData);
 
     //_eventListener.setEventCore(Application::core());
     _eventListener.addSupportedEventType(static_cast<std::uint32_t>(EventType::DataSelectionChanged));
@@ -327,12 +326,177 @@ void ScatterplotPlugin::init()
     events().notifyDatasetAdded(_floodScalars);
 }
 
+void ScatterplotPlugin::positionDatasetChanged()
+{
+    // Only proceed if we have a valid position dataset
+    if (!_positionDataset.isValid())
+        return;
+
+    // Reset dataset references
+    _positionSourceDataset.reset();
+
+    // Set position source dataset reference when the position dataset is derived
+    if (_positionDataset->isDerivedData())
+        _positionSourceDataset = _positionDataset->getSourceDataset<Points>();
+
+    // Do not show the drop indicator if there is a valid point positions dataset
+    _dropWidget->setShowDropIndicator(!_positionDataset.isValid());
+
+    // Update the window title to reflect the position dataset change
+    updateWindowTitle();
+
+    computeStaticData();
+
+    _dataInitialized = true;
+}
+
 void ScatterplotPlugin::updateWindowTitle()
 {
     if (!_positionDataset.isValid())
         getWidget().setWindowTitle(getGuiName());
     else
         getWidget().setWindowTitle(QString("%1: %2").arg(getGuiName(), _positionDataset->getDataHierarchyItem().getFullPathName()));
+}
+
+void ScatterplotPlugin::computeStaticData()
+{
+    // Make sure the position dataset is valid
+    if (!_positionDataset.isValid())
+        return;
+
+    // Check if source dataset names and num dimensions line up, otherwise throw warning
+    if (_positionSourceDataset->getDimensionNames().size() != _positionSourceDataset->getNumDimensions())
+    {
+        qWarning() << "!!! Warning: Data dimensions (" << _positionSourceDataset->getNumDimensions() << ") do not line up with number of dimension names (" << _positionSourceDataset->getDimensionNames().size() << ")";
+        qWarning() << "!!! Shown dimension names may not be correct.";
+    }
+
+    Timer timer;
+    timer.start();
+
+    {
+        logger() << "Converting data to internal format...";
+
+        convertToEigenMatrix(_positionDataset, _positionSourceDataset, _dataMatrix);
+        convertToEigenMatrixProjection(_positionDataset, _fullProjMatrix);
+    }
+    timer.mark("Data preparation");
+
+    std::cout << "Number of enabled dimensions in the dataset : " << _dataMatrix.cols() << std::endl;
+    _bins.resize(_dataMatrix.cols(), std::vector<int>(30));
+
+    // Update projection matrix and views
+    updateProjectionData();
+
+    timer.mark("Updating projection and views");
+
+    {
+        logger() << "Standardizing data...";
+        standardizeData(_dataMatrix, _variances);
+    }
+
+    {
+        logger() << "Normalizing data...";
+        normalizeData(_dataMatrix, _normalizedData);
+    }
+
+    timer.mark("Data transformations");
+
+    if (_computeOnLoad)
+    {
+        logger() << "Computing KNN graph";
+        createKnnIndex();
+        timer.mark("Computing KNN index");
+        computeKnnGraph();
+        timer.mark("Computing KNN graph");
+        _largeKnnGraph.writeToFile();
+    }
+
+    //_localSpatialDimensionality.clear();
+    //_localHighDimensionality.clear();
+
+    //timer.mark("Local dimensionality");
+
+    //compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _localHighDimensionality);
+    //getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
+    //getScatterplotWidget().setColorMapRange(0, 1);
+    //getScatterplotWidget().setScalars(_localHighDimensionality);
+
+    //Dataset<Points> localDims = _core->addDataset("Points", "Dimensionality");
+
+    //localDims->setData(_localHighDimensionality.data(), _localHighDimensionality.size(), 1);
+
+    //_core->notifyDatasetAdded(localDims);
+
+    //computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
+    //getScatterplotWidget().setDirections(_directions);
+
+    timer.mark("Directions");
+
+    // Get enabled dimension names
+    const auto& dimNames = _positionSourceDataset->getDimensionNames();
+    auto enabledDimensions = _positionSourceDataset->getDimensionsPickerAction().getEnabledDimensions();
+
+    _enabledDimNames.clear();
+    for (int i = 0; i < enabledDimensions.size(); i++)
+    {
+        if (enabledDimensions[i])
+            _enabledDimNames.push_back(dimNames[i]);
+    }
+
+    // Set up chart
+    _gradientGraph->setNumDimensions((bigint)_enabledDimNames.size());
+
+    timer.finish("Graph init");
+}
+
+// Is called when the x, y dimensions chosen by the user change, as well as once when dropping new data into the view
+void ScatterplotPlugin::updateProjectionData()
+{
+    // Check if the scatter plot is initialized, if not, don't do anything
+    if (!_scatterPlotWidget->isInitialized())
+    {
+        qCritical() << "Tried to update projection data while view widgets are uninitialized";
+        exit(1);
+    }
+
+    // Subset the new projection matrix from the one with all the dimensions
+    {
+        logger() << "Adjusting projection matrix...";
+
+        int xDim = _settingsAction.getPositionAction().getDimensionX();
+        int yDim = _settingsAction.getPositionAction().getDimensionY();
+        _projMatrix = _fullProjMatrix(Eigen::all, std::vector<int> { xDim, yDim });
+    }
+
+    // Convert projection data to 2D vector list
+    std::vector<Vector2f> positions(_projMatrix.rows());
+    {
+        logger() << "Convert projection data to 2D vector list...";
+        for (int i = 0; i < _projMatrix.rows(); i++)
+            positions[i].set(_projMatrix(i, 0), _projMatrix(i, 1));
+    }
+
+    // Update the views with the new data
+    updateViewData(positions);
+    // Update any selections FIXME: is this necessary?
+    updateSelection();
+
+    // Update the projection size
+    Bounds bounds = _scatterPlotWidget->getBounds();
+    _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
+    std::cout << "Projection bounds: x:" << bounds.getLeft() << ", " << bounds.getRight() << " y: " << bounds.getBottom() << ", " << bounds.getTop() << std::endl;
+    std::cout << "Projection size: " << _projectionSize << std::endl;
+}
+
+void ScatterplotPlugin::updateViewData(std::vector<Vector2f>& positions)
+{
+    // TODO: Can save some time here only computing data bounds once
+    // Pass the 2D points to the scatter plot widget
+    _scatterPlotWidget->setData(&positions);
+    for (int i = 0; i < (int)_projectionViews.size(); i++)
+        _projectionViews[i]->setData(&positions);
+    _selectedView->setData(&positions);
 }
 
 void ScatterplotPlugin::updateColorMapActionScalarRange()
@@ -376,33 +540,6 @@ void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
     }
 }
 
-void ScatterplotPlugin::positionDatasetChanged()
-{
-    // Only proceed if we have a valid position dataset
-    if (!_positionDataset.isValid())
-        return;
-
-    // Reset dataset references
-    _positionSourceDataset.reset();
-
-    // Set position source dataset reference when the position dataset is derived
-    if (_positionDataset->isDerivedData())
-        _positionSourceDataset = _positionDataset->getSourceDataset<Points>();
-
-    // Do not show the drop indicator if there is a valid point positions dataset
-    _dropWidget->setShowDropIndicator(!_positionDataset.isValid());
-
-    _dataInitialized = true;
-
-    // Update positions data
-    updateData();
-
-    // Update the window title to reflect the position dataset change
-    updateWindowTitle();
-
-    computeStaticData();
-}
-
 std::uint32_t ScatterplotPlugin::getNumberOfPoints() const
 {
     if (!_positionDataset.isValid())
@@ -425,92 +562,6 @@ void ScatterplotPlugin::createSubset(const bool& fromSourceData /*= false*/, con
     subset->getDataHierarchyItem().select();
 }
 
-void ScatterplotPlugin::computeStaticData()
-{
-    Timer timer;
-    timer.start();
-
-    std::cout << "Start conversion" << std::endl;
-    convertToEigenMatrix(_positionDataset, _positionSourceDataset, _dataMatrix);
-    convertToEigenMatrixProjection(_positionDataset, _fullProjMatrix);
-
-    int xDim = _settingsAction.getPositionAction().getDimensionX();
-    int yDim = _settingsAction.getPositionAction().getDimensionY();
-    _projMatrix = _fullProjMatrix(Eigen::all, std::vector<int> { xDim, yDim });
-
-    // Set mask to include all points
-    //_mask.resize(_dataMatrix.rows());
-    //std::iota(_mask.begin(), _mask.end(), 0);
-
-    std::cout << "Number of enabled dimensions in the dataset : " << _dataMatrix.cols() << std::endl;
-
-    timer.mark("Data preparation");
-    qDebug() << "Standardize..";
-    // Standardize
-    standardizeData(_dataMatrix, _variances);
-    qDebug() << "Normalize..";
-    // Compute normalized data
-    normalizeData(_dataMatrix, _normalizedData);
-
-    _bins.resize(_dataMatrix.cols(), std::vector<int>(30));
-
-    Bounds bounds = _scatterPlotWidget->getBounds();
-    _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
-    std::cout << "Projection size: " << _projectionSize << std::endl;
-
-    timer.mark("Data transformations");
-
-    if (_computeOnLoad)
-    {
-        createKnnIndex();
-        timer.mark("Computing KNN index");
-        computeKnnGraph();
-    }
-
-    timer.mark("Computing KNN graph");
-
-    _largeKnnGraph.writeToFile();
-
-    //_localSpatialDimensionality.clear();
-    //_localHighDimensionality.clear();
-
-    //timer.mark("Local dimensionality");
-
-    //compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _localHighDimensionality);
-    //getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
-    //getScatterplotWidget().setColorMapRange(0, 1);
-    //getScatterplotWidget().setScalars(_localHighDimensionality);
-
-    //Dataset<Points> localDims = _core->addDataset("Points", "Dimensionality");
-
-    //localDims->setData(_localHighDimensionality.data(), _localHighDimensionality.size(), 1);
-
-    //_core->notifyDatasetAdded(localDims);
-
-    //computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
-    //getScatterplotWidget().setDirections(_directions);
-
-    timer.mark("Directions");
-
-    qDebug() << _positionSourceDataset->getDimensionNames().size() << _positionSourceDataset->getNumDimensions();
-
-    // Get enabled dimension names
-    const auto& dimNames = _positionSourceDataset->getDimensionNames();
-    auto enabledDimensions = _positionSourceDataset->getDimensionsPickerAction().getEnabledDimensions();
-
-    _enabledDimNames.clear();
-    for (int i = 0; i < enabledDimensions.size(); i++)
-    {
-        if (enabledDimensions[i])
-            _enabledDimNames.push_back(dimNames[i]);
-    }
-
-    // Set up chart
-    _gradientGraph->setNumDimensions((bigint)_enabledDimNames.size());
-
-    timer.finish("Graph init");
-}
-
 void ScatterplotPlugin::onPointSelection()
 {
     Timer timer;
@@ -526,7 +577,7 @@ void ScatterplotPlugin::onPointSelection()
     {
 timer.start();
         //_selectedPoint = selection->indices[0];
-        Vector2f center = _positions[_globalSelectedPoint];
+        Vector2f center = Vector2f(_projMatrix(_globalSelectedPoint, 0), _projMatrix(_globalSelectedPoint, 1));
 
         getScatterplotWidget().setCurrentPosition(center);
         getProjectionViews()[0]->setCurrentPosition(center);
@@ -679,59 +730,6 @@ timer.mark("Filter");
     }
 }
 
-void ScatterplotPlugin::updateData()
-{
-    // Check if the scatter plot is initialized, if not, don't do anything
-    if (!_scatterPlotWidget->isInitialized() || !_dataInitialized)
-        return;
-    
-    // If no dataset has been selected, don't do anything
-    if (_positionDataset.isValid()) {
-
-        // Get the selected dimensions to use as X and Y dimension in the plot
-        const dint xDim = _settingsAction.getPositionAction().getDimensionX();
-        const dint yDim = _settingsAction.getPositionAction().getDimensionY();
-
-        // If one of the dimensions was not set, do not draw anything
-        if (xDim < 0 || yDim < 0)
-            return;
-
-        // Determine number of points depending on if its a full dataset or a subset
-        _numPoints = _positionDataset->getNumPoints();
-
-        // Extract 2-dimensional points from the data set based on the selected dimensions
-        calculatePositions(*_positionDataset);
-
-        // Pass the 2D points to the scatter plot widget
-        _scatterPlotWidget->setData(&_positions);
-        for (int i = 0; i < (int) _projectionViews.size(); i++)
-            _projectionViews[i]->setData(&_positions);
-        _selectedView->setData(&_positions);
-
-        updateSelection();
-
-        // Update proj matrix
-        _projMatrix = _fullProjMatrix(Eigen::all, std::vector<dint> { xDim, yDim });
-
-        Bounds bounds = _scatterPlotWidget->getBounds();
-        _projectionSize = bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight();
-        std::cout << "Projection size: " << _projectionSize << std::endl;
-
-        //std::vector<Vector2f> directions;
-        //computeDirection(_dataMatrix, _projMatrix, _knnGraph, directions);
-        //getScatterplotWidget().setDirections(directions);
-    }
-    else {
-        _positions.clear();
-        _scatterPlotWidget->setData(&_positions);
-    }
-}
-
-void ScatterplotPlugin::calculatePositions(const Points& points)
-{
-    points.extractDataForDimensions(_positions, _settingsAction.getPositionAction().getDimensionX(), _settingsAction.getPositionAction().getDimensionY());
-}
-
 void ScatterplotPlugin::updateSelection()
 {
     if (!_positionDataset.isValid())
@@ -752,7 +750,7 @@ void ScatterplotPlugin::updateSelection()
     _scatterPlotWidget->setHighlights(highlights, static_cast<std::int32_t>(selection->indices.size()));
 }
 
-void ScatterplotPlugin::updateViews()
+void ScatterplotPlugin::updateViewScalars()
 {
     _projectionViews[0]->selectView(false);
     _projectionViews[1]->selectView(false);
@@ -803,7 +801,7 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
         _mousePressed = true;
 
         _selectedViewIndex = 0;
-        updateViews();
+        updateViewScalars();
 
         break;
     }
@@ -845,7 +843,7 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
             //for (const int maskIndex : mask)
             {
                 int maskIndex = mask[i];
-                const Vector2f& position = _positions[maskIndex];
+                const Vector2f position(_projMatrix(maskIndex, 0), _projMatrix(maskIndex, 1));
                 const auto pointUV = Vector2f((position.x - bounds.getLeft()) / bounds.getWidth(), (bounds.getTop() - position.y) / bounds.getHeight());
                 const auto uvOffset = Vector2f((w - size) / 2.0f, (h - size) / 2.0f);
                 const auto uv = uvOffset + Vector2f(pointUV.x * size, pointUV.y * size);
@@ -945,7 +943,7 @@ void ScatterplotPlugin::onLineClicked(dint dim)
     _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
 
     onPointSelection();
-    updateViews();
+    updateViewScalars();
 }
 
 /******************************************************************************
