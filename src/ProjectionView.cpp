@@ -89,7 +89,6 @@ void ProjectionView::setData(const std::vector<Vector2f>* points)
     dataBounds.expand(0.1f);
 
     _dataBounds = dataBounds;
-    qDebug() << _dataBounds.getLeft() << _dataBounds.getRight() << _dataBounds.getTop();
 
     // Pass bounds and data to renderer
     _pointRenderer.setBounds(_dataBounds);
