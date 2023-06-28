@@ -679,6 +679,7 @@ timer.mark("Filter");
         /////////////////////
         // Coloring        //
         /////////////////////
+        _colorScalars.clear();
         _colorScalars.resize(_positionDataset->getNumPoints(), 0);
 
         if (_graphAvailable)
