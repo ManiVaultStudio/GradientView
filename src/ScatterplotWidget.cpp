@@ -514,6 +514,8 @@ void ScatterplotWidget::paintGL()
         painter.setFont(font);
         painter.drawText(14, 70, _coloredBy);
 
+        painter.drawText(14, 100, "Section " + _clusterName);
+
         // Draw random walks
         // [Bounds to -1, 1]
         Matrix3f orthoM = createProjectionMatrix(_dataBounds);

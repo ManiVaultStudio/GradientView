@@ -45,7 +45,7 @@ public:
     void setShownDimension(int dimension) { _shownDimension = dimension; }
 
     void setProjectionName(QString name);
-    void setSourcePointSize(float sourcePointSize) { _pointRenderer.setPointSize(sourcePointSize / 4); }
+    void setSourcePointSize(float sourcePointSize) { _pointRenderer.setPointSize(sourcePointSize / 3.5f); }
 
     /** Assign a color map image to the point renderer */
     void setColorMap(const QImage& colorMapImage);

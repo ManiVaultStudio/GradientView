@@ -4,6 +4,7 @@
 
 #include "util/PixelSelectionTool.h"
 
+#include "DataStore.h"
 #include "Types.h"
 #include "Common.h"
 
@@ -25,6 +26,7 @@ using namespace hdps::plugin;
 using namespace hdps::util;
 
 class Points;
+class Clusters;
 
 class ScatterplotWidget;
 class ProjectionView;
@@ -112,11 +114,11 @@ public:
 
     filters::SpatialPeakFilter& getSpatialPeakFilter()  { return _spatialPeakFilter; }
     filters::HDFloodPeakFilter& getHDPeakFilter()       { return _hdFloodPeakFilter; }
-    float getProjectionSize()                           { return _projectionSize; }
+    float getProjectionSize()                           { return _dataStore.getProjectionSize(); }
 
     void createKnnIndex();
     void computeKnnGraph();
-    void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataMatrix, _knnIndex, floodNeighbours); }
+    void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataStore.getData(), _knnIndex, floodNeighbours); }
     void setFloodSteps(int numFloodSteps)
     {
         _floodFill.setNumWaves(numFloodSteps);
@@ -135,6 +137,7 @@ private:
 
     void updateViewData(std::vector<Vector2f>& positions);
     void updateViewScalars();
+
     bool eventFilter(QObject* target, QEvent* event);
 
 public:
@@ -149,6 +152,7 @@ public: // Mask
     bool hasMaskApplied();
     void clearMask();
     void useSelectionAsMask();
+    void useSelectionAsDataView(std::vector<int>& indices);
 
 public: // Serialization
     /**
@@ -164,21 +168,23 @@ public: // Serialization
     QVariantMap toVariantMap() const override;
 
 private:
+    DataStorage                     _dataStore;
+
     // Data
     Dataset<Points>                 _positionDataset;           /** Smart pointer to points dataset for point position */
     Dataset<Points>                 _positionSourceDataset;     /** Smart pointer to source of the points dataset for point position (if any) */
     nint                            _numPoints;                 /** Number of point positions */
 
     std::vector<std::vector<float>> _normalizedData;
-    DataMatrix                      _dataMatrix;
+    //DataMatrix                      _dataMatrix;
     std::vector<QString>            _enabledDimNames;
-    std::vector<float>              _variances;
+    //std::vector<float>              _variances;
     bool                            _dataInitialized = false;
 
     // Projection
-    DataMatrix                      _fullProjMatrix;
-    DataMatrix                      _projMatrix;
-    float                           _projectionSize = 0;
+    //DataMatrix                      _fullProjMatrix;
+    //DataMatrix                      _projMatrix;
+    //float                           _projectionSize = 0;
 
     // Interaction
     nint                            _selectedPoint = 0;
@@ -189,6 +195,7 @@ private:
     QTimer*                         _graphTimer;
     std::vector<nint>               _mask;
     int                             _selectedViewIndex = 0;
+    std::vector<float>              _colorScalars;
 
     // Filters
     QLabel*                         _filterLabel;
@@ -206,12 +213,16 @@ private:
     bool                            _useSharedDistances = false;
     bool                            _preloadedKnnGraph = false;
 
+    // Mask
+    Dataset<Clusters>               _maskDataset;
+
     // Masked KNN
     DataMatrix                      _maskedDataMatrix;
     DataMatrix                      _maskedProjMatrix;
     knn::Index                      _maskedKnnIndex;
     KnnGraph                        _maskedKnnGraph;
     KnnGraph                        _maskedSourceKnnGraph;
+    bool                            _maskedKnn = false;
 
     // Floodfill
     Dataset<Points>                 _floodScalars;

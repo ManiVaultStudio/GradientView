@@ -30,6 +30,8 @@ set(PLUGIN
     src/Types.h
     src/DataMatrix.h
     src/DataMatrix.cpp
+    src/DataStore.h
+    src/DataStore.cpp
     src/Logging.h
     src/Logging.cpp
 )
