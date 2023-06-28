@@ -752,6 +752,7 @@ timer.mark("Filter");
         if (viewIndices.size() > 0)
         {
             std::vector<float> viewScalars(numPoints);
+#pragma omp parallel for
             for (int i = 0; i < numPoints; i++)
             {
                 viewScalars[i] = _colorScalars[viewIndices[i]];
@@ -762,6 +763,22 @@ timer.mark("Filter");
             getScatterplotWidget().setScalars(_colorScalars);
 
         // Store scalars in floodfill dataset
+        float scalarMin = std::numeric_limits<float>::max();
+        float scalarMax = -std::numeric_limits<float>::max();
+
+        // Normalize it first
+        for (int i = 0; i < _colorScalars.size(); i++)
+        {
+            if (_colorScalars[i] < scalarMin) scalarMin = _colorScalars[i];
+            if (_colorScalars[i] > scalarMax) scalarMax = _colorScalars[i];
+        }
+        float invScalarRange = 1.0f / (scalarMax - scalarMin);
+#pragma omp parallel for
+        for (int i = 0; i < _colorScalars.size(); i++)
+        {
+            _colorScalars[i] = (_colorScalars[i] - scalarMin) * invScalarRange;
+        }
+
         _floodScalars->setData<float>(_colorScalars.data(), _colorScalars.size(), 1);
         events().notifyDatasetChanged(_floodScalars);
 
