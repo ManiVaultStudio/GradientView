@@ -1,39 +1,30 @@
 #include "RenderModeAction.h"
-#include "Application.h"
 #include "ScatterplotPlugin.h"
 #include "ScatterplotWidget.h"
 
 using namespace hdps::gui;
 
-RenderModeAction::RenderModeAction(ScatterplotPlugin* scatterplotPlugin) :
-    PluginAction(scatterplotPlugin, "Render mode"),
+RenderModeAction::RenderModeAction(QObject* parent, const QString& title) :
+    OptionAction(parent, title, { "Scatter", "Density", "Contour", "Cell"}),
+    _scatterplotPlugin(nullptr),
     _scatterPlotAction(this, "Scatter"),
     _densityPlotAction(this, "Density"),
     _contourPlotAction(this, "Contour"),
-    _cellPlotAction(this, "Cell"),
-    _actionGroup(this)
+    _cellPlotAction(this, "Cell")
 {
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("image"));
+    setDefaultWidgetFlags(OptionAction::HorizontalButtons);
+    setEnabled(false);
+
+    _scatterPlotAction.setConnectionPermissionsToForceNone(true);
+    _densityPlotAction.setConnectionPermissionsToForceNone(true);
+    _contourPlotAction.setConnectionPermissionsToForceNone(true);
+    _cellPlotAction.setConnectionPermissionsToForceNone(true);
 
     _scatterPlotAction.setShortcutContext(Qt::WidgetWithChildrenShortcut);
     _densityPlotAction.setShortcutContext(Qt::WidgetWithChildrenShortcut);
     _contourPlotAction.setShortcutContext(Qt::WidgetWithChildrenShortcut);
     _cellPlotAction.setShortcutContext(Qt::WidgetWithChildrenShortcut);
-
-    _scatterplotPlugin->getWidget().addAction(&_scatterPlotAction);
-    _scatterplotPlugin->getWidget().addAction(&_densityPlotAction);
-    _scatterplotPlugin->getWidget().addAction(&_contourPlotAction);
-    _scatterplotPlugin->getWidget().addAction(&_cellPlotAction);
-
-    _actionGroup.addAction(&_scatterPlotAction);
-    _actionGroup.addAction(&_densityPlotAction);
-    _actionGroup.addAction(&_contourPlotAction);
-    _actionGroup.addAction(&_cellPlotAction);
-
-    _scatterPlotAction.setCheckable(true);
-    _densityPlotAction.setCheckable(true);
-    _contourPlotAction.setCheckable(true);
-    _cellPlotAction.setCheckable(true);
 
     _scatterPlotAction.setShortcut(QKeySequence("S"));
     _densityPlotAction.setShortcut(QKeySequence("D"));
@@ -44,49 +35,66 @@ RenderModeAction::RenderModeAction(ScatterplotPlugin* scatterplotPlugin) :
     _densityPlotAction.setToolTip("Set render mode to density plot (D)");
     _contourPlotAction.setToolTip("Set render mode to contour plot (C)");
     _cellPlotAction.setToolTip("Set render mode to cell plot (V)");
+}
 
-    /*
-    const auto& fontAwesome = Application::getIconFont("FontAwesome");
+void RenderModeAction::initialize(ScatterplotPlugin* scatterplotPlugin)
+{
+    Q_ASSERT(scatterplotPlugin != nullptr);
 
-    _scatterPlotAction.setIcon(fontAwesome.getIcon("braille"));
-    _densityPlotAction.setIcon(fontAwesome.getIcon("cloud"));
-    _contourPlotAction.setIcon(fontAwesome.getIcon("mountain"));
-    */
+    if (scatterplotPlugin == nullptr)
+        return;
 
-    connect(&_scatterPlotAction, &QAction::toggled, this, [this](bool toggled) {
-        if (toggled)
-            getScatterplotWidget().setRenderMode(ScatterplotWidget::RenderMode::SCATTERPLOT);
-    });
+    _scatterplotPlugin = scatterplotPlugin;
 
-    connect(&_densityPlotAction, &QAction::toggled, this, [this](bool toggled) {
-        if (toggled)
-            getScatterplotWidget().setRenderMode(ScatterplotWidget::RenderMode::DENSITY);
-    });
+    _scatterplotPlugin->getWidget().addAction(&_scatterPlotAction);
+    //_scatterplotPlugin->getWidget().addAction(&_densityPlotAction);
+    //_scatterplotPlugin->getWidget().addAction(&_contourPlotAction);
+    _scatterplotPlugin->getWidget().addAction(&_cellPlotAction);
 
-    connect(&_contourPlotAction, &QAction::toggled, this, [this](bool toggled) {
-        if (toggled)
-            getScatterplotWidget().setRenderMode(ScatterplotWidget::RenderMode::LANDSCAPE);
-    });
+    const auto currentIndexChanged = [this]() {
+        const auto renderMode = static_cast<RenderMode>(getCurrentIndex());
 
-    connect(&_cellPlotAction, &QAction::toggled, this, [this](bool toggled) {
-        if (toggled)
-            getScatterplotWidget().setRenderMode(ScatterplotWidget::RenderMode::CELL);
-    });
+        _scatterPlotAction.setChecked(renderMode == RenderMode::ScatterPlot);
+        _densityPlotAction.setChecked(renderMode == RenderMode::DensityPlot);
+        _contourPlotAction.setChecked(renderMode == RenderMode::ContourPlot);
+        _cellPlotAction.setChecked(renderMode == RenderMode::CellPlot);
 
-    const auto updateButtons = [this]() -> void {
-        const auto renderMode = getScatterplotWidget().getRenderMode();
-
-        _scatterPlotAction.setChecked(renderMode == ScatterplotWidget::RenderMode::SCATTERPLOT);
-        _densityPlotAction.setChecked(renderMode == ScatterplotWidget::RenderMode::DENSITY);
-        _contourPlotAction.setChecked(renderMode == ScatterplotWidget::RenderMode::LANDSCAPE);
-        _cellPlotAction.setChecked(renderMode == ScatterplotWidget::RenderMode::CELL);
+        _scatterplotPlugin->getScatterplotWidget().setRenderMode(static_cast<ScatterplotWidget::RenderMode>(getCurrentIndex()));
     };
 
-    connect(&getScatterplotWidget(), &ScatterplotWidget::renderModeChanged, this, [this, updateButtons](const ScatterplotWidget::RenderMode& renderMode) {
-        updateButtons();
+    currentIndexChanged();
+
+    connect(this, &OptionAction::currentIndexChanged, this, currentIndexChanged);
+
+    connect(&_scatterPlotAction, &QAction::toggled, this, [this, scatterplotPlugin](bool toggled) {
+        if (toggled)
+            setCurrentIndex(static_cast<std::int32_t>(RenderMode::ScatterPlot));
     });
 
-    updateButtons();
+    connect(&_densityPlotAction, &QAction::toggled, this, [this, scatterplotPlugin](bool toggled) {
+        if (toggled)
+            setCurrentIndex(static_cast<std::int32_t>(RenderMode::DensityPlot));
+    });
+
+    connect(&_contourPlotAction, &QAction::toggled, this, [this, scatterplotPlugin](bool toggled) {
+        if (toggled)
+            setCurrentIndex(static_cast<std::int32_t>(RenderMode::ContourPlot));
+    });
+
+    connect(&_cellPlotAction, &QAction::toggled, this, [this, scatterplotPlugin](bool toggled) {
+        if (toggled)
+            setCurrentIndex(static_cast<std::int32_t>(RenderMode::CellPlot));
+    });
+
+    setCurrentIndex(static_cast<std::int32_t>(RenderMode::ScatterPlot));
+
+    const auto updateReadOnly = [this]() -> void {
+        setEnabled(_scatterplotPlugin->getPositionDataset().isValid());
+    };
+
+    updateReadOnly();
+
+    connect(&_scatterplotPlugin->getPositionDataset(), &Dataset<Points>::changed, this, updateReadOnly);
 }
 
 QMenu* RenderModeAction::getContextMenu()
@@ -101,23 +109,58 @@ QMenu* RenderModeAction::getContextMenu()
     return menu;
 }
 
-RenderModeAction::Widget::Widget(QWidget* parent, RenderModeAction* renderModeAction, const std::int32_t& widgetFlags) :
-    WidgetActionWidget(parent, renderModeAction, widgetFlags)
+void RenderModeAction::connectToPublicAction(WidgetAction* publicAction, bool recursive)
 {
-    auto layout = new QHBoxLayout();
+    auto publicRenderModeAction = dynamic_cast<RenderModeAction*>(publicAction);
 
-    layout->setSpacing(3);
+    Q_ASSERT(publicRenderModeAction != nullptr);
 
-    layout->addWidget(renderModeAction->_scatterPlotAction.createWidget(this, ToggleAction::PushButton));
-    //layout->addWidget(renderModeAction->_densityPlotAction.createWidget(this, ToggleAction::PushButton));
-    //layout->addWidget(renderModeAction->_contourPlotAction.createWidget(this, ToggleAction::PushButton));
-    layout->addWidget(renderModeAction->_cellPlotAction.createWidget(this, ToggleAction::PushButton));
+    if (publicRenderModeAction == nullptr)
+        return;
 
-    if (widgetFlags & PopupLayout) {
-        setPopupLayout(layout);
+    if (recursive) {
+        actions().connectPrivateActionToPublicAction(&_scatterPlotAction, &publicRenderModeAction->getScatterPlotAction(), recursive);
+        actions().connectPrivateActionToPublicAction(&_densityPlotAction, &publicRenderModeAction->getDensityPlotAction(), recursive);
+        actions().connectPrivateActionToPublicAction(&_contourPlotAction, &publicRenderModeAction->getContourPlotAction(), recursive);
+        actions().connectPrivateActionToPublicAction(&_cellPlotAction, &publicRenderModeAction->getCellPlotAction(), recursive);
     }
-    else {
-        layout->setContentsMargins(0, 0, 0, 0);
-        setLayout(layout);
+
+    OptionAction::connectToPublicAction(publicAction, recursive);
+}
+
+void RenderModeAction::disconnectFromPublicAction(bool recursive)
+{
+    if (!isConnected())
+        return;
+
+    if (recursive) {
+        actions().disconnectPrivateActionFromPublicAction(&_scatterPlotAction, recursive);
+        actions().disconnectPrivateActionFromPublicAction(&_densityPlotAction, recursive);
+        actions().disconnectPrivateActionFromPublicAction(&_contourPlotAction, recursive);
+        actions().disconnectPrivateActionFromPublicAction(&_cellPlotAction, recursive);
     }
+
+    OptionAction::disconnectFromPublicAction(recursive);
+}
+
+void RenderModeAction::fromVariantMap(const QVariantMap& variantMap)
+{
+    OptionAction::fromVariantMap(variantMap);
+
+    _scatterPlotAction.fromParentVariantMap(variantMap);
+    _densityPlotAction.fromParentVariantMap(variantMap);
+    _contourPlotAction.fromParentVariantMap(variantMap);
+    _cellPlotAction.fromParentVariantMap(variantMap);
+}
+
+QVariantMap RenderModeAction::toVariantMap() const
+{
+    auto variantMap = OptionAction::toVariantMap();
+
+    _scatterPlotAction.insertIntoVariantMap(variantMap);
+    _densityPlotAction.insertIntoVariantMap(variantMap);
+    _contourPlotAction.insertIntoVariantMap(variantMap);
+    _cellPlotAction.insertIntoVariantMap(variantMap);
+
+    return variantMap;
 }

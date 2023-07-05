@@ -1,67 +1,70 @@
 #include "SettingsAction.h"
-#include "ExportImageDialog.h"
 
-#include "Application.h"
 #include "ScatterplotPlugin.h"
+#include "ScatterplotWidget.h"
 #include "PointData/PointData.h"
 
 #include <QMenu>
 
 using namespace hdps::gui;
 
-SettingsAction::SettingsAction(ScatterplotPlugin* scatterplotPlugin) :
-    PluginAction(scatterplotPlugin, "Settings"),
-    _currentDatasetAction(scatterplotPlugin),
-    _renderModeAction(scatterplotPlugin),
-    _positionAction(scatterplotPlugin),
-    _subsetAction(scatterplotPlugin),
-    _plotAction(scatterplotPlugin),
-    _exportImageAction(this, "Export to image/video"),
-    _miscellaneousAction(scatterplotPlugin),
-    _filterAction(scatterplotPlugin),
-    _overlayAction(scatterplotPlugin),
-    _exportAction(scatterplotPlugin),
+SettingsAction::SettingsAction(QObject* parent, const QString& title) :
+    GroupAction(parent, title),
+    _scatterplotPlugin(dynamic_cast<ScatterplotPlugin*>(parent)),
+    _currentDatasetAction(this, "Current dataset"),
+    _renderModeAction(this, "Render Mode"),
+    _positionAction(this, "Position"),
+    _plotAction(this, "Plot"),
+    //_exportImageAction(this, "Export to image/video"),
+    _miscellaneousAction(this, "Miscellaneous"),
+    _filterAction(this, "Filter"),
+    _overlayAction(this, "Overlay"),
+    _exportAction(this, "Export"),
     _selectionAsMaskAction(this, "Selection As Mask"),
     _clearMaskAction(this, "Clear Mask")
 {
-    setText("Settings");
-    setSerializationName("Settings");
+    setConnectionPermissionsToForceNone();
 
-    const auto updateEnabled = [this]()
-    {
+    _currentDatasetAction.initialize(_scatterplotPlugin);
+    _renderModeAction.initialize(_scatterplotPlugin);
+    _plotAction.initialize(_scatterplotPlugin);
+    //_exportImageAction.initialize(_scatterplotPlugin);
+
+    _filterAction.initialize(_scatterplotPlugin);
+    _overlayAction.initialize(_scatterplotPlugin);
+    _exportAction.initialize(_scatterplotPlugin);
+
+    //_exportImageAction.setEnabled(false);
+
+    const auto updateEnabled = [this]() {
         bool hasDataset = _scatterplotPlugin->getPositionDataset().isValid();
+
         _renderModeAction.setEnabled(hasDataset);
         _positionAction.setEnabled(hasDataset);
-        _subsetAction.setEnabled(hasDataset);
         _plotAction.setEnabled(hasDataset);
-        _exportImageAction.setEnabled(hasDataset);
+        //_exportImageAction.setEnabled(hasDataset);
         _miscellaneousAction.setEnabled(hasDataset);
         _filterAction.setEnabled(hasDataset);
         _overlayAction.setEnabled(hasDataset);
+        _exportAction.setEnabled(hasDataset);
         _selectionAsMaskAction.setEnabled(hasDataset);
         _clearMaskAction.setEnabled(hasDataset);
         //setEnabled(_scatterplotPlugin->getPositionDataset().isValid());
     };
 
-    connect(&scatterplotPlugin->getPositionDataset(), &Dataset<Points>::changed, this, updateEnabled);
+    connect(&_scatterplotPlugin->getPositionDataset(), &Dataset<Points>::changed, this, updateEnabled);
 
     updateEnabled();
 
-    _exportImageAction.setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("camera"));
-    _exportImageAction.setDefaultWidgetFlags(TriggerAction::Icon);
+    //_exportImageAction.setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("camera"));
+    //_exportImageAction.setDefaultWidgetFlags(TriggerAction::Icon);
 
-    connect(&_exportImageAction, &TriggerAction::triggered, this, [this]() {
-        ExportImageDialog exportDialog(nullptr, *_scatterplotPlugin);
-
-        exportDialog.exec();
+    connect(&_selectionAsMaskAction, &TriggerAction::triggered, this, [this]() {
+        _scatterplotPlugin->useSelectionAsMask();
     });
 
-    connect(&_selectionAsMaskAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
-        scatterplotPlugin->useSelectionAsMask();
-    });
-
-    connect(&_clearMaskAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
-        scatterplotPlugin->clearMask();
+    connect(&_clearMaskAction, &TriggerAction::triggered, this, [this]() {
+        _scatterplotPlugin->clearMask();
     });
 }
 
@@ -74,8 +77,6 @@ QMenu* SettingsAction::getContextMenu()
     menu->addSeparator();
     menu->addMenu(_positionAction.getContextMenu());
     menu->addSeparator();
-    //menu->addMenu(_subsetAction.getContextMenu());
-    //menu->addSeparator();
     menu->addMenu(_miscellaneousAction.getContextMenu());
     menu->addSeparator();
     menu->addMenu(_filterAction.getContextMenu());
@@ -94,8 +95,7 @@ void SettingsAction::fromVariantMap(const QVariantMap& variantMap)
     _positionAction.fromParentVariantMap(variantMap);
     _filterAction.fromParentVariantMap(variantMap);
     _overlayAction.fromParentVariantMap(variantMap);
-    //_coloringAction.fromParentVariantMap(variantMap);
-    //_renderModeAction.fromParentVariantMap(variantMap);
+    _miscellaneousAction.fromParentVariantMap(variantMap);
 }
 
 QVariantMap SettingsAction::toVariantMap() const
@@ -103,189 +103,11 @@ QVariantMap SettingsAction::toVariantMap() const
     QVariantMap variantMap = WidgetAction::toVariantMap();
 
     _currentDatasetAction.insertIntoVariantMap(variantMap);
-    //_renderModeAction.insertIntoVariantMap(variantMap);
     _plotAction.insertIntoVariantMap(variantMap);
     _positionAction.insertIntoVariantMap(variantMap);
     _filterAction.insertIntoVariantMap(variantMap);
     _overlayAction.insertIntoVariantMap(variantMap);
-    //_coloringAction.insertIntoVariantMap(variantMap);
+    _miscellaneousAction.insertIntoVariantMap(variantMap);
 
     return variantMap;
-}
-
-SettingsAction::Widget::Widget(QWidget* parent, SettingsAction* settingsAction) :
-    WidgetActionWidget(parent, settingsAction, Widget::State::Standard),
-    _layout(),
-    _toolBarWidget(),
-    _toolBarLayout(),
-    _stateWidgets(),
-    _spacerWidgets()
-{
-    setAutoFillBackground(true);
-
-    _toolBarLayout.setContentsMargins(0, 0, 0, 0);
-    _toolBarLayout.setSpacing(0);
-    _toolBarLayout.setSizeConstraint(QLayout::SetFixedSize);
-
-    addStateWidget(&settingsAction->_renderModeAction, 4);
-    addStateWidget(&settingsAction->_plotAction, 7);
-    addStateWidget(&settingsAction->_positionAction, 10);
-    //addStateWidget(&settingsAction->_subsetAction, 3);
-    addStateWidget(&settingsAction->_filterAction, 0);
-    addStateWidget(&settingsAction->_overlayAction, 0);
-    addStateWidget(&settingsAction->_exportAction, 0);
-    _toolBarLayout.addWidget(settingsAction->_selectionAsMaskAction.createWidget(this));
-    _toolBarLayout.addWidget(settingsAction->_clearMaskAction.createWidget(this));
-
-    _toolBarLayout.addStretch(1);
-
-    _toolBarWidget.setLayout(&_toolBarLayout);
-
-    _layout.addWidget(&_toolBarWidget);
-    _layout.addStretch(1);
-
-    setLayout(&_layout);
-
-    _layout.setContentsMargins(4, 4, 4, 4);
-
-    this->installEventFilter(this);
-    _toolBarWidget.installEventFilter(this);
-}
-
-bool SettingsAction::Widget::eventFilter(QObject* object, QEvent* event)
-{
-    switch (event->type())
-    {
-        case QEvent::Resize:
-            updateLayout();
-            break;
-
-        default:
-            break;
-    }
-
-    return QObject::eventFilter(object, event);
-}
-
-void SettingsAction::Widget::addStateWidget(WidgetAction* widgetAction, const std::int32_t& priority /*= 0*/)
-{
-    _stateWidgets << new WidgetActionStateWidget(this, widgetAction, priority);
-
-    if (_stateWidgets.count() >= 2) {
-        _spacerWidgets << new SpacerWidget();
-        _toolBarLayout.addWidget(_spacerWidgets.back());
-    }
-    
-    _toolBarLayout.addWidget(_stateWidgets.back());
-}
-
-void SettingsAction::Widget::updateLayout()
-{
-    QMap<WidgetActionStateWidget*, Widget::State> states;
-
-    for (auto stateWidget : _stateWidgets)
-        states[stateWidget] = Widget::State::Collapsed;
-
-    const auto getWidth = [this, &states]() -> std::uint32_t {
-        std::uint32_t width = 2 * _layout.contentsMargins().left();
-
-        for (auto stateWidget : _stateWidgets)
-            width += stateWidget->getSizeHint(states[stateWidget]).width();
-
-        for (auto spacerWidget : _spacerWidgets) {
-            const auto spacerWidgetIndex    = _spacerWidgets.indexOf(spacerWidget);
-            const auto stateWidgetLeft      = _stateWidgets[spacerWidgetIndex];
-            const auto stateWidgetRight     = _stateWidgets[spacerWidgetIndex + 1];
-            const auto spacerWidgetType     = SpacerWidget::getType(states[stateWidgetLeft], states[stateWidgetRight]);
-            const auto spacerWidgetWidth    = SpacerWidget::getWidth(spacerWidgetType);
-
-            width += spacerWidgetWidth;
-        }
-
-        return width;
-    };
-
-    auto prioritySortedStateWidgets = _stateWidgets;
-
-    std::sort(prioritySortedStateWidgets.begin(), prioritySortedStateWidgets.end(), [](WidgetActionStateWidget* stateWidgetA, WidgetActionStateWidget* stateWidgetB) {
-        return stateWidgetA->getPriority() > stateWidgetB->getPriority();
-    });
-
-    for (auto stateWidget : prioritySortedStateWidgets) {
-        auto cachedStates = states;
-
-        states[stateWidget] = Widget::State::Standard;
-
-        if (getWidth() > static_cast<std::uint32_t>(width())) {
-            states = cachedStates;
-            break;
-        }
-    }
-
-    for (auto stateWidget : _stateWidgets)
-        stateWidget->setState(states[stateWidget]);
-
-    for (auto spacerWidget : _spacerWidgets) {
-        const auto spacerWidgetIndex    = _spacerWidgets.indexOf(spacerWidget);
-        const auto stateWidgetLeft      = _stateWidgets[spacerWidgetIndex];
-        const auto stateWidgetRight     = _stateWidgets[spacerWidgetIndex + 1];
-        const auto spacerWidgetType     = SpacerWidget::getType(states[stateWidgetLeft], states[stateWidgetRight]);
-
-        spacerWidget->setType(spacerWidgetType);
-    }
-}
-
-SettingsAction::SpacerWidget::SpacerWidget(const Type& type /*= State::Divider*/) :
-    QWidget(),
-    _type(Type::Divider),
-    _layout(new QHBoxLayout()),
-    _verticalLine(new QFrame())
-{
-    _verticalLine->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-    _verticalLine->setFrameShape(QFrame::VLine);
-    _verticalLine->setFrameShadow(QFrame::Sunken);
-
-    _layout->setContentsMargins(2, 2, 2, 2);
-    _layout->setSpacing(0);
-    _layout->setAlignment(Qt::AlignCenter);
-    _layout->addWidget(_verticalLine);
-    
-    setType(type);
-}
-
-SettingsAction::SpacerWidget::Type SettingsAction::SpacerWidget::getType(const WidgetActionWidget::State& widgetTypeLeft, const WidgetActionWidget::State& widgetTypeRight)
-{
-    return widgetTypeLeft == WidgetActionWidget::State::Collapsed && widgetTypeRight == WidgetActionWidget::State::Collapsed ? Type::Spacer : Type::Divider;
-}
-
-SettingsAction::SpacerWidget::Type SettingsAction::SpacerWidget::getType(const WidgetActionStateWidget* stateWidgetLeft, const WidgetActionStateWidget* stateWidgetRight)
-{
-    return getType(stateWidgetLeft->getState(), stateWidgetRight->getState());
-}
-
-void SettingsAction::SpacerWidget::setType(const Type& type)
-{
-    _type = type;
-
-    setLayout(_layout);
-    setFixedWidth(getWidth(_type));
-
-    _verticalLine->setVisible(_type == Type::Divider ? true : false);
-}
-
-std::int32_t SettingsAction::SpacerWidget::getWidth(const Type& type)
-{
-    switch (type)
-    {
-        case Type::Divider:
-            return 14;
-
-        case Type::Spacer:
-            return 6;
-
-        default:
-            break;
-    }
-
-    return 0;
 }

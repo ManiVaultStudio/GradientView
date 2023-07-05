@@ -1,26 +1,31 @@
 #pragma once
 
-#include "PluginAction.h"
+#include <actions/VerticalGroupAction.h>
 
 #include "actions/DatasetPickerAction.h"
 
 using namespace hdps::gui;
 
-class LoadedDatasetsAction : public PluginAction
+class ScatterplotPlugin;
+
+class LoadedDatasetsAction : public VerticalGroupAction
 {
-protected:
-
-    class Widget : public WidgetActionWidget {
-    public:
-        Widget(QWidget* parent, LoadedDatasetsAction* currentDatasetAction, const std::int32_t& widgetFlags);
-    };
-
-    QWidget* getWidget(QWidget* parent, const std::int32_t& widgetFlags) override {
-        return new Widget(parent, this, widgetFlags);
-    };
+    Q_OBJECT
+//protected:
+//
+//    class Widget : public WidgetActionWidget {
+//    public:
+//        Widget(QWidget* parent, LoadedDatasetsAction* currentDatasetAction, const std::int32_t& widgetFlags);
+//    };
+//
+//    QWidget* getWidget(QWidget* parent, const std::int32_t& widgetFlags) override {
+//        return new Widget(parent, this, widgetFlags);
+//    };
 
 public:
-    LoadedDatasetsAction(ScatterplotPlugin* scatterplotPlugin);
+    Q_INVOKABLE LoadedDatasetsAction(QObject* parent, const QString& title);
+
+    void initialize(ScatterplotPlugin* scatterplotPlugin);
 
 public: // Serialization
 
@@ -36,9 +41,14 @@ public: // Serialization
      */
     QVariantMap toVariantMap() const override;
 
-protected:
+private:
+    ScatterplotPlugin*      _scatterplotPlugin;             /** Pointer to scatterplot plugin */
     DatasetPickerAction	    _positionDatasetPickerAction;
     DatasetPickerAction     _colorDatasetPickerAction;
 
-    friend class Widget;
+    friend class hdps::AbstractActionsManager;
 };
+
+Q_DECLARE_METATYPE(LoadedDatasetsAction)
+
+inline const auto loadedDatasetsActionMetaTypeId = qRegisterMetaType<LoadedDatasetsAction*>("LoadedDatasetsAction");

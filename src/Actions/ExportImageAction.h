@@ -1,6 +1,6 @@
 #pragma once
 
-#include <actions/GroupAction.h>
+#include <actions/VerticalGroupAction.h>
 #include <actions/IntegralAction.h>
 #include <actions/ToggleAction.h>
 #include <actions/TriggerAction.h>
@@ -16,14 +16,16 @@ using namespace hdps::gui;
 class ScatterplotPlugin;
 
 /**
- * Export image action class
+ * Export action class
  *
- * Action for export to image
+ * Action for exporting to image(s) (and maybe in the future also videos)
  *
  * @author Thomas Kroes
  */
-class ExportImageAction : public GroupAction
+class ExportImageAction : public VerticalGroupAction
 {
+    Q_OBJECT
+
 public:
 
     /** Scale options */
@@ -44,11 +46,17 @@ public:
 public:
 
     /**
-     * Constructor
+     * Construct with \p parent object and \p title
      * @param parent Pointer to parent object
-     * @param scatterplotPlugin Reference to the scatter plot plugin
+     * @param title Title
      */
-    ExportImageAction(QObject* parent, ScatterplotPlugin& scatterplotPlugin);
+    Q_INVOKABLE ExportImageAction(QObject* parent, const QString& title);
+
+    /**
+     * Initialize the selection action with \p scatterplotPlugin
+     * @param scatterplotPlugin Pointer to scatterplot plugin
+     */
+    void initialize(ScatterplotPlugin* scatterplotPlugin);
 
     /** Grab target size from scatter plot widget */
     void initializeTargetSize();
@@ -76,6 +84,20 @@ protected:
     /** Updates the export trigger text, tooltip and read-only */
     void updateExportTrigger();
 
+public: // Serialization
+
+    /**
+     * Load widget action from variant map
+     * @param Variant map representation of the widget action
+     */
+    void fromVariantMap(const QVariantMap& variantMap) override;
+
+    /**
+     * Save widget action to variant map
+     * @return Variant map representation of the widget action
+     */
+    QVariantMap toVariantMap() const override;
+
 public: // Action getters
 
     DimensionsPickerAction& getDimensionsPickerAction() { return _dimensionSelectionAction; }
@@ -89,8 +111,8 @@ public: // Action getters
     DirectoryPickerAction& getDirectoryPickerAction() { return _outputDirectoryAction; }
     TriggersAction& getExportCancelAction() { return _exportCancelAction; }
 
-protected:
-    ScatterplotPlugin&          _scatterplotPlugin;             /** Reference to scatterplot plugin */
+private:
+    ScatterplotPlugin*          _scatterplotPlugin;             /** Pointer to scatterplot plugin */
     DimensionsPickerAction      _dimensionSelectionAction;      /** Dimension selection picker action */
     IntegralAction              _targetWidthAction;             /** Screenshot target width action */
     IntegralAction              _targetHeightAction;            /** Screenshot target height action */

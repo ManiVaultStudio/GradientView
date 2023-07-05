@@ -56,8 +56,6 @@ set(Actions
     src/Actions/MiscellaneousAction.cpp
     src/Actions/PlotAction.h
     src/Actions/PlotAction.cpp
-    src/Actions/PluginAction.h
-    src/Actions/PluginAction.cpp
     src/Actions/PointPlotAction.h
     src/Actions/PointPlotAction.cpp
     src/Actions/PositionAction.h
@@ -68,12 +66,8 @@ set(Actions
     src/Actions/ScalarAction.cpp
     src/Actions/ScalarSourceAction.h
     src/Actions/ScalarSourceAction.cpp
-    #src/Actions/SelectionAction.h
-    #src/Actions/SelectionAction.cpp
     src/Actions/SettingsAction.h
     src/Actions/SettingsAction.cpp
-    src/Actions/SubsetAction.h
-    src/Actions/SubsetAction.cpp
     src/Actions/ExportImageAction.h
     src/Actions/ExportImageAction.cpp
     src/Actions/FilterAction.h

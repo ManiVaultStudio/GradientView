@@ -16,6 +16,8 @@
 #include "graphics/Vector3f.h"
 #include "widgets/DropWidget.h"
 
+#include <DatasetsMimeData.h>
+
 #include <Eigen/Dense>
 #include "Compute/LocalDimensionality.h"
 #include "Compute/RandomWalks.h"
@@ -103,21 +105,34 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _positionDataset(),
     _positionSourceDataset(),
     _numPoints(0),
+    _primaryToolbarAction(this, "PrimaryToolbar"),
+    _secondaryToolbarAction(this, "SecondaryToolbar"),
     _scatterPlotWidget(new ScatterplotWidget()),
     _projectionViews(2, nullptr),
     _selectedView(),
     _dropWidget(nullptr),
-    _settingsAction(this),
+    _settingsAction(this, "SettingsAction"),
     _gradientGraph(new GradientGraph()),
     _selectedDimension(-1),
     _floodFill(10),
     _filterType(filters::FilterType::SPATIAL_PEAK),
     _overlayType(OverlayType::NONE),
-    _colorMapAction(this, "Color map", util::ColorMap::Type::OneDimensional, "RdYlBu", "RdYlBu"),
+    _colorMapAction(this, "Color map", "RdYlBu"),
     _graphTimer(new QTimer(this)),
     _filterLabel(nullptr)
 {
     setObjectName("GradientExplorer");
+
+    getWidget().setFocusPolicy(Qt::ClickFocus);
+
+    _primaryToolbarAction.addAction(&_settingsAction.getRenderModeAction(), 4, GroupAction::Horizontal);
+    _primaryToolbarAction.addAction(&_settingsAction.getPlotAction(), 7, GroupAction::Horizontal);
+    _primaryToolbarAction.addAction(&_settingsAction.getPositionAction(), 10, GroupAction::Horizontal);
+    _primaryToolbarAction.addAction(&_settingsAction.getFilterAction(), 0, GroupAction::Horizontal);
+    _primaryToolbarAction.addAction(&_settingsAction.getOverlayAction(), 0, GroupAction::Horizontal);
+    _primaryToolbarAction.addAction(&_settingsAction.getExportAction(), 0, GroupAction::Horizontal);
+    _primaryToolbarAction.addAction(&_settingsAction.getSelectionAsMaskAction());
+    _primaryToolbarAction.addAction(&_settingsAction.getClearMaskAction());
 
     _dropWidget = new DropWidget(_scatterPlotWidget);
 
@@ -145,8 +160,6 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _graphTimer->setSingleShot(true);
     connect(_graphTimer, &QTimer::timeout, this, &ScatterplotPlugin::computeGraphs);
 
-    getWidget().setFocusPolicy(Qt::ClickFocus);
-
     connect(_scatterPlotWidget, &ScatterplotWidget::customContextMenuRequested, this, [this](const QPoint& point) {
         if (!_positionDataset.isValid())
             return;
@@ -164,16 +177,19 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _dropWidget->initialize([this](const QMimeData* mimeData) -> DropWidget::DropRegions {
         DropWidget::DropRegions dropRegions;
 
-        const auto mimeText = mimeData->text();
-        const auto tokens   = mimeText.split("\n");
+        const auto datasetsMimeData = dynamic_cast<const DatasetsMimeData*>(mimeData);
 
-        if (tokens.count() == 1)
+        if (datasetsMimeData == nullptr)
             return dropRegions;
 
-        const auto datasetGuiName       = tokens[0];
-        const auto datasetId            = tokens[1];
-        const auto dataType             = DataType(tokens[2]);
-        const auto dataTypes            = DataTypes({ PointType , ColorType, ClusterType });
+        if (datasetsMimeData->getDatasets().count() > 1)
+            return dropRegions;
+
+        const auto dataset = datasetsMimeData->getDatasets().first();
+        const auto datasetGuiName = dataset->text();
+        const auto datasetId = dataset->getId();
+        const auto dataType = dataset->getDataType();
+        const auto dataTypes = DataTypes({ PointType , ColorType, ClusterType });
 
         // Check if the data type can be dropped
         if (!dataTypes.contains(dataType))
@@ -262,6 +278,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
 
 ScatterplotPlugin::~ScatterplotPlugin()
 {
+
 }
 
 void ScatterplotPlugin::init()
@@ -272,7 +289,7 @@ void ScatterplotPlugin::init()
 
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    layout->addWidget(_settingsAction.createWidget(&getWidget()));
+    layout->addWidget(_primaryToolbarAction.createWidget(&getWidget()));
 
     _filterLabel = new QLabel();
     _filterLabel->setText("Spatial Peak Ranking");
@@ -317,10 +334,10 @@ void ScatterplotPlugin::init()
     //bottomToolbarLayout->addWidget(_settingsAction.getColoringAction().getColorMapAction().createWidget(&getWidget()));
     bottomToolbarLayout->addWidget(_settingsAction.getPlotAction().getPointPlotAction().getFocusSelection().createWidget(&getWidget()));
     bottomToolbarLayout->addStretch(1);
-    bottomToolbarLayout->addWidget(_settingsAction.getExportAction().createWidget(&getWidget()));
+    //bottomToolbarLayout->addWidget(_settingsAction.getExportImageAction().createWidget(&getWidget()));
     bottomToolbarLayout->addWidget(_settingsAction.getMiscellaneousAction().createCollapsedWidget(&getWidget()));
 
-    layout->addWidget(bottomToolbarWidget, 1);
+    layout->addWidget(_secondaryToolbarAction.createWidget(&getWidget()));
 
     getWidget().setLayout(layout);
 
@@ -328,7 +345,7 @@ void ScatterplotPlugin::init()
     //connect(_scatterPlotWidget, &ScatterplotWidget::initialized, this, &ScatterplotPlugin::updateProjectionData);
 
     //_eventListener.setEventCore(Application::core());
-    _eventListener.addSupportedEventType(static_cast<std::uint32_t>(EventType::DataSelectionChanged));
+    _eventListener.addSupportedEventType(static_cast<std::uint32_t>(EventType::DatasetDataSelectionChanged));
     _eventListener.registerDataEventByType(PointType, std::bind(&ScatterplotPlugin::onDataEvent, this, std::placeholders::_1));
 
     // Load points when the pointer to the position dataset changes
@@ -341,7 +358,7 @@ void ScatterplotPlugin::init()
     connect(&_positionDataset, &Dataset<Points>::dataSelectionChanged, this, &ScatterplotPlugin::updateSelection);
 
     // Update the window title when the GUI name of the position dataset changes
-    connect(&_positionDataset, &Dataset<Points>::dataGuiNameChanged, this, &ScatterplotPlugin::updateWindowTitle);
+    //connect(&_positionDataset, &Dataset<Points>::datasetTextChanged, this, &ScatterplotPlugin::updateWindowTitle);
 
     // Do an initial update of the window title
     updateWindowTitle();
@@ -382,7 +399,7 @@ void ScatterplotPlugin::updateWindowTitle()
     if (!_positionDataset.isValid())
         getWidget().setWindowTitle(getGuiName());
     else
-        getWidget().setWindowTitle(QString("%1: %2").arg(getGuiName(), _positionDataset->getDataHierarchyItem().getFullPathName()));
+        getWidget().setWindowTitle(QString("%1: %2").arg(getGuiName(), _positionDataset->getDataHierarchyItem().getLocation()));
 }
 
 void ScatterplotPlugin::computeStaticData()
@@ -554,9 +571,9 @@ void ScatterplotPlugin::loadData(const Datasets& datasets)
     //_settingsAction.getColoringAction().getColorByAction().setCurrentIndex(1);
 }
 
-void ScatterplotPlugin::onDataEvent(hdps::DataEvent* dataEvent)
+void ScatterplotPlugin::onDataEvent(hdps::DatasetEvent* dataEvent)
 {
-    if (dataEvent->getType() == EventType::DataSelectionChanged)
+    if (dataEvent->getType() == EventType::DatasetDataSelectionChanged)
     {
         if (dataEvent->getDataset() == _positionDataset)
         {
@@ -593,7 +610,6 @@ void ScatterplotPlugin::createSubset(const bool& fromSourceData /*= false*/, con
 void ScatterplotPlugin::onPointSelection()
 {
     Timer timer;
-
     if (!_positionDataset.isValid() || !_positionSourceDataset.isValid() || !_dataInitialized)
         return;
 
@@ -780,7 +796,7 @@ timer.mark("Filter");
         }
 
         _floodScalars->setData<float>(_colorScalars.data(), _colorScalars.size(), 1);
-        events().notifyDatasetChanged(_floodScalars);
+        events().notifyDatasetDataChanged(_floodScalars);
 
         timer.mark("Overlay");
 
@@ -971,7 +987,7 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
         _positionDataset->setSelectionIndices(targetSelectionIndices);
 
         // Notify others that the selection changed
-        events().notifyDatasetSelectionChanged(_positionDataset);
+        events().notifyDatasetDataSelectionChanged(_positionDataset);
 
         //_explanationWidget->update();
 

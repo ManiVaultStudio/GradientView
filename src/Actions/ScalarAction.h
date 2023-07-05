@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PluginAction.h"
+#include <actions/GroupAction.h>
 
 #include "ScalarSourceAction.h"
 
@@ -13,47 +13,21 @@ using namespace hdps::gui;
  *
  * @author Thomas Kroes
  */
-class ScalarAction : public PluginAction
+class ScalarAction : public GroupAction
 {
-
     Q_OBJECT
-
-protected: // Widget
-
-    /** Widget class for scalar action */
-    class Widget : public WidgetActionWidget {
-    public:
-
-        /**
-         * Constructor
-         * @param parent Pointer to parent widget
-         * @param scalarAction Pointer to scalar action
-         */
-        Widget(QWidget* parent, ScalarAction* scalarAction);
-    };
-
-protected:
-
-    /**
-     * Get widget representation of the scalar action
-     * @param parent Pointer to parent widget
-     * @param widgetFlags Widget flags for the configuration of the widget (type)
-     */
-    QWidget* getWidget(QWidget* parent, const std::int32_t& widgetFlags) override {
-        return new Widget(parent, this);
-    };
 
 public:
 
     /**
      * Constructor
-     * @param scatterplotPlugin Pointer to scatter plot plugin
+     * @param parent Pointer to parent object
+     * @param title Title
      * @param minimum Scalar minimum value
      * @param maximum Scalar maximum value
      * @param value Scalar value
-     * @param defaultValue Scalar default value
      */
-    ScalarAction(ScatterplotPlugin* scatterplotPlugin, const QString& title, const float& minimum, const float& maximum, const float& value, const float& defaultValue);
+    Q_INVOKABLE ScalarAction(QObject* parent, const QString& title, const float& minimum = 0.0f, const float& maximum = 100.0f, const float& value = 0.0f);
 
     /**
      * Add dataset to the model
@@ -88,6 +62,21 @@ public:
     /** Determines whether the scalar source is a dataset */
     bool isSourceDataset() const;
 
+protected: // Linking
+
+    /**
+     * Connect this action to a public action
+     * @param publicAction Pointer to public action to connect to
+     * @param recursive Whether to also connect descendant child actions
+     */
+    void connectToPublicAction(WidgetAction* publicAction, bool recursive) override;
+
+    /**
+     * Disconnect this action from its public action
+     * @param recursive Whether to also disconnect descendant child actions
+     */
+    void disconnectFromPublicAction(bool recursive) override;
+
 public: // Serialization
 
     /**
@@ -111,7 +100,7 @@ signals:
 
     /**
      * Signals that the source selection changed
-     * @param sourceIndex Index of the selected source (0 is constant, 1 si selection, above is a dataset)
+     * @param sourceIndex Index of the selected source (0 is constant, 1 is selection, above is a dataset)
      */
     void sourceSelectionChanged(const std::uint32_t& sourceSelectionIndex);
 
@@ -140,7 +129,13 @@ signals:
      */
     void offsetChanged(const float& offset);
 
-protected:
+private:
     DecimalAction           _magnitudeAction;   /** Scalar magnitude action */
     ScalarSourceAction      _sourceAction;      /** Scalar source action */
+
+    friend class hdps::AbstractActionsManager;
 };
+
+Q_DECLARE_METATYPE(ScalarAction)
+
+inline const auto scalarActionMetaTypeId = qRegisterMetaType<ScalarAction*>("ScalarAction");

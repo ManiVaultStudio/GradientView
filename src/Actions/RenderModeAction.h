@@ -1,38 +1,98 @@
 #pragma once
 
-#include "PluginAction.h"
-
-#include <QActionGroup>
-#include <QHBoxLayout>
+#include <actions/OptionAction.h>
+#include <actions/ToggleAction.h>
 
 using namespace hdps::gui;
 
-class QMenu;
+class ScatterplotPlugin;
 
-class RenderModeAction : public PluginAction
+/**
+ * Render mode action class
+ *
+ * Action class for configuring render mode settings
+ *
+ * @author Thomas Kroes
+ */
+class RenderModeAction : public OptionAction
 {
-protected: // Widget
-
-    class Widget : public WidgetActionWidget {
-    public:
-        Widget(QWidget* parent, RenderModeAction* renderModeAction, const std::int32_t& widgetFlags);
-    };
-
-    QWidget* getWidget(QWidget* parent, const std::int32_t& widgetFlags) override {
-        return new Widget(parent, this, widgetFlags);
+    Q_OBJECT
+    
+    enum class RenderMode {
+        ScatterPlot,
+        DensityPlot,
+        ContourPlot,
+        CellPlot
     };
 
 public:
-    RenderModeAction(ScatterplotPlugin* scatterplotPlugin);
 
+    /**
+     * Construct with \p parent and \p title
+     * @param parent Pointer to parent object
+     * @param title Title of the action
+     */
+    Q_INVOKABLE RenderModeAction(QObject* parent, const QString& title);
+
+    /**
+     * Initialize the selection action with \p scatterplotPlugin
+     * @param scatterplotPlugin Pointer to scatterplot plugin
+     */
+    void initialize(ScatterplotPlugin* scatterplotPlugin);
+
+    /**
+     * Get action context menu
+     * @return Pointer to menu
+     */
     QMenu* getContextMenu();
 
-protected:
-    ToggleAction    _scatterPlotAction;
-    ToggleAction    _densityPlotAction;
-    ToggleAction    _contourPlotAction;
-    ToggleAction    _cellPlotAction;
-    QActionGroup    _actionGroup;
+protected: // Linking
 
-    friend class Widget;
+    /**
+     * Connect this action to a public action
+     * @param publicAction Pointer to public action to connect to
+     * @param recursive Whether to also connect descendant child actions
+     */
+    void connectToPublicAction(WidgetAction* publicAction, bool recursive) override;
+
+    /**
+     * Disconnect this action from its public action
+     * @param recursive Whether to also disconnect descendant child actions
+     */
+    void disconnectFromPublicAction(bool recursive) override;
+
+public: // Serialization
+
+    /**
+     * Load widget action from variant map
+     * @param Variant map representation of the widget action
+     */
+    void fromVariantMap(const QVariantMap& variantMap) override;
+
+    /**
+     * Save widget action to variant map
+     * @return Variant map representation of the widget action
+     */
+
+    QVariantMap toVariantMap() const override;
+
+public: // Action getters
+
+    ToggleAction& getScatterPlotAction() { return _scatterPlotAction; }
+    ToggleAction& getDensityPlotAction() { return _densityPlotAction; }
+    ToggleAction& getContourPlotAction() { return _contourPlotAction; }
+    ToggleAction& getCellPlotAction() { return _cellPlotAction; }
+
+private:
+    ScatterplotPlugin*  _scatterplotPlugin;     /** Pointer to scatterplot plugin */
+    ToggleAction        _scatterPlotAction;     /** Trigger action for activating the scatter plot render mode */
+    ToggleAction        _densityPlotAction;     /** Trigger action for activating the density plot render mode */
+    ToggleAction        _contourPlotAction;     /** Trigger action for activating the contour plot render mode */
+    ToggleAction        _cellPlotAction;        /** Trigger action for activating the cell plot render mode */
+
+    friend class hdps::AbstractActionsManager;
 };
+
+Q_DECLARE_METATYPE(RenderModeAction)
+
+inline const auto renderModeActionMetaTypeId = qRegisterMetaType<RenderModeAction*>("RenderModeAction");

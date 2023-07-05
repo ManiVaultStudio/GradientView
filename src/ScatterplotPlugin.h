@@ -15,6 +15,9 @@
 #include "DataMatrix.h"
 #include "Logging.h"
 
+#include <actions/HorizontalToolbarAction.h>
+#include <actions/ColorMap1DAction.h>
+
 #include "Compute/FloodFill.h"
 #include "Compute/KnnIndex.h"
 #include "Compute/KnnGraph.h"
@@ -61,7 +64,7 @@ public:
 
     void init() override;
 
-    void onDataEvent(hdps::DataEvent* dataEvent);
+    void onDataEvent(hdps::DatasetEvent* dataEvent);
     void onPointSelection();
 
     void computeGraphs();
@@ -250,7 +253,9 @@ protected:
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;
-    ColorMapAction              _colorMapAction;            /** Color map action */
+    ColorMap1DAction            _colorMapAction;            /** Color map action */
+    HorizontalToolbarAction     _primaryToolbarAction;      /** Horizontal toolbar for primary content */
+    HorizontalToolbarAction     _secondaryToolbarAction;    /** Secondary toolbar for secondary content */
 };
 
 // =============================================================================

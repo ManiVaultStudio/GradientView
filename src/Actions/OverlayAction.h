@@ -1,13 +1,18 @@
 #pragma once
 
-#include "PluginAction.h"
+#include <actions/WidgetAction.h>
 
-#include "actions/GroupAction.h"
+#include <actions/TriggerAction.h>
+#include <actions/IntegralAction.h>
+#include <actions/ToggleAction.h>
 
 using namespace hdps::gui;
 
-class OverlayAction : public PluginAction
+class ScatterplotPlugin;
+
+class OverlayAction : public WidgetAction
 {
+    Q_OBJECT
 protected: // Widget
     class Widget : public WidgetActionWidget
     {
@@ -21,7 +26,9 @@ protected: // Widget
     }
 
 public:
-    OverlayAction(ScatterplotPlugin* scatterplotPlugin);
+    Q_INVOKABLE OverlayAction(QObject* parent, const QString& title);
+
+    void initialize(ScatterplotPlugin* scatterplotPlugin);
 
     QMenu* getContextMenu();
 
@@ -56,17 +63,22 @@ public: // Action getters
 
     //GroupAction& getOverlayGroupAction() { return _overlayGroupAction; }
 
-protected:
-    TriggerAction                       _computeKnnGraphAction;
+private:
+    ScatterplotPlugin*  _scatterplotPlugin;             /** Pointer to scatterplot plugin */
+    TriggerAction       _computeKnnGraphAction;
 
-    IntegralAction                      _floodDecimal;
-    IntegralAction                      _floodStepsAction;
-    ToggleAction                        _sharedDistAction;
+    IntegralAction      _floodDecimal;
+    IntegralAction      _floodStepsAction;
+    ToggleAction        _sharedDistAction;
 
-    TriggerAction                       _floodOverlayAction;
-    TriggerAction                       _dimensionOverlayAction;
-    TriggerAction                       _dimensionalityOverlayAction;
+    TriggerAction       _floodOverlayAction;
+    TriggerAction       _dimensionOverlayAction;
+    TriggerAction       _dimensionalityOverlayAction;
 
     //QVector<TriggersAction::Trigger>    _triggers;
     //GroupAction _overlayGroupAction;
 };
+
+Q_DECLARE_METATYPE(OverlayAction)
+
+inline const auto overlayActionMetaTypeId = qRegisterMetaType<OverlayAction*>("OverlayAction");

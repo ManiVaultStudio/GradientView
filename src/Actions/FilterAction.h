@@ -1,11 +1,19 @@
 #pragma once
 
-#include "PluginAction.h"
+#include <actions/WidgetAction.h>
+
+#include <actions/TriggerAction.h>
+#include <actions/ToggleAction.h>
+#include <actions/DecimalAction.h>
+#include <actions/IntegralAction.h>
 
 using namespace hdps::gui;
 
-class FilterAction : public PluginAction
+class ScatterplotPlugin;
+
+class FilterAction : public WidgetAction
 {
+    Q_OBJECT
 protected: // Widget
     class Widget : public WidgetActionWidget
     {
@@ -19,7 +27,9 @@ protected: // Widget
     }
 
 public:
-    FilterAction(ScatterplotPlugin* scatterplotPlugin);
+    Q_INVOKABLE FilterAction(QObject* parent, const QString& title);
+
+    void initialize(ScatterplotPlugin* scatterplotPlugin);
 
     QMenu* getContextMenu();
 
@@ -56,6 +66,7 @@ public: // Action getters
     //IntegralAction& getHDOuterFilterSizeAction() { return _hdOuterFilterSizeAction; }
 
 protected:
+    ScatterplotPlugin*  _scatterplotPlugin;             /** Pointer to scatterplot plugin */
     TriggerAction       _spatialPeakFilterAction;
     TriggerAction       _hdPeakFilterAction;
 
@@ -67,3 +78,7 @@ protected:
     IntegralAction      _hdInnerFilterSizeAction;
     //IntegralAction      _hdOuterFilterSizeAction;
 };
+
+Q_DECLARE_METATYPE(FilterAction)
+
+inline const auto filterActionMetaTypeId = qRegisterMetaType<FilterAction*>("FilterAction");

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PluginAction.h"
+#include <actions/VerticalGroupAction.h>
 
 #include <PointData/DimensionPickerAction.h>
 
@@ -16,40 +16,18 @@ using namespace hdps::gui;
  *
  * @author Thomas Kroes
  */
-class PositionAction : public PluginAction
+class PositionAction : public VerticalGroupAction
 {
-protected: // Widget
-
-    /** Widget class for position action */
-    class Widget : public WidgetActionWidget {
-    public:
-
-        /**
-         * Constructor
-         * @param parent Pointer to parent widget
-         * @param positionAction Pointer to position action
-         */
-        Widget(QWidget* parent, PositionAction* positionAction, const std::int32_t& widgetFlags);
-    };
-
-protected:
-
-    /**
-     * Get widget representation of the position action
-     * @param parent Pointer to parent widget
-     * @param widgetFlags Widget flags for the configuration of the widget (type)
-     */
-    QWidget* getWidget(QWidget* parent, const std::int32_t& widgetFlags) override {
-        return new Widget(parent, this, widgetFlags);
-    };
+    Q_OBJECT
 
 public:
 
     /**
-     * Constructor
-     * @param scatterplotPlugin Pointer to scatter plot plugin
+     * Construct with \p parent object and \p title
+     * @param parent Pointer to parent object
+     * @param title Title
      */
-    PositionAction(ScatterplotPlugin* scatterplotPlugin);
+    Q_INVOKABLE PositionAction(QObject* parent, const QString& title);
 
     /**
      * Get the context menu for the action
@@ -63,6 +41,21 @@ public:
 
     /** Get current y-dimension */
     std::int32_t getDimensionY() const;
+
+protected: // Linking
+
+    /**
+     * Connect this action to a public action
+     * @param publicAction Pointer to public action to connect to
+     * @param recursive Whether to also connect descendant child actions
+     */
+    void connectToPublicAction(WidgetAction* publicAction, bool recursive) override;
+
+    /**
+     * Disconnect this action from its public action
+     * @param recursive Whether to also disconnect descendant child actions
+     */
+    void disconnectFromPublicAction(bool recursive) override;
 
 public: // Serialization
 
@@ -78,9 +71,18 @@ public: // Serialization
      */
     QVariantMap toVariantMap() const override;
 
-protected:
+public: // Action getters
+
+    DimensionPickerAction& getXDimensionPickerAction() { return _xDimensionPickerAction; }
+    DimensionPickerAction& getYDimensionPickerAction() { return _yDimensionPickerAction; }
+
+private:
     DimensionPickerAction    _xDimensionPickerAction;   /** X-dimension picker action */
     DimensionPickerAction    _yDimensionPickerAction;   /** Y-dimension picker action */
 
-    friend class Widget;
+    friend class hdps::AbstractActionsManager;
 };
+
+Q_DECLARE_METATYPE(PositionAction)
+
+inline const auto positionActionMetaTypeId = qRegisterMetaType<PositionAction*>("PositionAction");

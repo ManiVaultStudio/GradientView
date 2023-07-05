@@ -6,29 +6,47 @@
 #include <QMenu>
 #include <QGroupBox>
 
-OverlayAction::OverlayAction(ScatterplotPlugin* scatterplotPlugin) :
-    PluginAction(scatterplotPlugin, "Filter"),
+OverlayAction::OverlayAction(QObject* parent, const QString& title) :
+    WidgetAction(parent, "Overlay Settings"),
+    _scatterplotPlugin(nullptr),
     _computeKnnGraphAction(this, "Compute Floods"),
-    _floodDecimal(this, "Flood nodes", 10, 500, 10, 10),
-    _floodStepsAction(this, "Flood steps", 2, 50, 10, 10),
-    _sharedDistAction(this, "Shared distances", false, false),
+    _floodDecimal(this, "Flood nodes", 10, 500, 10),
+    _floodStepsAction(this, "Flood steps", 2, 50, 10),
+    _sharedDistAction(this, "Shared distances", false),
     _floodOverlayAction(this, "Flood Steps"),
     _dimensionOverlayAction(this, "Top Dimension Values"),
     _dimensionalityOverlayAction(this, "Local Dimensionality")
     //_overlayGroupAction(this, true)
 {
-    setSerializationName("OverlaySettings");
-
-    _floodDecimal.setSerializationName("FloodSize");
-    _floodStepsAction.setSerializationName("FloodSteps");
-    _sharedDistAction.setSerializationName("SharedDistance");
-
-    _floodOverlayAction.setSerializationName("FloodOverlay");
-    _dimensionOverlayAction.setSerializationName("DimensionOverlay");
-    _dimensionalityOverlayAction.setSerializationName("DimensionalityOverlay");
-
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("image"));
 
+    setConfigurationFlag(WidgetAction::ConfigurationFlag::ForceCollapsedInGroup);
+
+    //_triggers << TriggersAction::Trigger("Flood Steps", "Color flood points by closeness to seed point in HD space");
+    //_triggers << TriggersAction::Trigger("Top Dimension Values", "Color flood points by values of top ranked dimension");
+    //_triggers << TriggersAction::Trigger("Local Dimensionality", "Color flood points by local intrinsic dimensionality");
+    //_triggers << TriggersAction::Trigger("Directions", "Show major eigenvector directions over flood points");
+
+    //_overlayGroupAction.setText("Flood Nodes Overlay");
+    //_overlayGroupAction.setShowLabels(false);
+
+    //TriggersAction* overlayTriggers = new TriggersAction(&_overlayGroupAction, "Overlay Triggers", _triggers);
+
+    //connect(overlayTriggers, &TriggersAction::triggered, this, [scatterplotPlugin](int32_t triggerIndex)
+    //{
+    //    scatterplotPlugin->getScatterplotWidget().showDirections(false);
+    //    switch (triggerIndex)
+    //    {
+    //    case 0: scatterplotPlugin->setOverlayType(OverlayType::NONE); break;
+    //    case 1: scatterplotPlugin->setOverlayType(OverlayType::DIM_VALUES); break;
+    //    case 2: scatterplotPlugin->setOverlayType(OverlayType::LOCAL_DIMENSIONALITY); break;
+    //    case 3: {scatterplotPlugin->setOverlayType(OverlayType::DIRECTIONS); scatterplotPlugin->getScatterplotWidget().showDirections(true); break; }
+    //    }
+    //});
+}
+
+void OverlayAction::initialize(ScatterplotPlugin* scatterplotPlugin)
+{
     connect(&_computeKnnGraphAction, &TriggerAction::triggered, this, [scatterplotPlugin](bool enabled)
     {
         scatterplotPlugin->createKnnIndex();
@@ -67,28 +85,6 @@ OverlayAction::OverlayAction(ScatterplotPlugin* scatterplotPlugin) :
         scatterplotPlugin->setOverlayType(OverlayType::LOCAL_DIMENSIONALITY);
         scatterplotPlugin->onPointSelection();
     });
-
-    //_triggers << TriggersAction::Trigger("Flood Steps", "Color flood points by closeness to seed point in HD space");
-    //_triggers << TriggersAction::Trigger("Top Dimension Values", "Color flood points by values of top ranked dimension");
-    //_triggers << TriggersAction::Trigger("Local Dimensionality", "Color flood points by local intrinsic dimensionality");
-    //_triggers << TriggersAction::Trigger("Directions", "Show major eigenvector directions over flood points");
-
-    //_overlayGroupAction.setText("Flood Nodes Overlay");
-    //_overlayGroupAction.setShowLabels(false);
-
-    //TriggersAction* overlayTriggers = new TriggersAction(&_overlayGroupAction, "Overlay Triggers", _triggers);
-
-    //connect(overlayTriggers, &TriggersAction::triggered, this, [scatterplotPlugin](int32_t triggerIndex)
-    //{
-    //    scatterplotPlugin->getScatterplotWidget().showDirections(false);
-    //    switch (triggerIndex)
-    //    {
-    //    case 0: scatterplotPlugin->setOverlayType(OverlayType::NONE); break;
-    //    case 1: scatterplotPlugin->setOverlayType(OverlayType::DIM_VALUES); break;
-    //    case 2: scatterplotPlugin->setOverlayType(OverlayType::LOCAL_DIMENSIONALITY); break;
-    //    case 3: {scatterplotPlugin->setOverlayType(OverlayType::DIRECTIONS); scatterplotPlugin->getScatterplotWidget().showDirections(true); break; }
-    //    }
-    //});
 }
 
 QMenu* OverlayAction::getContextMenu()
@@ -145,61 +141,26 @@ OverlayAction::Widget::Widget(QWidget* parent, OverlayAction* overlayAction, con
     setToolTip("Overlay settings");
     //setStyleSheet("QToolButton { width: 36px; height: 36px; qproperty-iconSize: 18px; }");
 
-    // Add widgets
-    if (widgetFlags & PopupLayout)
-    {
-        auto layout = new QGridLayout();
+    auto layout = new QGridLayout();
 
-        layout->setContentsMargins(4, 4, 4, 4);
+    layout->setContentsMargins(4, 4, 4, 4);
 
-        layout->addWidget(overlayAction->getComputeKnnGraphAction().createLabelWidget(this), 0, 0);
-        layout->addWidget(overlayAction->getComputeKnnGraphAction().createWidget(this), 0, 1);
+    layout->addWidget(overlayAction->getComputeKnnGraphAction().createLabelWidget(this), 0, 0);
+    layout->addWidget(overlayAction->getComputeKnnGraphAction().createWidget(this), 0, 1);
 
-        layout->addWidget(overlayAction->getFloodDecimalAction().createLabelWidget(this), 1, 0);
-        layout->addWidget(overlayAction->getFloodDecimalAction().createWidget(this), 1, 1);
+    layout->addWidget(overlayAction->getFloodDecimalAction().createLabelWidget(this), 1, 0);
+    layout->addWidget(overlayAction->getFloodDecimalAction().createWidget(this), 1, 1);
 
-        layout->addWidget(overlayAction->getFloodStepsAction().createLabelWidget(this), 2, 0);
-        layout->addWidget(overlayAction->getFloodStepsAction().createWidget(this), 2, 1);
+    layout->addWidget(overlayAction->getFloodStepsAction().createLabelWidget(this), 2, 0);
+    layout->addWidget(overlayAction->getFloodStepsAction().createWidget(this), 2, 1);
 
-        layout->addWidget(overlayAction->getSharedDistAction().createLabelWidget(this), 3, 0);
-        layout->addWidget(overlayAction->getSharedDistAction().createWidget(this), 3, 1);
+    layout->addWidget(overlayAction->getSharedDistAction().createLabelWidget(this), 3, 0);
+    layout->addWidget(overlayAction->getSharedDistAction().createWidget(this), 3, 1);
 
-        layout->addWidget(new QLabel("Color flood nodes by:", parent), 4, 0);
-        layout->addWidget(overlayAction->getFloodOverlayAction().createWidget(this), 5, 0);
-        layout->addWidget(overlayAction->getDimensionOverlayAction().createWidget(this), 5, 1);
-        layout->addWidget(overlayAction->getDimensionalityOverlayAction().createWidget(this), 5, 2);
+    layout->addWidget(new QLabel("Color flood nodes by:", parent), 4, 0);
+    layout->addWidget(overlayAction->getFloodOverlayAction().createWidget(this), 5, 0);
+    layout->addWidget(overlayAction->getDimensionOverlayAction().createWidget(this), 5, 1);
+    layout->addWidget(overlayAction->getDimensionalityOverlayAction().createWidget(this), 5, 2);
 
-        auto mainLayout = new QVBoxLayout();
-
-        mainLayout->setContentsMargins(4, 4, 4, 4);
-
-        setLayout(mainLayout);
-
-        auto groupBox = new QGroupBox("Filter Settings");
-
-        groupBox->setLayout(layout);
-        groupBox->setCheckable(false);
-
-        mainLayout->addWidget(groupBox);
-    }
-    else
-    {
-        auto layout = new QHBoxLayout();
-
-        layout->setContentsMargins(0, 0, 0, 0);
-
-        //layout->addWidget(filterAction->getInnerFilterSizeAction().createLabelWidget(this));
-        //layout->addWidget(filterAction->getInnerFilterSizeAction().createWidget(this));
-
-        //layout->addWidget(filterAction->getOuterFilterSizeAction().createLabelWidget(this));
-        //layout->addWidget(filterAction->getOuterFilterSizeAction().createWidget(this));
-
-        //layout->addWidget(filterAction->getHDInnerFilterSizeAction().createLabelWidget(this));
-        //layout->addWidget(filterAction->getHDInnerFilterSizeAction().createWidget(this));
-
-        //layout->addWidget(filterAction->getHDOuterFilterSizeAction().createLabelWidget(this));
-        //layout->addWidget(filterAction->getHDOuterFilterSizeAction().createWidget(this));
-
-        setLayout(layout);
-    }
+    setLayout(layout);
 }

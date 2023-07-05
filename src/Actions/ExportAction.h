@@ -1,13 +1,16 @@
 #pragma once
 
-#include "PluginAction.h"
+#include <actions/WidgetAction.h>
 
-#include "actions/GroupAction.h"
+#include <Actions/TriggerAction.h>
 
 using namespace hdps::gui;
 
-class ExportAction : public PluginAction
+class ScatterplotPlugin;
+
+class ExportAction : public WidgetAction
 {
+    Q_OBJECT
 protected: // Widget
     class Widget : public WidgetActionWidget
     {
@@ -21,7 +24,9 @@ protected: // Widget
     }
 
 public:
-    ExportAction(ScatterplotPlugin* scatterplotPlugin);
+    Q_INVOKABLE ExportAction(QObject* parent, const QString& title);
+
+    void initialize(ScatterplotPlugin* scatterplotPlugin);
 
     QMenu* getContextMenu();
 
@@ -40,3 +45,7 @@ protected:
     TriggerAction       _exportFloodnodesAction;
     TriggerAction       _importKnnGraphAction;
 };
+
+Q_DECLARE_METATYPE(ExportAction)
+
+inline const auto exportActionMetaTypeId = qRegisterMetaType<ExportAction*>("ExportAction");

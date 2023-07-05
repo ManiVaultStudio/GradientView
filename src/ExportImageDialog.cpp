@@ -10,7 +10,7 @@ using namespace hdps;
 ExportImageDialog::ExportImageDialog(QWidget* parent, ScatterplotPlugin& scatterplotPlugin) :
     QDialog(parent),
     _scatterplotPlugin(scatterplotPlugin),
-    _exportImageAction(&scatterplotPlugin, scatterplotPlugin)
+    _exportImageAction(&scatterplotPlugin, "ExportImageAction")
 {
     setWindowTitle("Export " + scatterplotPlugin.getPositionDataset()->getGuiName() + " to image(s)");
     setWindowIcon(Application::getIconFont("FontAwesome").getIcon("file-export"));

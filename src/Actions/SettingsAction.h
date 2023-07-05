@@ -1,91 +1,41 @@
 #pragma once
 
-#include "PluginAction.h"
+#include <actions/GroupAction.h>
 
 #include "LoadedDatasetsAction.h"
 #include "RenderModeAction.h"
-#include "PlotAction.h"
 #include "PositionAction.h"
-#include "SubsetAction.h"
+#include "PlotAction.h"
+#include "ExportImageAction.h"
 #include "MiscellaneousAction.h"
+
 #include "FilterAction.h"
 #include "OverlayAction.h"
 #include "ExportAction.h"
-
-#include "actions/WidgetActionStateWidget.h"
 
 using namespace hdps::gui;
 
 class ScatterplotPlugin;
 
-class SettingsAction : public PluginAction
+class SettingsAction : public GroupAction
 {
 public:
-    class SpacerWidget : public QWidget {
-    public:
-        enum class Type {
-            Divider,
-            Spacer
-        };
+    
+    /**
+     * Construct with \p parent object and \p title
+     * @param parent Pointer to parent object
+     * @param title Title
+     */
+    Q_INVOKABLE SettingsAction(QObject* parent, const QString& title);
 
-    public:
-        SpacerWidget(const Type& type = Type::Divider);
-
-        static Type getType(const WidgetActionWidget::State& widgetTypeLeft, const WidgetActionWidget::State& widgetTypeRight);
-        static Type getType(const hdps::gui::WidgetActionStateWidget* stateWidgetLeft, const hdps::gui::WidgetActionStateWidget* stateWidgetRight);
-
-        void setType(const Type& type);
-        static std::int32_t getWidth(const Type& type);
-
-    protected:
-        Type            _type;
-        QHBoxLayout*    _layout;
-        QFrame*         _verticalLine;
-    };
-
-protected: // Widget
-
-    class Widget : public WidgetActionWidget {
-    public:
-        Widget(QWidget* parent, SettingsAction* settingsAction);
-
-        bool eventFilter(QObject* object, QEvent* event);
-
-    protected:
-        void addStateWidget(WidgetAction* widgetAction, const std::int32_t& priority = 0);
-
-    private:
-        void updateLayout();
-
-    protected:
-        QHBoxLayout                         _layout;
-        QWidget                             _toolBarWidget;
-        QHBoxLayout                         _toolBarLayout;
-        QVector<WidgetActionStateWidget*>   _stateWidgets;
-        QVector<SpacerWidget*>              _spacerWidgets;
-
-        friend class SettingsAction;
-    };
-
-    QWidget* getWidget(QWidget* parent, const std::int32_t& widgetFlags) override {
-        return new Widget(parent, this);
-    };
-
-public:
-    SettingsAction(ScatterplotPlugin* scatterplotPlugin);
-
+    /**
+     * Get action context menu
+     * @return Pointer to menu
+     */
     QMenu* getContextMenu();
 
-    RenderModeAction& getRenderModeAction() { return _renderModeAction; }
-    PositionAction& getPositionAction() { return _positionAction; }
-    SubsetAction& getSubsetAction() { return _subsetAction; }
-    PlotAction& getPlotAction() { return _plotAction; }
-    TriggerAction& getExportImageAction() { return _exportImageAction; }
-    MiscellaneousAction& getMiscellaneousAction() { return _miscellaneousAction; }
-    FilterAction& getFilterAction() { return _filterAction; }
-    ExportAction& getExportAction() { return _exportAction; }
-
 public: // Serialization
+
     /**
      * Load plugin from variant map
      * @param Variant map representation of the plugin
@@ -98,14 +48,29 @@ public: // Serialization
      */
     QVariantMap toVariantMap() const override;
 
+public: // Action getters
+    
+    RenderModeAction& getRenderModeAction() { return _renderModeAction; }
+    PositionAction& getPositionAction() { return _positionAction; }
+    PlotAction& getPlotAction() { return _plotAction; }
+    //ExportImageAction& getExportImageAction() { return _exportImageAction; }
+    MiscellaneousAction& getMiscellaneousAction() { return _miscellaneousAction; }
+
+    FilterAction& getFilterAction() { return _filterAction; }
+    OverlayAction& getOverlayAction() { return _overlayAction; }
+    ExportAction& getExportAction() { return _exportAction; }
+    TriggerAction& getSelectionAsMaskAction() { return _selectionAsMaskAction; }
+    TriggerAction& getClearMaskAction() { return _clearMaskAction; }
+
 protected:
+    ScatterplotPlugin*          _scatterplotPlugin;         /** Pointer to scatter plot plugin */
     LoadedDatasetsAction        _currentDatasetAction;
-    RenderModeAction            _renderModeAction;
-    PositionAction              _positionAction;
-    SubsetAction                _subsetAction;
-    PlotAction                  _plotAction;
-    TriggerAction               _exportImageAction;
-    MiscellaneousAction         _miscellaneousAction;
+    RenderModeAction            _renderModeAction;          /** Action for configuring render mode */
+    PositionAction              _positionAction;            /** Action for configuring point positions */
+    PlotAction                  _plotAction;                /** Action for configuring plot settings */
+    //ExportImageAction           _exportImageAction;
+    MiscellaneousAction         _miscellaneousAction;       /** Action for miscellaneous settings */
+
     FilterAction                _filterAction;
     OverlayAction               _overlayAction;
     ExportAction                _exportAction;

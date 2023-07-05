@@ -1,7 +1,7 @@
 #include "ScalarSourceModel.h"
 
-#include "DataHierarchyItem.h"
-#include "Application.h"
+#include <DataHierarchyItem.h>
+#include <Application.h>
 #include <Set.h>
 
 using namespace hdps;
@@ -64,9 +64,9 @@ QVariant ScalarSourceModel::data(const QModelIndex& index, int role) const
             if (row >= DefaultRow::DatasetStart)
             {
                 if (row == 2)
-                    return scalarDataset->getGuiName();
+                    return scalarDataset->text();
                 else
-                    return _showFullPathName ? scalarDataset->getDataHierarchyItem().getFullPathName() : scalarDataset->getGuiName();
+                    return _showFullPathName ? scalarDataset->getLocation() : scalarDataset->text();
             } else {
                 if (row == DefaultRow::Constant)
                     return "Constant";
@@ -101,12 +101,12 @@ void ScalarSourceModel::addDataset(const Dataset<DatasetImpl>& dataset)
     auto& addedDataset = _datasets.last();
 
     // Remove a dataset from the model when it is about to be deleted
-    connect(&addedDataset, &Dataset<DatasetImpl>::dataAboutToBeRemoved, this, [this, &addedDataset]() {
+    connect(&addedDataset, &Dataset<DatasetImpl>::aboutToBeRemoved, this, [this, &addedDataset]() {
         removeDataset(addedDataset);
     });
 
     // Notify others that the model has updated when the dataset GUI name changes
-    connect(&addedDataset, &Dataset<DatasetImpl>::dataGuiNameChanged, this, [this, &addedDataset]() {
+    connect(addedDataset.get(), &DatasetImpl::textChanged, this, [this, &addedDataset]() {
 
         // Get row index of the dataset
         const auto colorDatasetRowIndex = rowIndex(addedDataset);

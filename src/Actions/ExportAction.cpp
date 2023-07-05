@@ -8,14 +8,19 @@
 
 using namespace hdps::gui;
 
-ExportAction::ExportAction(ScatterplotPlugin* scatterplotPlugin) :
-    PluginAction(scatterplotPlugin, "Export"),
-    _exportRankingsAction(scatterplotPlugin, "Export rankings"),
-    _exportFloodnodesAction(scatterplotPlugin, "Export floodnodes"),
-    _importKnnGraphAction(scatterplotPlugin, "Import KNN Graph")
+ExportAction::ExportAction(QObject* parent, const QString& title) :
+    WidgetAction(parent, "Export Settings"),
+    _exportRankingsAction(this, "Export rankings"),
+    _exportFloodnodesAction(this, "Export floodnodes"),
+    _importKnnGraphAction(this, "Import KNN Graph")
 {
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("file-export"));
 
+    setConfigurationFlag(WidgetAction::ConfigurationFlag::ForceCollapsedInGroup);
+}
+
+void ExportAction::initialize(ScatterplotPlugin* scatterplotPlugin)
+{
     connect(&_exportRankingsAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
         scatterplotPlugin->exportRankings();
     });
@@ -52,51 +57,16 @@ ExportAction::Widget::Widget(QWidget* parent, ExportAction* exportAction, const 
     setToolTip("Export settings");
     //setStyleSheet("QToolButton { width: 36px; height: 36px; qproperty-iconSize: 18px; }");
 
-    // Add widgets
-    if (widgetFlags & PopupLayout)
-    {
-        auto layout = new QGridLayout();
+    auto layout = new QGridLayout();
 
-        layout->setContentsMargins(4, 4, 4, 4);
+    layout->setContentsMargins(4, 4, 4, 4);
 
-        layout->addWidget(exportAction->getExportRankingsAction().createLabelWidget(this), 0, 0);
-        layout->addWidget(exportAction->getExportRankingsAction().createWidget(this), 0, 1);
-        layout->addWidget(exportAction->getExportFloodnodesAction().createLabelWidget(this), 1, 0);
-        layout->addWidget(exportAction->getExportFloodnodesAction().createWidget(this), 1, 1);
-        layout->addWidget(exportAction->getImportKnnGraphAction().createLabelWidget(this), 2, 0);
-        layout->addWidget(exportAction->getImportKnnGraphAction().createWidget(this), 2, 1);
+    layout->addWidget(exportAction->getExportRankingsAction().createLabelWidget(this), 0, 0);
+    layout->addWidget(exportAction->getExportRankingsAction().createWidget(this), 0, 1);
+    layout->addWidget(exportAction->getExportFloodnodesAction().createLabelWidget(this), 1, 0);
+    layout->addWidget(exportAction->getExportFloodnodesAction().createWidget(this), 1, 1);
+    layout->addWidget(exportAction->getImportKnnGraphAction().createLabelWidget(this), 2, 0);
+    layout->addWidget(exportAction->getImportKnnGraphAction().createWidget(this), 2, 1);
 
-        auto mainLayout = new QVBoxLayout();
-
-        mainLayout->setContentsMargins(4, 4, 4, 4);
-
-        setLayout(mainLayout);
-
-        auto groupBox = new QGroupBox("Export Settings");
-
-        groupBox->setLayout(layout);
-        groupBox->setCheckable(false);
-
-        mainLayout->addWidget(groupBox);
-    }
-    else
-    {
-        auto layout = new QHBoxLayout();
-
-        layout->setContentsMargins(0, 0, 0, 0);
-
-        //layout->addWidget(filterAction->getInnerFilterSizeAction().createLabelWidget(this));
-        //layout->addWidget(filterAction->getInnerFilterSizeAction().createWidget(this));
-
-        //layout->addWidget(filterAction->getOuterFilterSizeAction().createLabelWidget(this));
-        //layout->addWidget(filterAction->getOuterFilterSizeAction().createWidget(this));
-
-        //layout->addWidget(filterAction->getHDInnerFilterSizeAction().createLabelWidget(this));
-        //layout->addWidget(filterAction->getHDInnerFilterSizeAction().createWidget(this));
-
-        //layout->addWidget(filterAction->getHDOuterFilterSizeAction().createLabelWidget(this));
-        //layout->addWidget(filterAction->getHDOuterFilterSizeAction().createWidget(this));
-
-        setLayout(layout);
-    }
+    setLayout(layout);
 }

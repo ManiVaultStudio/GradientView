@@ -1,27 +1,26 @@
 #include "MiscellaneousAction.h"
-#include "Application.h"
 #include "ScatterplotPlugin.h"
 #include "ScatterplotWidget.h"
 
 using namespace hdps::gui;
 
-const QColor MiscellaneousAction::DEFAULT_BACKGROUND_COLOR = qRgb(22, 22, 22);
+const QColor MiscellaneousAction::DEFAULT_BACKGROUND_COLOR = qRgb(255, 255, 255);
 
-MiscellaneousAction::MiscellaneousAction(ScatterplotPlugin* scatterplotPlugin) :
-    PluginAction(scatterplotPlugin, "Miscellaneous"),
-    _backgroundColorAction(scatterplotPlugin, "Background color")
+MiscellaneousAction::MiscellaneousAction(QObject* parent, const QString& title) :
+    VerticalGroupAction(parent, title),
+    _scatterplotPlugin(dynamic_cast<ScatterplotPlugin*>(parent->parent())),
+    _backgroundColorAction(this, "Background color")
 {
     setIcon(Application::getIconFont("FontAwesome").getIcon("cog"));
+    setLabelSizingType(LabelSizingType::Auto);
+    setConfigurationFlag(WidgetAction::ConfigurationFlag::ForceCollapsedInGroup);
 
-    _scatterplotPlugin->getWidget().addAction(&_backgroundColorAction);
+    addAction(&_backgroundColorAction);
 
     _backgroundColorAction.setColor(DEFAULT_BACKGROUND_COLOR);
-    _backgroundColorAction.setDefaultColor(DEFAULT_BACKGROUND_COLOR);
 
     const auto updateBackgroundColor = [this]() -> void {
-        const auto color = _backgroundColorAction.getColor();
-
-        getScatterplotWidget().setBackgroundColor(color);
+        _scatterplotPlugin->getScatterplotWidget().setBackgroundColor(_backgroundColorAction.getColor());
     };
 
     connect(&_backgroundColorAction, &ColorAction::colorChanged, this, [this, updateBackgroundColor](const QColor& color) {
@@ -40,27 +39,46 @@ QMenu* MiscellaneousAction::getContextMenu()
     return menu;
 }
 
-MiscellaneousAction::Widget::Widget(QWidget* parent, MiscellaneousAction* miscellaneousAction, const std::int32_t& widgetFlags) :
-    WidgetActionWidget(parent, miscellaneousAction, widgetFlags)
+void MiscellaneousAction::connectToPublicAction(WidgetAction* publicAction, bool recursive)
 {
-    auto labelWidget    = miscellaneousAction->_backgroundColorAction.createLabelWidget(this);
-    auto colorWidget    = miscellaneousAction->_backgroundColorAction.createWidget(this);
+    auto publicMiscellaneousAction = dynamic_cast<MiscellaneousAction*>(publicAction);
 
-    if (widgetFlags & PopupLayout) {
-        auto layout = new QGridLayout();
+    Q_ASSERT(publicMiscellaneousAction != nullptr);
 
-        layout->addWidget(labelWidget, 0, 0);
-        layout->addWidget(colorWidget, 0, 1);
+    if (publicMiscellaneousAction == nullptr)
+        return;
 
-        setPopupLayout(layout);
+    if (recursive) {
+        actions().connectPrivateActionToPublicAction(&_backgroundColorAction, &publicMiscellaneousAction->getBackgroundColorAction(), recursive);
     }
-    else {
-        auto layout = new QHBoxLayout();
 
-        layout->setContentsMargins(0, 0, 0, 0);
-        layout->addWidget(labelWidget);
-        layout->addWidget(colorWidget);
+    GroupAction::connectToPublicAction(publicAction, recursive);
+}
 
-        setLayout(layout);
+void MiscellaneousAction::disconnectFromPublicAction(bool recursive)
+{
+    if (!isConnected())
+        return;
+
+    if (recursive) {
+        actions().disconnectPrivateActionFromPublicAction(&_backgroundColorAction, recursive);
     }
+
+    GroupAction::disconnectFromPublicAction(recursive);
+}
+
+void MiscellaneousAction::fromVariantMap(const QVariantMap& variantMap)
+{
+    GroupAction::fromVariantMap(variantMap);
+
+    _backgroundColorAction.fromParentVariantMap(variantMap);
+}
+
+QVariantMap MiscellaneousAction::toVariantMap() const
+{
+    auto variantMap = GroupAction::toVariantMap();
+
+    _backgroundColorAction.insertIntoVariantMap(variantMap);
+
+    return variantMap;
 }
