@@ -16,7 +16,7 @@ PlotAction::PlotAction(QObject* parent, const QString& title) :
 
     addAction(&_pointPlotAction.getSizeAction());
     addAction(&_pointPlotAction.getOpacityAction());
-    addAction(&_pointPlotAction.getFocusSelection());
+    //addAction(&_pointPlotAction.getFocusSelection());
     
     addAction(&_densityPlotAction.getSigmaAction());
     addAction(&_densityPlotAction.getContinuousUpdatesAction());

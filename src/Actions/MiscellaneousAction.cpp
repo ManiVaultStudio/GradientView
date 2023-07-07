@@ -4,7 +4,7 @@
 
 using namespace hdps::gui;
 
-const QColor MiscellaneousAction::DEFAULT_BACKGROUND_COLOR = qRgb(255, 255, 255);
+const QColor MiscellaneousAction::DEFAULT_BACKGROUND_COLOR = qRgb(22, 22, 22);
 
 MiscellaneousAction::MiscellaneousAction(QObject* parent, const QString& title) :
     VerticalGroupAction(parent, title),
