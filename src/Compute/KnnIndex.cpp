@@ -6,6 +6,50 @@
 #include <iostream>
 #include <iomanip>
 
+#include <fstream>
+#include <sstream>
+
+void writeDataMatrixToDisk(const DataMatrix& dataMatrix)
+{
+    uint32_t numPoints = (uint32_t)dataMatrix.rows();
+    uint32_t numDimensions = (uint32_t)dataMatrix.cols();
+
+    // Linearize data
+    std::vector<float> linearData(numPoints * numDimensions);
+    int c = 0;
+    for (int i = 0; i < numPoints; i++)
+    {
+        for (int j = 0; j < numDimensions; j++)
+            linearData[c++] = dataMatrix(i, j);
+    }
+    std::cout << "Linearized data for export" << std::endl;
+    // Write to file
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+
+    std::ostringstream fileName;
+    fileName << "data_matrix";
+    fileName << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
+    fileName << ".data";
+    std::cout << "Writing to file: " << fileName.str() << std::endl;
+    std::ofstream myfile(fileName.str(), std::ios::out | std::ios::binary);
+    if (!myfile) {
+        std::cout << "Cannot open file for writing data matrix!" << std::endl;
+        return;
+    }
+    myfile.write((char*)&numPoints, sizeof(uint32_t));
+    myfile.write((char*)&numDimensions, sizeof(uint32_t));
+
+    for (size_t i = 0; i < linearData.size(); i++)
+    {
+        if (i % 10000 == 0) std::cout << "Progress: " << i << std::endl;
+        myfile.write((char*)&linearData[i], sizeof(uint32_t));
+    }
+
+    myfile.close();
+    std::cout << "Data matrix written to file" << std::endl;
+}
+
 void createFaissGpuIndex(faiss::gpu::StandardGpuResources*& res, faiss::gpu::GpuIndexFlat*& index, int numDimensions, knn::Metric metric)
 {
     res = new faiss::gpu::StandardGpuResources();
