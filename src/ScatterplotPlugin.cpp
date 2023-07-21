@@ -1094,7 +1094,7 @@ void ScatterplotPlugin::createKnnIndex()
     if (_dataStore.getNumDimensions() <= 200)
         _knnIndex.create(_dataStore.getNumDimensions(), knn::Metric::MANHATTAN);
     else
-        _knnIndex.create(_dataStore.getNumDimensions(), knn::Metric::EUCLIDEAN);
+        _knnIndex.create(_dataStore.getNumDimensions(), knn::Metric::COSINE);
     qDebug() << "Adding data";
     _knnIndex.addData(_dataStore.getData());
     qDebug() << "Done creating index";
