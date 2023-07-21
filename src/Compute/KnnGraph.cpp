@@ -82,7 +82,7 @@ void KnnGraph::build(const DataMatrix& data, const knn::Index& index, int numNei
 
     // print results
     printIndices("INDEX", indices, k);
-    printDistances("INDEX", distances.data(), k);
+    //printDistances("INDEX", distances.data(), k);
 
     _numNeighbours = numNeighbours;
     _neighbours.clear();
