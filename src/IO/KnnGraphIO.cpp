@@ -10,7 +10,7 @@
 
 void KnnGraphImporter::read(QString filePath, KnnGraph& graph)
 {
-    std::ifstream myfile(filePath.toStdString(), std::ios::out | std::ios::binary);
+    std::ifstream myfile(filePath.toStdString(), std::ios::in | std::ios::binary);
     if (!myfile) {
         std::cout << "Cannot open file for reading KNN graph!" << std::endl;
         return;
