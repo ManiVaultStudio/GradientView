@@ -35,6 +35,8 @@ void computeDimensionAverage(const DataMatrix& data, const std::vector<int>& ind
 {
     int numDimensions = data.cols();
     averages.resize(numDimensions, 0);
+
+#pragma omp parallel for
     for (int d = 0; d < numDimensions; d++)
     {
         for (const int& index : indices)

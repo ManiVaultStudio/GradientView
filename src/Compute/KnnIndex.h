@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include "DataMatrix.h"
 
 #pragma warning(push, 0) // annoylib.h has some warnings that are 'annoy'ing
 #define ANNOYLIB_MULTITHREADED_BUILD
@@ -14,8 +14,6 @@
 #include <faiss/gpu/StandardGpuResources.h>
 
 using AnnoyIndex = Annoy::AnnoyIndex<int, float, Annoy::Angular, Annoy::Kiss32Random, Annoy::AnnoyIndexMultiThreadedBuildPolicy>;
-
-using DataMatrix = Eigen::MatrixXf;
 
 using idx_t = int64_t;
 
