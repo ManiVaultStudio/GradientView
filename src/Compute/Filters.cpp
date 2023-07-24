@@ -48,61 +48,6 @@ void computeDimensionAverage(const DataMatrix& data, const std::vector<int>& ind
     }
 }
 
-#pragma warning(push)
-#pragma warning(disable:4996) // Disable security warning of localtime
-void writeFloodNodes(const std::vector<std::vector<int>>& floodNodes)
-{
-    auto t = std::time(nullptr);
-    auto tm = *std::localtime(&t);
-
-    std::ostringstream fileName;
-    fileName << "flood_nodes";
-    fileName << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
-    fileName << ".csv";
-
-    std::ofstream myfile;
-    myfile.open(fileName.str());
-    for (int i = 0; i < floodNodes.size(); i++)
-    {
-        for (int d = 0; d < floodNodes[i].size(); d++)
-        {
-            if (d != 0) myfile << ',';
-            myfile << floodNodes[i][d];
-        }
-        myfile << std::endl;
-    }
-
-    myfile.close();
-    std::cout << "Flood nodes written to file" << std::endl;
-}
-
-void writeDimensionRanking(const std::vector<std::vector<int>>& ranking, const std::vector<QString>& names)
-{
-    auto t = std::time(nullptr);
-    auto tm = *std::localtime(&t);
-
-    std::ostringstream fileName;
-    fileName << "rankings";
-    fileName << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
-    fileName << ".csv";
-
-    std::ofstream myfile;
-    myfile.open(fileName.str());
-    for (int i = 0; i < ranking.size(); i++)
-    {
-        for (int d = 0; d < ranking[i].size(); d++)
-        {
-            if (d != 0) myfile << ',';
-            myfile << names[ranking[i][d]].toStdString();
-        }
-        myfile << std::endl;
-    }
-
-    myfile.close();
-    std::cout << "Rankings written to file" << std::endl;
-}
-#pragma warning(pop)
-
 void maskPoints(std::vector<int>& indices, const std::vector<int>& mask, std::vector<int>& intersection)
 {
     // Find the intersection of points that are selected, and the given indices

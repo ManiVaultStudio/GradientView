@@ -22,6 +22,8 @@
 #include "Compute/LocalDimensionality.h"
 #include "Compute/RandomWalks.h"
 #include "Compute/DataTransformations.h"
+#include "IO/RankingExport.h"
+#include "IO/FloodNodeExport.h"
 #include "Timer.h"
 #include "Types.h"
 
@@ -1059,29 +1061,26 @@ void ScatterplotPlugin::onLineClicked(dint dim)
  * Import / Export
  ******************************************************************************/
 
-void ScatterplotPlugin::exportRankings()
+void ScatterplotPlugin::exportDimRankings()
 {
-    std::vector<std::vector<int>> perPointDimRankings(_dataStore.getNumPoints());
-    for (int i = 0; i < _dataStore.getNumPoints(); i++)
-    {
-        FloodFill exportFloodFill(_floodFill.getNumWaves());
-        exportFloodFill.compute(_knnGraph, i);
+    bool restrictToFloodNodes = _settingsAction.getFilterAction().getRestrictToFloodAction().isChecked();
+    exportRankings(_dataStore, _floodFill, _knnGraph, _filterType, _spatialPeakFilter, _hdFloodPeakFilter, restrictToFloodNodes, _enabledDimNames);
+}
 
-        switch (_filterType)
-        {
-        case filters::FilterType::SPATIAL_PEAK:
-            if (_settingsAction.getFilterAction().getRestrictToFloodAction().isChecked())
-                _spatialPeakFilter.computeDimensionRanking(i, _dataStore.getData(), _dataStore.getVariances(), _dataStore.getProjection(), _dataStore.getProjectionSize(), perPointDimRankings[i], exportFloodFill.getAllNodes());
-            else
-                _spatialPeakFilter.computeDimensionRanking(i, _dataStore.getData(), _dataStore.getVariances(), _dataStore.getProjection(), _dataStore.getProjectionSize(), perPointDimRankings[i]);
-            break;
-        case filters::FilterType::HD_PEAK:
-            _hdFloodPeakFilter.computeDimensionRanking(i, _dataStore.getData(), _dataStore.getVariances(), exportFloodFill, perPointDimRankings[i]);
-            break;
-        }
-    }
+void ScatterplotPlugin::exportFloodnodes()
+{
+    exportFloodNodes(_dataStore.getNumPoints(), _floodFill, _knnGraph);
+}
 
-    writeDimensionRanking(perPointDimRankings, _enabledDimNames);
+void ScatterplotPlugin::importKnnGraph()
+{
+    QString fileName = QFileDialog::getOpenFileName(&getWidget(),
+        tr("Open Knn Graph"), "", tr("KNN Files (*.knn)"));
+
+    _largeKnnGraph.readFromFile(fileName);
+    _knnGraph.build(_largeKnnGraph, 10);
+
+    _graphAvailable = true;
 }
 
 /******************************************************************************
@@ -1116,41 +1115,7 @@ void ScatterplotPlugin::computeKnnGraph()
 
     _graphAvailable = true;
     qDebug() << "Done building KNN Graph! Ready for flood-fill.";
-}
-
-void ScatterplotPlugin::exportFloodnodes()
-{
-    std::vector<std::vector<int>> perPointFloodNodes(_dataStore.getNumPoints());
-    for (int p = 0; p < _dataStore.getNumPoints(); p++)
-    {
-        FloodFill exportFloodFill(_floodFill.getNumWaves());
-        exportFloodFill.compute(_knnGraph, p);
-
-        // Store all flood nodes together
-        perPointFloodNodes[p].resize(exportFloodFill.getTotalNumNodes() + exportFloodFill.getNumWaves());
-        int n = 0;
-        for (int i = 0; i < exportFloodFill.getNumWaves(); i++)
-        {
-            perPointFloodNodes[p][n++] = -1;
-            for (int j = 0; j < exportFloodFill.getWaves()[i].size(); j++)
-            {
-                perPointFloodNodes[p][n++] = exportFloodFill.getWaves()[i][j];
-            }
-        }
-    }
-
-    writeFloodNodes(perPointFloodNodes);
-}
-
-void ScatterplotPlugin::importKnnGraph()
-{
-    QString fileName = QFileDialog::getOpenFileName(&getWidget(),
-        tr("Open Knn Graph"), "", tr("KNN Files (*.knn)"));
-
-    _largeKnnGraph.readFromFile(fileName);
-    _knnGraph.build(_largeKnnGraph, 10);
-
-    _graphAvailable = true;
+    _largeKnnGraph.writeToFile();
 }
 
 /******************************************************************************

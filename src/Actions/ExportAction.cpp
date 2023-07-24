@@ -22,7 +22,7 @@ ExportAction::ExportAction(QObject* parent, const QString& title) :
 void ExportAction::initialize(ScatterplotPlugin* scatterplotPlugin)
 {
     connect(&_exportRankingsAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
-        scatterplotPlugin->exportRankings();
+        scatterplotPlugin->exportDimRankings();
     });
     connect(&_exportFloodnodesAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
         scatterplotPlugin->exportFloodnodes();

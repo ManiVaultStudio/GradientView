@@ -144,7 +144,7 @@ private:
     bool eventFilter(QObject* target, QEvent* event);
 
 public:
-    void exportRankings();
+    void exportDimRankings();
     void exportFloodnodes();
     void importKnnGraph();
 
