@@ -109,6 +109,10 @@ set(Compute
 set(IO
     src/IO/KnnGraphIO.h
     src/IO/KnnGraphIO.cpp
+    src/IO/RankingExport.h
+    src/IO/RankingExport.cpp
+    src/IO/FloodNodeExport.h
+    src/IO/FloodNodeExport.cpp
 )
 
 set(SHADERS
