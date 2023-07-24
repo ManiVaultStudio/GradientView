@@ -1,11 +1,9 @@
 #pragma once
 
+#include "DataMatrix.h"
 #include "graphics/Vector2f.h"
 
-#include <Eigen/Dense>
 #include <vector>
-
-using DataMatrix = Eigen::MatrixXf;
 
 class KnnGraph;
 

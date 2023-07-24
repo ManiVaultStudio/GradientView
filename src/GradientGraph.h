@@ -13,8 +13,6 @@
 
 #include <vector>
 
-using DataMatrix = Eigen::MatrixXf;
-
 class LineSeries : public QLineSeries
 {
     Q_OBJECT

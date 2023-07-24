@@ -1,11 +1,9 @@
 #pragma once
 
-#include <Eigen/Eigen>
+#include "DataMatrix.h"
 
 #include <vector>
 #include <QString>
-
-using DataMatrix = Eigen::MatrixXf;
 
 void writeFloodNodes(const std::vector<std::vector<int>>& floodNodes);
 void writeDimensionRanking(const std::vector<std::vector<int>>& ranking, const std::vector<QString>& names);

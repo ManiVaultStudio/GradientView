@@ -7,7 +7,7 @@
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexIVFFlat.h>
 
-using DataMatrix = Eigen::MatrixXf;
+using DataMatrix = Eigen::Matrix<float, -1, -1, Eigen::ColMajor>;
 
 void convertToEigenMatrix(hdps::Dataset<Points> dataset, hdps::Dataset<Points> sourceDataset, DataMatrix& dataMatrix);
 

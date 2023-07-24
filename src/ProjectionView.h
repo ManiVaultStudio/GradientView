@@ -14,8 +14,6 @@
 using namespace hdps;
 using namespace hdps::gui;
 
-using DataMatrix = Eigen::MatrixXf;
-
 /**
  * Projection view class
  *
