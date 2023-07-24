@@ -908,6 +908,9 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
     {
         auto wheelEvent = static_cast<QWheelEvent*>(event);
 
+        if (!_maskDataset.isValid())
+            break;
+
         int mv = wheelEvent->angleDelta().y() > 0 ? -1 : 1;
         cc += mv;
         cc = std::max(std::min(cc, (int) _maskDataset->getClusters().size()-1), 0);
@@ -1268,12 +1271,15 @@ void ScatterplotPlugin::useSelectionAsDataView(std::vector<int>& indices)
     updateViewData(positions);
 
     // Update the color of the points
-    std::vector<float> viewScalars(indices.size());
-    for (int i = 0; i < indices.size(); i++)
+    if (_colorScalars.size() == _positionDataset->getNumPoints())
     {
-        viewScalars[i] = _colorScalars[indices[i]];
+        std::vector<float> viewScalars(indices.size());
+        for (int i = 0; i < indices.size(); i++)
+        {
+            viewScalars[i] = _colorScalars[indices[i]];
+        }
+        getScatterplotWidget().setScalars(viewScalars);
     }
-    getScatterplotWidget().setScalars(viewScalars);
 }
 
 /******************************************************************************
