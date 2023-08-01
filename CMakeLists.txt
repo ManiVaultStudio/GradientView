@@ -24,7 +24,6 @@ set(PLUGIN
     src/Common.h
     src/ScatterplotPlugin.h
     src/ScatterplotPlugin.cpp
-    src/CudaCheck.h
     src/Timer.h
     src/Timer.cpp
     src/Types.h
@@ -127,8 +126,6 @@ set(AUX
     src/GradientExplorerPlugin.json
 )
 
-find_package(CUDA 12.0 REQUIRED)
-
 set(SOURCES ${PLUGIN} ${UI} ${Actions} ${Models} ${Compute} ${IO})
 
 source_group(Plugin FILES ${PLUGIN})
@@ -170,9 +167,10 @@ target_link_libraries(${PROJECT} PRIVATE Qt6::WebEngineWidgets)
 target_link_libraries(${PROJECT} PRIVATE Qt6::OpenGL)
 target_link_libraries(${PROJECT} PRIVATE Qt6::OpenGLWidgets)
 target_link_libraries(${PROJECT} PRIVATE Qt6::Charts)
-target_link_libraries(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/lib/Release/faiss_dll.lib)
-target_link_libraries(${PROJECT} PRIVATE ${CUDA_LIBRARIES})
-target_link_libraries(${PROJECT} PRIVATE ${CUDA_CUBLAS_LIBRARIES})
+target_link_libraries(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/lib/Release/faiss.lib)
+target_link_libraries(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/lib/Release/mkl_core_dll.lib)
+target_link_libraries(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/lib/Release/mkl_intel_ilp64_dll.lib)
+target_link_libraries(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/lib/Release/mkl_intel_thread_dll.lib)
 
 target_link_libraries(${PROJECT} PRIVATE "${HDPS_LINK_LIBRARY}")
 target_link_libraries(${PROJECT} PRIVATE "${POINTDATA_LINK_LIBRARY}")
@@ -200,6 +198,12 @@ add_custom_command(TARGET ${PROJECT} POST_BUILD
         --config $<CONFIGURATION>
         --prefix ${INSTALL_DIR}/$<CONFIGURATION>
 )
+
+# Copy faiss DLLs
+add_custom_command(TARGET ${PROJECT} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_SOURCE_DIR}/thirdparty/faiss/bin/"
+        ${INSTALL_DIR}/$<CONFIGURATION>)
 
 # Automatically set the debug environment (command + working directory) for MSVC
 if(MSVC)

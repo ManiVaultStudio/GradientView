@@ -1,7 +1,5 @@
 #include "KnnIndex.h"
 
-#include "CudaCheck.h"
-
 #include <QDebug>
 #include <iostream>
 #include <iomanip>
@@ -50,18 +48,16 @@ void writeDataMatrixToDisk(const DataMatrix& dataMatrix)
     std::cout << "Data matrix written to file" << std::endl;
 }
 
-void createFaissGpuIndex(faiss::gpu::StandardGpuResources*& res, faiss::gpu::GpuIndexFlat*& index, int numDimensions, knn::Metric metric)
+void createFaissIndex(faiss::IndexFlat*& index, int numDimensions, knn::Metric metric)
 {
-    res = new faiss::gpu::StandardGpuResources();
-
     switch (metric)
     {
     case knn::Metric::MANHATTAN:
-        index = new faiss::gpu::GpuIndexFlat(res, numDimensions, faiss::METRIC_L1); break;
+        index = new faiss::IndexFlat(numDimensions, faiss::METRIC_L1); break;
     case knn::Metric::EUCLIDEAN:
-        index = new faiss::gpu::GpuIndexFlat(res, numDimensions, faiss::METRIC_L2); break;
+        index = new faiss::IndexFlat(numDimensions, faiss::METRIC_L2); break;
     case knn::Metric::COSINE:
-        index = new faiss::gpu::GpuIndexFlat(res, numDimensions, faiss::METRIC_INNER_PRODUCT); break;
+        index = new faiss::IndexFlat(numDimensions, faiss::METRIC_INNER_PRODUCT); break;
     }
 }
 
@@ -73,25 +69,16 @@ void createAnnoyIndex(AnnoyIndex*& index, int numDimensions)
 namespace knn
 {
     Index::Index() :
-        _metric(Metric::EUCLIDEAN),
-        _usingGpuCompute(false)
+        _metric(Metric::EUCLIDEAN)
     {
-        // Establish whether CUDA is available
-        bool hasCudaCapableGpu = checkCuda();
-        if (hasCudaCapableGpu)
-        {
-            qDebug() << "CUDA capable device detected, using fast KNN.";
-            _usingGpuCompute = true;
-        }
-        else
-            qDebug() << "No CUDA device detected, using CPU KNN.";
+
     }
 
     void Index::create(int numDimensions, Metric metric)
     {
         _metric = metric;
-        if (_usingGpuCompute)
-            createFaissGpuIndex(_res, _faissGpuIndex, numDimensions, metric);
+        if (_preciseKnn)
+            createFaissIndex(_faissIndex, numDimensions, metric);
         else
             createAnnoyIndex(_annoyIndex, numDimensions);
     }
@@ -104,24 +91,24 @@ namespace knn
         std::vector<float> indexData;
         linearizeData(data, indexData);
 
-        if (_usingGpuCompute)
+        if (_preciseKnn)
         {
-            _faissGpuIndex->add(numPoints, indexData.data());
+            _faissIndex->add(numPoints, indexData.data());
         }
         else
         {
-            _annoyIndex->load("test.ann");
+            //_annoyIndex->load("test.ann");
             //writeDataMatrixToDisk(data);
             //_annoyIndex->on_disk_build("test.ann");
-            //for (size_t i = 0; i < numPoints; ++i) {
-            //    if (i % 10000 == 0) qDebug() << "Add Progress: " << i;
-            //    _annoyIndex->add_item((int) i, highDimArray.data() + (i * numDimensions));
-            //    if (i % 100 == 0)
-            //        std::cout << "Loading objects ...\t object: " << i + 1 << "\tProgress:" << std::fixed << std::setprecision(2) << (double)i / (double)(numPoints + 1) * 100 << "%\r";
-            //}
+            for (size_t i = 0; i < numPoints; ++i) {
+                if (i % 10000 == 0) qDebug() << "Add Progress: " << i;
+                _annoyIndex->add_item((int) i, indexData.data() + (i * numDimensions));
+                if (i % 100 == 0)
+                    std::cout << "Loading objects ...\t object: " << i + 1 << "\tProgress:" << std::fixed << std::setprecision(2) << (double)i / (double)(numPoints + 1) * 100 << "%\r";
+            }
 
-            //std::cout << "Building index.." << std::endl;
-            //_annoyIndex->build((int) (10 * numDimensions));
+            std::cout << "Building index.." << std::endl;
+            _annoyIndex->build((int) (10 * numDimensions));
             //_annoyIndex->save("test.ann");
         }
     }
@@ -140,11 +127,11 @@ namespace knn
         indices.resize(resultSize);
         distances.resize(resultSize);
 
-        if (_usingGpuCompute)
+        if (_preciseKnn)
         {
             idx_t* I = new idx_t[k * data.rows()];
 
-            _faissGpuIndex->search(data.rows(), query.data(), k, distances.data(), I);
+            _faissIndex->search(data.rows(), query.data(), k, distances.data(), I);
 
             indices.assign(I, I + resultSize);
 

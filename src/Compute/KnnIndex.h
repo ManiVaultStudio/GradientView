@@ -10,8 +10,6 @@
 
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexIVFFlat.h>
-#include <faiss/gpu/GpuIndexFlat.h>
-#include <faiss/gpu/StandardGpuResources.h>
 
 using AnnoyIndex = Annoy::AnnoyIndex<int, float, Annoy::Angular, Annoy::Kiss32Random, Annoy::AnnoyIndexMultiThreadedBuildPolicy>;
 
@@ -38,11 +36,10 @@ namespace knn
 
     private:
         AnnoyIndex*                         _annoyIndex     = nullptr;
-        faiss::gpu::StandardGpuResources*   _res            = nullptr;
-        faiss::gpu::GpuIndexFlat*           _faissGpuIndex  = nullptr;
+        faiss::IndexFlat*                   _faissIndex     = nullptr;
 
         Metric                              _metric;
 
-        bool _usingGpuCompute = false;
+        bool                                _preciseKnn     = true;
     };
 }
