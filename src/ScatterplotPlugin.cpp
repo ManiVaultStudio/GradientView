@@ -722,16 +722,16 @@ timer.mark("Filter");
             case OverlayType::DIM_VALUES:
             {
                 _scatterPlotWidget->setColoredBy("Colored by - Dim: " + _enabledDimNames[dimRanking[0]]);
-                //for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
-                //{
-                //    int node = _floodFill.getAllNodes()[i];
-                //    int index = _mask.empty() ? node : _mask[node];
-                //    _colorScalars[index] = _normalizedData[dimRanking[0]][index];
-                //}
+                for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
+                {
+                    int node = _floodFill.getAllNodes()[i];
+                    int index = _mask.empty() ? node : _mask[node];
+                    _colorScalars[index] = _normalizedData[dimRanking[0]][index];
+                }
                 // TEMP
-                const auto dimValues = _dataStore.getFullData()(Eigen::all, dimRanking[0]);
-                std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
-                _colorScalars.assign(dimV.begin(), dimV.end());
+                //const auto dimValues = _dataStore.getFullData()(Eigen::all, dimRanking[0]);
+                //std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
+                //_colorScalars.assign(dimV.begin(), dimV.end());
                 break;
             }
             case OverlayType::LOCAL_DIMENSIONALITY:
