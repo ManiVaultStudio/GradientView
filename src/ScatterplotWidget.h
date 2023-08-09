@@ -74,6 +74,8 @@ public:
      */
     void setColors(const std::vector<Vector3f>& colors);
 
+    void setPointSize(float pointSize);
+
     /**
      * Set point size scalars
      * @param pointSizeScalars Point size scalars

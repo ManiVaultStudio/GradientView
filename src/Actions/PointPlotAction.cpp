@@ -244,10 +244,14 @@ void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
     if (_scatterplotPlugin == nullptr)
         return;
 
-    if (!_scatterplotPlugin->getPositionDataset().isValid())
-        return;
+    //if (!_scatterplotPlugin->getDataStore().hasData())
+    //    return;
 
-    const auto numberOfPoints = _scatterplotPlugin->getPositionDataset()->getNumPoints();
+    _scatterplotPlugin->getScatterplotWidget().setPointSize(_sizeAction.getMagnitudeAction().getValue());
+
+    return;
+
+    const auto numberOfPoints = _scatterplotPlugin->getDataStore().getProjectionView().rows();
 
     if (numberOfPoints != _pointSizeScalars.size())
         _pointSizeScalars.resize(numberOfPoints);

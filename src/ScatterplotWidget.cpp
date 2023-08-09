@@ -242,6 +242,13 @@ void ScatterplotWidget::setColors(const std::vector<Vector3f>& colors)
     update();
 }
 
+void ScatterplotWidget::setPointSize(float pointSize)
+{
+    _pointRenderer.setPointSize(pointSize);
+
+    update();
+}
+
 void ScatterplotWidget::setPointSizeScalars(const std::vector<float>& pointSizeScalars)
 {
     _pointRenderer.setSizeChannelScalars(pointSizeScalars);
