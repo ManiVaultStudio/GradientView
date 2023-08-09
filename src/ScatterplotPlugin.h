@@ -124,6 +124,9 @@ public:
     void createKnnIndex();
     void computeKnnGraph();
     void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataStore.getBaseData(), _knnIndex, floodNeighbours); }
+
+    FloodFill& getFloodFill() { return _floodFill; }
+
     void setFloodSteps(int numFloodSteps)
     {
         _floodFill.setNumWaves(numFloodSteps);

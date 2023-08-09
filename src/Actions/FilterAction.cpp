@@ -34,6 +34,11 @@ void FilterAction::initialize(ScatterplotPlugin* scatterplotPlugin)
         scatterplotPlugin->getScatterplotWidget().update();
         });
     connect(&_hdPeakFilterAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
+        if (scatterplotPlugin->getFloodFill().getNumWaves() == 0)
+        {
+            qDebug() << "No flood-fill loaded, cannot do HD ranking";
+            return;
+        }
         scatterplotPlugin->setFilterType(filters::FilterType::HD_PEAK);
         scatterplotPlugin->setFilterLabelText("HD Peak Ranking");
         scatterplotPlugin->getScatterplotWidget().showFiltersCircles(false);
