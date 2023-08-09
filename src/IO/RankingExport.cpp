@@ -53,12 +53,12 @@ void exportRankings(DataStorage& dataStore, FloodFill& floodFill, KnnGraph& knnG
         {
         case filters::FilterType::SPATIAL_PEAK:
             if (restrictToFloodNodes)
-                spatialFilter.computeDimensionRanking(i, dataStore.getData(), dataStore.getVariances(), dataStore.getProjection(), dataStore.getProjectionSize(), perPointDimRankings[i], exportFloodFill.getAllNodes());
+                spatialFilter.computeDimensionRanking(i, dataStore.getDataView(), dataStore.getVariances(), dataStore.getProjectionView(), dataStore.getProjectionSize(), perPointDimRankings[i], exportFloodFill.getAllNodes());
             else
-                spatialFilter.computeDimensionRanking(i, dataStore.getData(), dataStore.getVariances(), dataStore.getProjection(), dataStore.getProjectionSize(), perPointDimRankings[i]);
+                spatialFilter.computeDimensionRanking(i, dataStore.getDataView(), dataStore.getVariances(), dataStore.getProjectionView(), dataStore.getProjectionSize(), perPointDimRankings[i]);
             break;
         case filters::FilterType::HD_PEAK:
-            hdFilter.computeDimensionRanking(i, dataStore.getData(), dataStore.getVariances(), exportFloodFill, perPointDimRankings[i]);
+            hdFilter.computeDimensionRanking(i, dataStore.getDataView(), dataStore.getVariances(), exportFloodFill, perPointDimRankings[i]);
             break;
         }
     }

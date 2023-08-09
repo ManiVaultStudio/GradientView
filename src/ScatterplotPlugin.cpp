@@ -423,27 +423,24 @@ void ScatterplotPlugin::computeStaticData()
     {
         logger() << "Converting data to internal format...";
 
-        convertToEigenMatrix(_positionDataset, _positionSourceDataset, _dataStore.getData());
-        convertToEigenMatrixProjection(_positionDataset, _dataStore.getFullProjection());
-        // Update projection matrix and views
-        updateProjectionData();
+        convertToEigenMatrix(_positionDataset, _positionSourceDataset, _dataStore.getBaseData());
+        convertToEigenMatrixProjection(_positionDataset, _dataStore.getBaseFullProjection());
     }
     timer.mark("Data preparation");
 
-    std::cout << "Number of enabled dimensions in the dataset : " << _dataStore.getNumDimensions() << std::endl;
-    _bins.resize(_dataStore.getNumDimensions(), std::vector<int>(30));
-
-    timer.mark("Updating projection and views");
-
     {
         logger() << "Standardizing data...";
-        standardizeData(_dataStore.getData(), _dataStore.getVariances());
+        standardizeData(_dataStore.getBaseData(), _dataStore.getVariances());
     }
 
     {
         logger() << "Normalizing data...";
-        normalizeData(_dataStore.getData(), _normalizedData);
+        normalizeData(_dataStore.getBaseData(), _normalizedData);
     }
+
+    _dataStore.createDataView();
+    // Update projection matrix and views
+    updateProjectionData();
 
     timer.mark("Data transformations");
 
@@ -457,26 +454,29 @@ void ScatterplotPlugin::computeStaticData()
         _largeKnnGraph.writeToFile();
     }
 
-    //_localSpatialDimensionality.clear();
-    //_localHighDimensionality.clear();
+    {
+        //compute::computePCAData(_dataStore.getData());
 
-    //timer.mark("Local dimensionality");
+        //_localSpatialDimensionality.clear();
+        //_localHighDimensionality.clear();
 
-    //compute::computeHDLocalDimensionality(_dataMatrix, _largeKnnGraph, _localHighDimensionality);
-    //getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
-    //getScatterplotWidget().setColorMapRange(0, 1);
-    //getScatterplotWidget().setScalars(_localHighDimensionality);
+        //timer.mark("Local dimensionality");
 
-    //Dataset<Points> localDims = _core->addDataset("Points", "Dimensionality");
+        //compute::computeHDLocalDimensionality(_dataStore.getData(), _largeKnnGraph, _localHighDimensionality);
+        //getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
+        //getScatterplotWidget().setColorMapRange(0, 1);
+        //getScatterplotWidget().setScalars(_localHighDimensionality);
 
-    //localDims->setData(_localHighDimensionality.data(), _localHighDimensionality.size(), 1);
+        //Dataset<Points> localDims = _core->addDataset("Points", "Dimensionality");
 
-    //_core->notifyDatasetAdded(localDims);
+        //localDims->setData(_localHighDimensionality.data(), _localHighDimensionality.size(), 1);
 
-    //computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
-    //getScatterplotWidget().setDirections(_directions);
+        //_core->notifyDatasetAdded(localDims);
 
-    timer.mark("Directions");
+        //computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
+        //getScatterplotWidget().setDirections(_directions);
+        timer.mark("Directions");
+    }
 
     // Get enabled dimension names
     const auto& dimNames = _positionSourceDataset->getDimensionNames();
@@ -489,12 +489,13 @@ void ScatterplotPlugin::computeStaticData()
             _enabledDimNames.push_back(dimNames[i]);
     }
 
+    std::cout << "Number of enabled dimensions in the dataset : " << _dataStore.getNumDimensions() << std::endl;
+    _bins.resize(_dataStore.getNumDimensions(), std::vector<int>(30));
+
     // Set up chart
     _gradientGraph->setNumDimensions((bigint)_enabledDimNames.size());
 
     timer.finish("Graph init");
-
-    _dataStore.storeState();
 }
 
 // Is called when the x, y dimensions chosen by the user change, as well as once when dropping new data into the view
@@ -513,15 +514,15 @@ void ScatterplotPlugin::updateProjectionData()
 
         int xDim = _settingsAction.getPositionAction().getDimensionX();
         int yDim = _settingsAction.getPositionAction().getDimensionY();
-        _dataStore.getProjection() = _dataStore.getFullProjection()(Eigen::all, std::vector<int> { xDim, yDim });
+        _dataStore.createProjectionView(xDim, yDim);
     }
 
     // Convert projection data to 2D vector list
-    std::vector<Vector2f> positions(_dataStore.getProjection().rows());
+    std::vector<Vector2f> positions(_dataStore.getProjectionView().rows());
     {
         logger() << "Convert projection data to 2D vector list...";
-        for (int i = 0; i < _dataStore.getProjection().rows(); i++)
-            positions[i].set(_dataStore.getProjection()(i, 0), _dataStore.getProjection()(i, 1));
+        for (int i = 0; i < _dataStore.getProjectionView().rows(); i++)
+            positions[i].set(_dataStore.getProjectionView()(i, 0), _dataStore.getProjectionView()(i, 1));
     }
 
     // Update the views with the new data
@@ -612,6 +613,7 @@ void ScatterplotPlugin::createSubset(const bool& fromSourceData /*= false*/, con
 void ScatterplotPlugin::onPointSelection()
 {
     Timer timer;
+
     if (!_positionDataset.isValid() || !_positionSourceDataset.isValid() || !_dataInitialized)
         return;
 
@@ -621,11 +623,11 @@ void ScatterplotPlugin::onPointSelection()
     {
 timer.start();
         //_selectedPoint = selection->indices[0];
-        Vector2f center = Vector2f(_dataStore.getProjection()(_selectedPoint, 0), _dataStore.getProjection()(_selectedPoint, 1));
+        Vector2f center = Vector2f(_dataStore.getProjectionView()(_selectedPoint, 0), _dataStore.getProjectionView()(_selectedPoint, 1));
 
         KnnGraph& knnGraph = !_maskedKnn ? _knnGraph : _maskedKnnGraph;
-        DataMatrix& dataMatrix = _mask.empty() ? _dataStore.getData() : _maskedDataMatrix;
-        DataMatrix& projMatrix = _mask.empty() ? _dataStore.getProjection() : _maskedProjMatrix;
+        DataMatrix& dataMatrix = _mask.empty() ? _dataStore.getDataView() : _maskedDataMatrix;
+        DataMatrix& projMatrix = _mask.empty() ? _dataStore.getProjectionView() : _maskedProjMatrix;
         const std::vector<float>& variances = _dataStore.getVariances();
 
         float projectionSize = _dataStore.getProjectionSize();
@@ -706,17 +708,21 @@ timer.mark("Filter");
             {
             case OverlayType::NONE:
             {
-                _scatterPlotWidget->setColoredBy("Colored by - Flood fill step");
-                for (int i = 0; i < _floodFill.getNumWaves(); i++)
+                if (_floodFill.getNumWaves() > 0)
                 {
-                    for (int j = 0; j < _floodFill.getWaves()[i].size(); j++)
+                    _scatterPlotWidget->setColoredBy("Colored by - Flood fill step");
+                    for (int i = 0; i < _floodFill.getNumWaves(); i++)
                     {
-                        int index = _floodFill.getWaves()[i][j];
-                        _colorScalars[_mask.empty() ? index : _mask[index]] = 1 - (1.0f / _floodFill.getNumWaves()) * i;
+                        for (int j = 0; j < _floodFill.getWaves()[i].size(); j++)
+                        {
+                            int index = _floodFill.getWaves()[i][j];
+                            _colorScalars[_mask.empty() ? index : _mask[index]] = 1 - (1.0f / _floodFill.getNumWaves()) * i;
+                        }
                     }
                 }
+                else
+                    _scatterPlotWidget->setColoredBy("Colored by - None");
 
-                //_scatterPlotWidget->setColorMapRange(0, 1);
                 break;
             }
             case OverlayType::DIM_VALUES:
@@ -765,7 +771,7 @@ timer.mark("Filter");
             }
             }
         }
-        
+
         // Compute scalars of view
         if (viewIndices.size() > 0)
         {
@@ -780,27 +786,37 @@ timer.mark("Filter");
         else
             getScatterplotWidget().setScalars(_colorScalars);
 
+        timer.mark("Compute color scalars");
+
         // Store scalars in floodfill dataset
         float scalarMin = std::numeric_limits<float>::max();
         float scalarMax = -std::numeric_limits<float>::max();
 
-        // Normalize it first
+        // Compute min and max of scalars
         for (int i = 0; i < _colorScalars.size(); i++)
         {
             if (_colorScalars[i] < scalarMin) scalarMin = _colorScalars[i];
             if (_colorScalars[i] > scalarMax) scalarMax = _colorScalars[i];
         }
-        float invScalarRange = 1.0f / (scalarMax - scalarMin);
-#pragma omp parallel for
-        for (int i = 0; i < _colorScalars.size(); i++)
+        float scalarRange = scalarMax - scalarMin;
+        
+        if (scalarRange != 0)
         {
-            _colorScalars[i] = (_colorScalars[i] - scalarMin) * invScalarRange;
+            float invScalarRange = 1.0f / (scalarMax - scalarMin);
+            // Normalize the scalars
+#pragma omp parallel for
+            for (int i = 0; i < _colorScalars.size(); i++)
+            {
+                _colorScalars[i] = (_colorScalars[i] - scalarMin) * invScalarRange;
+            }
         }
+
+        std::cout << "Color scalars: " << _colorScalars[1000] << std::endl;
 
         _floodScalars->setData<float>(_colorScalars.data(), _colorScalars.size(), 1);
         events().notifyDatasetDataChanged(_floodScalars);
 
-        timer.mark("Overlay");
+        timer.mark("Publish color scalars");
 
         /////////////////////
         // Graphs          //
@@ -849,7 +865,7 @@ void ScatterplotPlugin::updateViewScalars()
         selectedView->selectView(true);
 
         int selectedDimension = selectedView->getShownDimension();
-        const auto dimValues = _dataStore.getData()(Eigen::all, selectedDimension);
+        const auto dimValues = _dataStore.getDataView()(Eigen::all, selectedDimension);
         std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
         getScatterplotWidget().setScalars(dimV);
         getScatterplotWidget().setProjectionName("Dimension View: " + _enabledDimNames[selectedDimension]);
@@ -914,7 +930,7 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
         int mv = wheelEvent->angleDelta().y() > 0 ? -1 : 1;
         cc += mv;
         cc = std::max(std::min(cc, (int) _maskDataset->getClusters().size()-1), 0);
-        qDebug() << "Beep2";
+        
         //Dataset<Points> selection = _positionDataset->getSelection();
 
         std::vector<uint32_t>& uindices = _maskDataset->getClusters()[cc].getIndices();
@@ -957,7 +973,7 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
             //for (const int maskIndex : mask)
             {
                 int maskIndex = mask[i];
-                const Vector2f position(_dataStore.getProjection()(maskIndex, 0), _dataStore.getProjection()(maskIndex, 1));
+                const Vector2f position(_dataStore.getProjectionView()(maskIndex, 0), _dataStore.getProjectionView()(maskIndex, 1));
                 const auto pointUV = Vector2f((position.x - bounds.getLeft()) / bounds.getWidth(), (bounds.getTop() - position.y) / bounds.getHeight());
                 const auto uvOffset = Vector2f((w - size) / 2.0f, (h - size) / 2.0f);
                 const auto uv = uvOffset + Vector2f(pointUV.x * size, pointUV.y * size);
@@ -976,9 +992,15 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
         // Loop over either all points or only the masked points and establish whether they are selected or not
         std::vector<int> full(_dataStore.getNumPoints());
         std::iota(full.begin(), full.end(), 0);
-        _selectedPoint = findSelectedPoint(_mask.empty() ? full: _mask);
+        int selectedPoint = findSelectedPoint(_mask.empty() ? full: _mask);
+
+        // Check if the selected point is the same as the previous, then dont update
+        if (selectedPoint == _selectedPoint)
+            break;
+
+        _selectedPoint = selectedPoint;
         _globalSelectedPoint = _mask.empty() ? _selectedPoint : _mask[_selectedPoint];
-        int selectedPoint = _globalSelectedPoint;
+        selectedPoint = _globalSelectedPoint;
 
         // If we're looking at a subset of the projection, apply subset indirection to selected index
         if (!_positionDataset->isFull())
@@ -1098,7 +1120,7 @@ void ScatterplotPlugin::createKnnIndex()
     else
         _knnIndex.create(_dataStore.getNumDimensions(), knn::Metric::COSINE);
     qDebug() << "Adding data";
-    _knnIndex.addData(_dataStore.getData());
+    _knnIndex.addData(_dataStore.getBaseData());
     qDebug() << "Done creating index";
 }
 
@@ -1106,11 +1128,11 @@ void ScatterplotPlugin::computeKnnGraph()
 {
     qDebug() << "Building KNN Graph..";
     if (!_preloadedKnnGraph)
-        _largeKnnGraph.build(_dataStore.getData(), _knnIndex, 30);
+        _largeKnnGraph.build(_dataStore.getBaseData(), _knnIndex, 30);
 
     if (_useSharedDistances)
     {
-        _sourceKnnGraph.build(_dataStore.getData(), _knnIndex, 100);
+        _sourceKnnGraph.build(_dataStore.getBaseData(), _knnIndex, 100);
         _knnGraph.build(_sourceKnnGraph, 10, true);
     }
     else
@@ -1225,8 +1247,8 @@ void ScatterplotPlugin::useSelectionAsMask()
         opacityScalars[maskIndex] = 1.0f;
     getScatterplotWidget().setPointOpacityScalars(opacityScalars);
 
-    _maskedDataMatrix = _dataStore.getData()(_mask, Eigen::all);
-    _maskedProjMatrix = _dataStore.getProjection()(_mask, Eigen::all);
+    _maskedDataMatrix = _dataStore.getDataView()(_mask, Eigen::all);
+    _maskedProjMatrix = _dataStore.getProjectionView()(_mask, Eigen::all);
 
     if (_maskedKnn)
     {
@@ -1259,12 +1281,17 @@ void ScatterplotPlugin::useSelectionAsDataView(std::vector<int>& indices)
 
     _dataStore.createDataView(indices);
 
+    int xDim = _settingsAction.getPositionAction().getDimensionX();
+    int yDim = _settingsAction.getPositionAction().getDimensionY();
+    qDebug() << "Selected dimensions: " << xDim << yDim;
+    _dataStore.createProjectionView(xDim, yDim);
+
     // Convert projection data to 2D vector list
-    std::vector<Vector2f> positions(_dataStore.getProjection().rows());
+    std::vector<Vector2f> positions(_dataStore.getProjectionView().rows());
     {
         logger() << "Convert projection data to 2D vector list...";
-        for (int i = 0; i < _dataStore.getProjection().rows(); i++)
-            positions[i].set(_dataStore.getProjection()(i, 0), _dataStore.getProjection()(i, 1));
+        for (int i = 0; i < _dataStore.getProjectionView().rows(); i++)
+            positions[i].set(_dataStore.getProjectionView()(i, 0), _dataStore.getProjectionView()(i, 1));
     }
 
     // Update the views with the new data

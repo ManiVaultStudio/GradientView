@@ -7,61 +7,66 @@
 class DataStorage
 {
 public:
-    DataMatrix& getData() { return _currentDataView; }
-    DataMatrix& getFullData() { return _dataMatrix; }
-    DataMatrix& getProjection() { return _currentProjView; }
-    DataMatrix& getFullProjection() { return _currentFullProjView; }
-    std::vector<float>& getVariances() { return _variancesView; }
+    // Base getters
+    DataMatrix& getBaseData() { return _dataMatrix; }
+    DataMatrix& getBaseFullProjection() { return _fullProjMatrix; }
+    bool hasData() { return _hasBaseData; }
+
+    // View getters
+    DataMatrix& getDataView() { return _dataView; }
+    DataMatrix& getFullProjectionView() { return _fullProjectionView; }
+    DataMatrix& getProjectionView() { return _projectionView; }
 
     const std::vector<int>& getViewIndices() const { return _viewIndices; }
 
-    int getNumPoints() { return _currentDataView.rows(); }
-    int getNumDimensions() { return _currentDataView.cols(); }
+    // Auxilliary data getters
+    std::vector<float>& getVariances() { return _variances; }
+
+    int getNumPoints() { return _dataView.rows(); }
+    int getNumDimensions() { return _dataView.cols(); }
 
     void setProjectionSize(float projectionSize) { _projectionSize = projectionSize; }
     float getProjectionSize() { return _projectionSize; }
 
-    void storeState()
+    void createDataView()
     {
-        _dataMatrix = _currentDataView;
-        _fullProjMatrix = _currentFullProjView;
-        _projMatrix = _currentProjView;
+        _dataView = _dataMatrix;
+        _fullProjectionView = _fullProjMatrix;
 
-        //_variances = _variancesView;
+        _viewIndices.resize(_projectionView.rows());
+        std::iota(_viewIndices.begin(), _viewIndices.end(), 0);
+
+        _hasBaseData = true;
     }
 
     void createDataView(const std::vector<int>& indices)
     {
-        _currentDataView = _dataMatrix(indices, Eigen::all);
-        _currentFullProjView = _fullProjMatrix(indices, Eigen::all);
-        _currentProjView = _projMatrix(indices, Eigen::all);
-
-        //_variancesView.resize(indices.size());
-        //for (int i = 0; i < indices.size(); i++)
-        //{
-        //    _variancesView[i] = _variances[indices[i]];
-        //}
+        _dataView = _dataMatrix(indices, Eigen::all);
+        _fullProjectionView = _fullProjMatrix(indices, Eigen::all);
 
         _viewIndices = indices;
     }
 
+    void createProjectionView(int xDim, int yDim)
+    {
+        getProjectionView() = getFullProjectionView()(Eigen::all, std::vector<int> { xDim, yDim });
+    }
+
 private:
     // Stored state
-    // Data
+    // Base Data
     DataMatrix                      _dataMatrix;
-    std::vector<float>              _variances;
-
-    // Projection
     DataMatrix                      _fullProjMatrix;
-    DataMatrix                      _projMatrix;
     float                           _projectionSize = 0;
 
     // View
-    DataMatrix                      _currentDataView;
-    std::vector<float>              _variancesView;
-
-    DataMatrix                      _currentFullProjView;
-    DataMatrix                      _currentProjView;
+    DataMatrix                      _dataView;
+    DataMatrix                      _fullProjectionView;
+    DataMatrix                      _projectionView;
 
     std::vector<int>                _viewIndices;
+
+    // Auxilliary data
+    std::vector<float>              _variances;
+    bool                            _hasBaseData = false;
 };

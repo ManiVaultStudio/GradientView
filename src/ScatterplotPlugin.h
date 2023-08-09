@@ -117,11 +117,13 @@ public:
 
     filters::SpatialPeakFilter& getSpatialPeakFilter()  { return _spatialPeakFilter; }
     filters::HDFloodPeakFilter& getHDPeakFilter()       { return _hdFloodPeakFilter; }
+    
+    DataStorage& getDataStore()                         { return _dataStore; }
     float getProjectionSize()                           { return _dataStore.getProjectionSize(); }
 
     void createKnnIndex();
     void computeKnnGraph();
-    void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataStore.getData(), _knnIndex, floodNeighbours); }
+    void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataStore.getBaseData(), _knnIndex, floodNeighbours); }
     void setFloodSteps(int numFloodSteps)
     {
         _floodFill.setNumWaves(numFloodSteps);
