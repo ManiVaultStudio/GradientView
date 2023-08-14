@@ -37,6 +37,8 @@ class GradientGraph : public QWidget
 public:
     GradientGraph();
 
+    void reset();
+
     void setNumDimensions(dint numDimensions);
     void setValues(const std::vector<std::vector<float>>& values);
     void setBins(const std::vector<std::vector<int>>& bins);

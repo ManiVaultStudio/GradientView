@@ -69,6 +69,25 @@ GradientGraph::GradientGraph() :
     setLayout(layout);
 }
 
+void GradientGraph::reset()
+{
+    _numDimensions = 0;
+
+    for (int i = 0; i < _seriesArray.size(); i++)
+    {
+        delete _seriesArray[i];
+    }
+    _seriesArray.clear();
+    _chart->removeAllSeries();
+
+    _xAxis->setRange(0, 1);
+    _yAxis->setRange(0, 1);
+
+    _topDimension1 = -1;
+    _topDimension2 = -1;
+    _selectedDimension = -1;
+}
+
 void GradientGraph::setNumDimensions(dint numDimensions)
 {
     _numDimensions = numDimensions;

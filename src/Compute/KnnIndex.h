@@ -26,6 +26,7 @@ namespace knn
     {
     public:
         Index();
+        ~Index();
 
         void create(int numDimensions, Metric metric);
         void addData(const DataMatrix& data);

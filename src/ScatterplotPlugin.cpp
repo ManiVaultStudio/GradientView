@@ -159,6 +159,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
 
                 // Load as point positions when no dataset is currently loaded
                 dropRegions << new DropWidget::DropRegion(this, "Point position", description, "map-marker-alt", true, [this, candidateDataset]() {
+                    _dataInitialized = false;
                     _positionDataset = candidateDataset;
                     positionDatasetChanged();
                 });
@@ -168,6 +169,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
 
                     // The number of points is equal, so offer the option to replace the existing points dataset
                     dropRegions << new DropWidget::DropRegion(this, "Point position", description, "map-marker-alt", true, [this, candidateDataset]() {
+                        _dataInitialized = false;
                         _positionDataset = candidateDataset;
                         positionDatasetChanged();
                     });
@@ -319,6 +321,69 @@ void ScatterplotPlugin::init()
     events().notifyDatasetAdded(_floodScalars);
 }
 
+void ScatterplotPlugin::resetState()
+{
+    _dataStore = DataStorage();
+
+    _positionSourceDataset.reset();
+    _numPoints = 0;
+
+    _normalizedData.clear();
+    _enabledDimNames.clear();
+    _dataInitialized = false;
+
+    // Interaction
+    _selectedPoint = 0;
+    _globalSelectedPoint = 0;
+    _selectedDimension = -1;
+    _mousePos = QPoint(0, 0);
+    _mousePressed = false;
+    _graphTimer->stop();
+    _mask.clear();
+    _selectedViewIndex = 0;
+    _colorScalars.clear();
+
+    // Filters
+    // ... Should be ok
+
+    // KNN
+    _computeOnLoad = false;
+    _graphAvailable = false;
+    _knnIndex = knn::Index();
+    _knnGraph = KnnGraph();
+    _largeKnnGraph = KnnGraph();
+    _sourceKnnGraph = KnnGraph();
+    _preloadedKnnGraph = false;
+
+    // Mask
+    _maskDataset.reset();
+
+    // MaskedKNN
+    _maskedDataMatrix = DataMatrix();
+    _maskedProjMatrix = DataMatrix();
+    _maskedKnnIndex = knn::Index();
+    _maskedKnnGraph = KnnGraph();
+    _maskedSourceKnnGraph = KnnGraph();
+    _maskedKnn = false;
+
+    // Floodfill
+    _floodFill = FloodFill(10);
+
+    // Graph
+    _gradientGraph->reset();
+    _bins.clear();
+
+    // Local dimensionality
+    _localSpatialDimensionality.clear();
+    _localHighDimensionality.clear();
+
+    // Directions
+    _directions.clear();
+
+    // Overlays
+    _overlayType = OverlayType::NONE;
+}
+
 void ScatterplotPlugin::positionDatasetChanged()
 {
     // Only proceed if we have a valid position dataset
@@ -326,6 +391,7 @@ void ScatterplotPlugin::positionDatasetChanged()
         return;
 
     qDebug() << "New data dropped on gradient explorer..";
+    resetState();
 
     // Reset dataset references
     _positionSourceDataset.reset();

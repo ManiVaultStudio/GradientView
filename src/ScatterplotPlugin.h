@@ -63,6 +63,7 @@ public:
     bool isDataInitialized() { return _dataInitialized; }
 
     void init() override;
+    void resetState();
 
     void onDataEvent(hdps::DatasetEvent* dataEvent);
     void onPointSelection();

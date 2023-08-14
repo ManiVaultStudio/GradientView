@@ -74,6 +74,14 @@ namespace knn
 
     }
 
+    Index::~Index()
+    {
+        if (_annoyIndex != nullptr)
+            delete _annoyIndex;
+        if (_faissIndex != nullptr)
+            delete _faissIndex;
+    }
+
     void Index::create(int numDimensions, Metric metric)
     {
         _metric = metric;
