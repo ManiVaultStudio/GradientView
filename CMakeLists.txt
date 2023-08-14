@@ -103,6 +103,8 @@ set(Compute
     src/Compute/DataTransformations.cpp
     src/Compute/SecondaryDistanceMeasures.h
     src/Compute/SecondaryDistanceMeasures.cpp
+    src/Compute/Directions.h
+    src/Compute/Directions.cpp
 )
 
 set(IO
