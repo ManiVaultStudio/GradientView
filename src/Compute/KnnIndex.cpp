@@ -129,9 +129,9 @@ namespace knn
 
         if (_preciseKnn)
         {
-            idx_t* I = new idx_t[k * data.rows()];
+            idx_t* I = new idx_t[resultSize];
 
-            _faissIndex->search(data.rows(), query.data(), k, distances.data(), I);
+            _faissIndex->search(numPoints, query.data(), k, distances.data(), I);
 
             indices.assign(I, I + resultSize);
 
