@@ -249,18 +249,20 @@ void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
 
     _scatterplotPlugin->getScatterplotWidget().setPointSize(_sizeAction.getMagnitudeAction().getValue());
 
-    return;
+
 
     const auto numberOfPoints = _scatterplotPlugin->getDataStore().getProjectionView().rows();
 
-    if (numberOfPoints != _pointSizeScalars.size())
-        _pointSizeScalars.resize(numberOfPoints);
+    //if (numberOfPoints != _pointSizeScalars.size())
+    //    _pointSizeScalars.resize(numberOfPoints);
 
-    std::fill(_pointSizeScalars.begin(), _pointSizeScalars.end(), _sizeAction.getMagnitudeAction().getValue());
+    //std::fill(_pointSizeScalars.begin(), _pointSizeScalars.end(), _sizeAction.getMagnitudeAction().getValue());
 
     _scatterplotPlugin->getProjectionViews()[0]->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
     _scatterplotPlugin->getProjectionViews()[1]->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
     _scatterplotPlugin->getSelectedView()->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
+
+    return;
 
     if (_sizeAction.isSourceSelection()) {
         auto positionDataset = _scatterplotPlugin->getPositionDataset();
