@@ -146,6 +146,7 @@ private:
 
     void updateViewData(std::vector<Vector2f>& positions);
     void updateViewScalars();
+    void updateFloodScalarOutput(const std::vector<float>& scalars);
 
     bool eventFilter(QObject* target, QEvent* event);
 

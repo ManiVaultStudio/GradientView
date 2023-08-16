@@ -51,6 +51,35 @@ Q_PLUGIN_METADATA(IID "nl.biovault.GradientExplorerPlugin")
 using namespace hdps;
 using namespace hdps::util;
 
+namespace
+{
+    void normalizeVector(std::vector<float>& v)
+    {
+        // Store scalars in floodfill dataset
+        float scalarMin = std::numeric_limits<float>::max();
+        float scalarMax = -std::numeric_limits<float>::max();
+
+        // Compute min and max of scalars
+        for (int i = 0; i < v.size(); i++)
+        {
+            if (v[i] < scalarMin) scalarMin = v[i];
+            if (v[i] > scalarMax) scalarMax = v[i];
+        }
+        float scalarRange = scalarMax - scalarMin;
+
+        if (scalarRange != 0)
+        {
+            float invScalarRange = 1.0f / (scalarMax - scalarMin);
+            // Normalize the scalars
+#pragma omp parallel for
+            for (int i = 0; i < v.size(); i++)
+            {
+                v[i] = (v[i] - scalarMin) * invScalarRange;
+            }
+        }
+    }
+}
+
 ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     ViewPlugin(factory),
     _positionDataset(),
@@ -804,32 +833,8 @@ timer.mark("Filter");
         timer.mark("Compute color scalars");
 
         // Store scalars in floodfill dataset
-        float scalarMin = std::numeric_limits<float>::max();
-        float scalarMax = -std::numeric_limits<float>::max();
-
-        // Compute min and max of scalars
-        for (int i = 0; i < _colorScalars.size(); i++)
-        {
-            if (_colorScalars[i] < scalarMin) scalarMin = _colorScalars[i];
-            if (_colorScalars[i] > scalarMax) scalarMax = _colorScalars[i];
-        }
-        float scalarRange = scalarMax - scalarMin;
-        
-        if (scalarRange != 0)
-        {
-            float invScalarRange = 1.0f / (scalarMax - scalarMin);
-            // Normalize the scalars
-#pragma omp parallel for
-            for (int i = 0; i < _colorScalars.size(); i++)
-            {
-                _colorScalars[i] = (_colorScalars[i] - scalarMin) * invScalarRange;
-            }
-        }
-
-        std::cout << "Color scalars: " << _colorScalars[1000] << std::endl;
-
-        _floodScalars->setData<float>(_colorScalars.data(), _colorScalars.size(), 1);
-        events().notifyDatasetDataChanged(_floodScalars);
+        normalizeVector(_colorScalars);
+        updateFloodScalarOutput(_colorScalars);
 
         timer.mark("Publish color scalars");
 
@@ -885,12 +890,27 @@ void ScatterplotPlugin::updateViewScalars()
         getScatterplotWidget().setScalars(dimV);
         getScatterplotWidget().setProjectionName("Dimension View: " + _enabledDimNames[selectedDimension]);
         getScatterplotWidget().setColoredBy("");
+
+        // Put full dimension scalars in output dataset
+        const auto fullDimValues = _dataStore.getBaseData()(Eigen::all, selectedDimension);
+        std::vector<float> fullDimV(fullDimValues.data(), fullDimValues.data() + fullDimValues.size());
+        normalizeVector(fullDimV);
+        updateFloodScalarOutput(fullDimV);
+
         //setProjectionName(_enabledDimNames[_selectedDimension]);
     }
     else
     {
         getScatterplotWidget().setProjectionName("Floodfill View");
     }
+}
+
+void ScatterplotPlugin::updateFloodScalarOutput(const std::vector<float>& scalars)
+{
+    std::cout << "Flood scalars: " << scalars[1000] << std::endl;
+
+    _floodScalars->setData<float>(scalars.data(), scalars.size(), 1);
+    events().notifyDatasetDataChanged(_floodScalars);
 }
 
 int cc = 0;
