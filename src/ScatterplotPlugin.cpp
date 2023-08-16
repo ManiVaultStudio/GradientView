@@ -710,7 +710,7 @@ timer.mark("Floodfill");
         }
         case filters::FilterType::HD_PEAK:
         {
-            _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, dataMatrix, variances, _floodFill, dimRanking);
+            _hdFloodPeakFilter.computeDimensionRanking(_selectedPoint, _dataStore.getBaseData(), variances, _floodFill, dimRanking);
             break;
         }
         }
