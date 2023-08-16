@@ -938,11 +938,6 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
         _selectedViewIndex = 0;
         updateViewScalars();
 
-        if (mouseEvent->button() == Qt::MiddleButton)
-        {
-
-        }
-
         break;
     }
 
@@ -966,15 +961,13 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
         cc += mv;
         cc = std::max(std::min(cc, (int) _maskDataset->getClusters().size()-1), 0);
         
-        //Dataset<Points> selection = _positionDataset->getSelection();
-
         std::vector<uint32_t>& uindices = _maskDataset->getClusters()[cc].getIndices();
         std::vector<int> indices;
         indices.assign(uindices.begin(), uindices.end());
 
         QString clusterName = _maskDataset->getClusters()[cc].getName();
         _scatterPlotWidget->setClusterName(QString::number(cc) + ": " + clusterName);
-        //events().notifyDatasetSelectionChanged(_positionDataset);
+
         useSelectionAsDataView(indices);
 
         break;
@@ -1096,20 +1089,6 @@ void ScatterplotPlugin::onLineClicked(dint dim)
 {
     qDebug() << "Dim: " << dim;
     _selectedDimension = dim;
-
-    //const auto dimValues = _dataMatrix(Eigen::all, _selectedDimension);
-
-    //float minV = *std::min_element(dimValues.begin(), dimValues.end());
-    //float maxV = *std::max_element(dimValues.begin(), dimValues.end());
-
-    //std::vector<Vector3f> colors(_positions.size());
-    //for (int i = 0; i < dimValues.size(); i++)
-    //{
-    //    float dimValue = dimValues[i] / (maxV - minV);
-
-    //    colors[i] = (i == _selectedPoint) ? Vector3f(1, 0, 0) : Vector3f(1 - dimValue, 1 - dimValue, 1 - dimValue);
-    //}
-    //_selectedView->setColors(colors);
 
     _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
 

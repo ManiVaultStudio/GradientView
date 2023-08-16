@@ -256,7 +256,6 @@ protected:
     ScatterplotWidget*              _scatterPlotWidget;
     std::vector<ProjectionView*>    _projectionViews;
     ProjectionView*                 _selectedView;
-    std::vector<Vector3f> colors;
 
     hdps::gui::DropWidget*      _dropWidget;
     SettingsAction              _settingsAction;
