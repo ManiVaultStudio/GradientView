@@ -1165,35 +1165,39 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
 {
     ViewPlugin::fromVariantMap(variantMap);
 
-    variantMapMustContain(variantMap, "Settings");
+    variantMapMustContain(variantMap, "SettingsAction");
 
-    _settingsAction.fromVariantMap(variantMap["Settings"].toMap());
+    _settingsAction.fromVariantMap(variantMap["SettingsAction"].toMap());
 
-    _overlayType = static_cast<OverlayType>(variantMap["OverlayType"].toInt());
+    //_overlayType = static_cast<OverlayType>(variantMap["OverlayType"].toInt());
 
-    int numPoints = static_cast<size_t>(variantMap["numPoints"].toInt());
-    int numNeighbours = static_cast<size_t>(variantMap["numNeighbours"].toInt());
-    const auto qneighbours = variantMap["largeKnnGraph"].toMap();
-
-    std::vector<int> linearNeighbours(numPoints * numNeighbours);
-
-    populateDataBufferFromVariantMap(qneighbours, (char*)linearNeighbours.data());
-
-    std::vector<std::vector<int>> neighbours(numPoints, std::vector<int>(numNeighbours));
-    int c = 0;
-    for (int i = 0; i < neighbours.size(); i++)
+    /*bool knnAvailable = static_cast<bool>(variantMap["knnAvailable"].toBool());
+    if (knnAvailable)
     {
-        for (int j = 0; j < neighbours[i].size(); j++)
+        int numPoints = static_cast<size_t>(variantMap["numPoints"].toInt());
+        int numNeighbours = static_cast<size_t>(variantMap["numNeighbours"].toInt());
+        const auto qneighbours = variantMap["largeKnnGraph"].toMap();
+
+        std::vector<int> linearNeighbours(numPoints * numNeighbours);
+
+        populateDataBufferFromVariantMap(qneighbours, (char*)linearNeighbours.data());
+
+        std::vector<std::vector<int>> neighbours(numPoints, std::vector<int>(numNeighbours));
+        int c = 0;
+        for (int i = 0; i < neighbours.size(); i++)
         {
-            neighbours[c / numNeighbours][c % numNeighbours] = linearNeighbours[c];
-            c++;
+            for (int j = 0; j < neighbours[i].size(); j++)
+            {
+                neighbours[c / numNeighbours][c % numNeighbours] = linearNeighbours[c];
+                c++;
+            }
         }
-    }
 
-    _largeKnnGraph._neighbours = neighbours;
-    _largeKnnGraph._numNeighbours = numNeighbours;
+        _largeKnnGraph._neighbours = neighbours;
+        _largeKnnGraph._numNeighbours = numNeighbours;
 
-    _preloadedKnnGraph = true;
+        _preloadedKnnGraph = true;
+    }*/
 
     positionDatasetChanged();
 }
@@ -1204,25 +1208,32 @@ QVariantMap ScatterplotPlugin::toVariantMap() const
 
     _settingsAction.insertIntoVariantMap(variantMap);
 
-    variantMap.insert("OverlayType", static_cast<int>(_overlayType));
+    //variantMap.insert("OverlayType", static_cast<int>(_overlayType));
 
-    const std::vector<std::vector<int>>& neighbours = _largeKnnGraph.getNeighbours();
-
-    // Linearize data
-    std::vector<int> linearNeighbours(neighbours.size() * neighbours[0].size());
-    int c = 0;
-    for (int i = 0; i < neighbours.size(); i++)
+    // Store KNN graph in project
+    //variantMap.insert("knnAvailable", _graphAvailable);
+    if (_graphAvailable && _largeKnnGraph.getNeighbours().size() > 0)
     {
-        const std::vector<int>& n = neighbours[i];
-        for (int j = 0; j < neighbours[i].size(); j++)
-            linearNeighbours[c++] = neighbours[i][j];
+        
+
+        const std::vector<std::vector<int>>& neighbours = _largeKnnGraph.getNeighbours();
+
+        // Linearize data
+        std::vector<int> linearNeighbours(neighbours.size() * neighbours[0].size());
+        int c = 0;
+        for (int i = 0; i < neighbours.size(); i++)
+        {
+            const std::vector<int>& n = neighbours[i];
+            for (int j = 0; j < neighbours[i].size(); j++)
+                linearNeighbours[c++] = neighbours[i][j];
+        }
+
+        QVariantMap qneighbours = rawDataToVariantMap((char*)linearNeighbours.data(), linearNeighbours.size() * sizeof(std::int32_t), true);
+
+        variantMap.insert("largeKnnGraph", qneighbours);
+        variantMap.insert("numPoints", neighbours.size());
+        variantMap.insert("numNeighbours", neighbours[0].size());
     }
-
-    QVariantMap qneighbours = rawDataToVariantMap((char*)linearNeighbours.data(), linearNeighbours.size() * sizeof(std::int32_t), true);
-
-    variantMap.insert("largeKnnGraph", qneighbours);
-    variantMap.insert("numPoints", neighbours.size());
-    variantMap.insert("numNeighbours", neighbours[0].size());
 
     return variantMap;
 }

@@ -73,8 +73,14 @@ void LoadedDatasetsAction::fromVariantMap(const QVariantMap& variantMap)
     _positionDatasetPickerAction.fromParentVariantMap(variantMap);
     _colorDatasetPickerAction.fromParentVariantMap(variantMap);
 
-    Dataset pickedDataset = core()->getDataManager().getSet(_positionDatasetPickerAction.getCurrentDatasetGuid());
-    _scatterplotPlugin->getPositionDataset() = pickedDataset;
+    // Load position dataset
+    auto positionDataset = _positionDatasetPickerAction.getCurrentDataset();
+    if (positionDataset.isValid())
+    {
+        Dataset pickedDataset = core()->getDataManager().getSet(positionDataset.getDatasetId());
+        _scatterplotPlugin->getPositionDataset() = pickedDataset;
+    }
+
     //_scatterplotPlugin->positionDatasetChanged();
 }
 

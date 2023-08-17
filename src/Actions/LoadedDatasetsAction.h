@@ -43,7 +43,7 @@ public: // Serialization
 
 private:
     ScatterplotPlugin*      _scatterplotPlugin;             /** Pointer to scatterplot plugin */
-    DatasetPickerAction	    _positionDatasetPickerAction;
+    DatasetPickerAction     _positionDatasetPickerAction;
     DatasetPickerAction     _colorDatasetPickerAction;
 
     friend class hdps::AbstractActionsManager;
