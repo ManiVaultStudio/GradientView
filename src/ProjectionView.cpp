@@ -10,6 +10,8 @@
 #include <QEvent>
 #include <QMouseEvent>
 
+constexpr float MIN_POINT_SIZE = 0.5f;
+
 namespace
 {
     Bounds getDataBounds(const std::vector<Vector2f>& points)
@@ -139,6 +141,11 @@ void ProjectionView::setScalars(const Eigen::Block<Eigen::MatrixXf, -1, 1, true>
 void ProjectionView::setProjectionName(QString name)
 {
     _projectionName = name;
+}
+
+void ProjectionView::setSourcePointSize(float sourcePointSize)
+{
+    _pointRenderer.setPointSize(std::max(sourcePointSize / 3.5f, MIN_POINT_SIZE));
 }
 
 void ProjectionView::setPointSizeScalars(const std::vector<float>& pointSizeScalars)
