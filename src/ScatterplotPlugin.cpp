@@ -1154,7 +1154,7 @@ void ScatterplotPlugin::computeKnnGraph()
 
     _graphAvailable = true;
     qDebug() << "Done building KNN Graph! Ready for flood-fill.";
-    _largeKnnGraph.writeToFile();
+    //_largeKnnGraph.writeToFile();
 }
 
 /******************************************************************************
