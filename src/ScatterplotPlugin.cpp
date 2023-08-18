@@ -612,9 +612,6 @@ void ScatterplotPlugin::loadData(const Datasets& datasets)
 
     // Load the first dataset
     _positionDataset = datasets.first();
-
-    // And set the coloring mode to constant
-    //_settingsAction.getColoringAction().getColorByAction().setCurrentIndex(1);
 }
 
 void ScatterplotPlugin::onDataEvent(hdps::DatasetEvent* dataEvent)
@@ -665,7 +662,6 @@ void ScatterplotPlugin::onPointSelection()
     if (selection->indices.size() > 0)
     {
 timer.start();
-        //_selectedPoint = selection->indices[0];
         Vector2f center = Vector2f(_dataStore.getProjectionView()(_selectedPoint, 0), _dataStore.getProjectionView()(_selectedPoint, 1));
 
         KnnGraph& knnGraph = !_maskedKnn ? _knnGraph : _maskedKnnGraph;
@@ -815,7 +811,7 @@ timer.mark("Filter");
             }
         }
 
-        // Compute scalars of view
+        // Set color scalars in the main view, if we are looking at a data view, subset the scalars first
         if (viewIndices.size() > 0)
         {
             std::vector<float> viewScalars(numPoints);
