@@ -24,6 +24,8 @@ set(PLUGIN
     src/Common.h
     src/ScatterplotPlugin.h
     src/ScatterplotPlugin.cpp
+    src/PluginMouseListener.h
+    src/PluginMouseListener.cpp
     src/Timer.h
     src/Timer.cpp
     src/Types.h

@@ -148,9 +148,12 @@ private:
     void updateViewScalars();
     void updateFloodScalarOutput(const std::vector<float>& scalars);
 
+private: // Mouse Interaction
+    void selectPointInDataset();
+    void mousePositionChanged(Vector2f mousePos);
     bool eventFilter(QObject* target, QEvent* event);
 
-public:
+public: // Import / Export
     void exportDimRankings();
     void exportFloodnodes();
     void importKnnGraph();
