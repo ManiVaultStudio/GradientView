@@ -1171,7 +1171,9 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
 
     //_overlayType = static_cast<OverlayType>(variantMap["OverlayType"].toInt());
 
-    /*bool knnAvailable = static_cast<bool>(variantMap["knnAvailable"].toBool());
+    positionDatasetChanged();
+
+    bool knnAvailable = static_cast<bool>(variantMap["knnAvailable"].toBool());
     if (knnAvailable)
     {
         int numPoints = static_cast<size_t>(variantMap["numPoints"].toInt());
@@ -1197,9 +1199,9 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
         _largeKnnGraph._numNeighbours = numNeighbours;
 
         _preloadedKnnGraph = true;
-    }*/
+    }
 
-    positionDatasetChanged();
+    computeKnnGraph();
 }
 
 QVariantMap ScatterplotPlugin::toVariantMap() const
@@ -1211,7 +1213,7 @@ QVariantMap ScatterplotPlugin::toVariantMap() const
     //variantMap.insert("OverlayType", static_cast<int>(_overlayType));
 
     // Store KNN graph in project
-    //variantMap.insert("knnAvailable", _graphAvailable);
+    variantMap.insert("knnAvailable", _graphAvailable);
     if (_graphAvailable && _largeKnnGraph.getNeighbours().size() > 0)
     {
         
