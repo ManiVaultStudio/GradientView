@@ -1030,6 +1030,7 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
 
     positionDatasetChanged();
 
+    // Load potential kNN graph from project
     bool knnAvailable = static_cast<bool>(variantMap["knnAvailable"].toBool());
     if (knnAvailable)
     {
@@ -1056,9 +1057,18 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
         _largeKnnGraph._numNeighbours = numNeighbours;
 
         _preloadedKnnGraph = true;
+
+        computeKnnGraph();
     }
 
-    computeKnnGraph();
+    // Load selected point from project
+    {
+        _selectedPoint = variantMap["selectedPoint"].toInt();
+        _globalSelectedPoint = variantMap["globalSelectedPoint"].toInt();
+
+        // Notify core of new selected point
+        notifyNewSelectedPoint();
+    }
 }
 
 QVariantMap ScatterplotPlugin::toVariantMap() const
@@ -1069,12 +1079,10 @@ QVariantMap ScatterplotPlugin::toVariantMap() const
 
     //variantMap.insert("OverlayType", static_cast<int>(_overlayType));
 
-    // Store KNN graph in project
+    // Store potential KNN graph in project
     variantMap.insert("knnAvailable", _graphAvailable);
     if (_graphAvailable && _largeKnnGraph.getNeighbours().size() > 0)
     {
-        
-
         const std::vector<std::vector<int>>& neighbours = _largeKnnGraph.getNeighbours();
 
         // Linearize data
@@ -1092,6 +1100,12 @@ QVariantMap ScatterplotPlugin::toVariantMap() const
         variantMap.insert("largeKnnGraph", qneighbours);
         variantMap.insert("numPoints", neighbours.size());
         variantMap.insert("numNeighbours", neighbours[0].size());
+    }
+
+    // Store selected point in project
+    {
+        variantMap.insert("selectedPoint", _selectedPoint);
+        variantMap.insert("globalSelectedPoint", _globalSelectedPoint);
     }
 
     return variantMap;

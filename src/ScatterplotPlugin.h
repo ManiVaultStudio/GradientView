@@ -149,7 +149,7 @@ private:
     void updateFloodScalarOutput(const std::vector<float>& scalars);
 
 private: // Mouse Interaction
-    void selectPointInDataset();
+    void notifyNewSelectedPoint();
     void mousePositionChanged(Vector2f mousePos);
     bool eventFilter(QObject* target, QEvent* event);
 

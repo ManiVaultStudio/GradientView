@@ -81,7 +81,7 @@ int findClosestPointToMouse(const DataMatrix& projection, const Bounds& bounds, 
     return closestIndex;
 }
 
-void ScatterplotPlugin::selectPointInDataset()
+void ScatterplotPlugin::notifyNewSelectedPoint()
 {
     int selectedPoint = _globalSelectedPoint;
 
@@ -117,7 +117,7 @@ void ScatterplotPlugin::mousePositionChanged(Vector2f mousePos)
     _selectedPoint = selectedPoint;
     _globalSelectedPoint = _mask.empty() ? _selectedPoint : _mask[_selectedPoint];
 
-    selectPointInDataset();
+    notifyNewSelectedPoint();
 }
 
 int cc = 0;
