@@ -101,6 +101,12 @@ public: // Miscellaneous
     /** Get smart pointer to source of the points dataset for point position (if any) */
     Dataset<Points>& getPositionSourceDataset()         { return _positionSourceDataset; }
 
+    void setOverlayType(OverlayType type)               { _overlayType = type; }
+    void setFilterLabelText(QString text)               { _filterLabel->setText(text); }
+    void setFilterType(filters::FilterType type)        { _filterType = type; }
+
+    SettingsAction& getSettingsAction()                 { return _settingsAction; }
+
 protected:
 
     /** Updates the window title (displays the name of the view and the GUI name of the loaded points dataset) */
@@ -122,6 +128,7 @@ public:
     DataStorage& getDataStore()                         { return _dataStore; }
     float getProjectionSize()                           { return _dataStore.getProjectionSize(); }
 
+public: // Flood fill
     void createKnnIndex();
     void computeKnnGraph();
     void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataStore.getBaseData(), _knnIndex, floodNeighbours); }
@@ -134,13 +141,9 @@ public:
         _settingsAction.getFilterAction().setFloodSteps(numFloodSteps);
     }
 
-    void setOverlayType(OverlayType type) { _overlayType = type; }
-    void setFilterLabelText(QString text) { _filterLabel->setText(text); }
-    void setFilterType(filters::FilterType type) { _filterType = type; }
     void useSharedDistances(bool useSharedDistances) { _useSharedDistances = useSharedDistances; }
-    SettingsAction& getSettingsAction() { return _settingsAction; }
 
-private:
+private: // Updating functions
     void updateProjectionData();
     void updateSelection();
 
@@ -158,7 +161,7 @@ public: // Import / Export
     void exportFloodnodes();
     void importKnnGraph();
 
-private slots:
+private slots: // Graph
     void onLineClicked(dint dim);
 
 public: // Mask
@@ -189,26 +192,18 @@ private:
     nint                            _numPoints;                 /** Number of point positions */
 
     std::vector<std::vector<float>> _normalizedData;
-    //DataMatrix                      _dataMatrix;
     std::vector<QString>            _enabledDimNames;
-    //std::vector<float>              _variances;
     bool                            _dataInitialized = false;
-
-    // Projection
-    //DataMatrix                      _fullProjMatrix;
-    //DataMatrix                      _projMatrix;
-    //float                           _projectionSize = 0;
+    std::vector<nint>               _mask;
+    std::vector<float>              _colorScalars;
 
     // Interaction
     nint                            _selectedPoint = 0;
     nint                            _globalSelectedPoint = 0;
     dint                            _selectedDimension;
-    QPoint                          _mousePos;
+
     bool                            _mousePressed = false;
-    QTimer*                         _graphTimer;
-    std::vector<nint>               _mask;
     int                             _selectedViewIndex = 0;
-    std::vector<float>              _colorScalars;
 
     // Filters
     QLabel*                         _filterLabel;
@@ -244,6 +239,7 @@ private:
     // Graph
     GradientGraph*                  _gradientGraph;
     std::vector<std::vector<int>>   _bins;
+    QTimer*                         _graphTimer;
 
     // Local dimensionality
     std::vector<float>              _localSpatialDimensionality;

@@ -365,7 +365,6 @@ void ScatterplotPlugin::resetState()
     _selectedPoint = 0;
     _globalSelectedPoint = 0;
     _selectedDimension = -1;
-    _mousePos = QPoint(0, 0);
     _mousePressed = false;
     _graphTimer->stop();
     _mask.clear();
