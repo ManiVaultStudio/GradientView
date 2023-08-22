@@ -101,6 +101,8 @@ public: // Miscellaneous
     /** Get smart pointer to source of the points dataset for point position (if any) */
     Dataset<Points>& getPositionSourceDataset()         { return _positionSourceDataset; }
 
+    Dataset<Clusters>& getSliceDataset()                { return _sliceDataset; }
+
     void setOverlayType(OverlayType type)               { _overlayType = type; }
     void setFilterLabelText(QString text)               { _filterLabel->setText(text); }
     void setFilterType(filters::FilterType type)        { _filterType = type; }
@@ -142,6 +144,9 @@ public: // Flood fill
     }
 
     void useSharedDistances(bool useSharedDistances) { _useSharedDistances = useSharedDistances; }
+
+public: // Slicing
+    void onSliceIndexChanged();
 
 private: // Updating functions
     void updateProjectionData();
@@ -204,6 +209,7 @@ private:
 
     bool                            _mousePressed = false;
     int                             _selectedViewIndex = 0;
+    bool                            _loadingFromProject = false;
 
     // Filters
     QLabel*                         _filterLabel;
@@ -221,8 +227,9 @@ private:
     bool                            _useSharedDistances = false;
     bool                            _preloadedKnnGraph = false;
 
-    // Mask
-    Dataset<Clusters>               _maskDataset;
+    // Slicing
+    Dataset<Clusters>               _sliceDataset;
+    int                             _currentSliceIndex = 0;
 
     // Masked KNN
     DataMatrix                      _maskedDataMatrix;

@@ -45,6 +45,7 @@ private:
     ScatterplotPlugin*      _scatterplotPlugin;             /** Pointer to scatterplot plugin */
     DatasetPickerAction     _positionDatasetPickerAction;
     DatasetPickerAction     _colorDatasetPickerAction;
+    DatasetPickerAction     _sliceDatasetPickerAction;
 
     friend class hdps::AbstractActionsManager;
 };

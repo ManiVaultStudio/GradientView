@@ -13,7 +13,8 @@ using namespace hdps::gui;
 LoadedDatasetsAction::LoadedDatasetsAction(QObject* parent, const QString& title) :
     VerticalGroupAction(parent, "Loaded datasets"),
     _positionDatasetPickerAction(this, "Position"),
-    _colorDatasetPickerAction(this, "Color")
+    _colorDatasetPickerAction(this, "Color"),
+    _sliceDatasetPickerAction(this, "Cluster")
 {
     setIcon(hdps::Application::getIconFont("FontAwesome").getIcon("database"));
     setToolTip("Manage loaded datasets for position and/or color");
@@ -64,6 +65,10 @@ void LoadedDatasetsAction::initialize(ScatterplotPlugin* scatterplotPlugin)
     connect(&_scatterplotPlugin->getPositionDataset(), &Dataset<Points>::changed, this, [this](DatasetImpl* dataset) -> void {
         _positionDatasetPickerAction.setCurrentDataset(dataset);
     });
+
+    connect(&_scatterplotPlugin->getSliceDataset(), &Dataset<Clusters>::changed, this, [this](DatasetImpl* dataset) -> void {
+        _sliceDatasetPickerAction.setCurrentDataset(dataset);
+    });
 }
 
 void LoadedDatasetsAction::fromVariantMap(const QVariantMap& variantMap)
@@ -72,6 +77,7 @@ void LoadedDatasetsAction::fromVariantMap(const QVariantMap& variantMap)
 
     _positionDatasetPickerAction.fromParentVariantMap(variantMap);
     _colorDatasetPickerAction.fromParentVariantMap(variantMap);
+    _sliceDatasetPickerAction.fromParentVariantMap(variantMap);
 
     // Load position dataset
     auto positionDataset = _positionDatasetPickerAction.getCurrentDataset();
@@ -79,6 +85,15 @@ void LoadedDatasetsAction::fromVariantMap(const QVariantMap& variantMap)
     {
         Dataset pickedDataset = core()->getDataManager().getSet(positionDataset.getDatasetId());
         _scatterplotPlugin->getPositionDataset() = pickedDataset;
+    }
+
+    // Load slice dataset
+    auto sliceDataset = _sliceDatasetPickerAction.getCurrentDataset();
+    if (sliceDataset.isValid())
+    {
+        qDebug() << ">>>>> Found a slice dataset " << sliceDataset->getGuiName();
+        Dataset pickedDataset = core()->getDataManager().getSet(sliceDataset.getDatasetId());
+        _scatterplotPlugin->getSliceDataset() = pickedDataset;
     }
 
     //_scatterplotPlugin->positionDatasetChanged();
@@ -95,6 +110,7 @@ QVariantMap LoadedDatasetsAction::toVariantMap() const
     //    "dataset", _positionDatasetPickerAction.getCurrentDataset());
     _positionDatasetPickerAction.insertIntoVariantMap(variantMap);
     _colorDatasetPickerAction.insertIntoVariantMap(variantMap);
+    _sliceDatasetPickerAction.insertIntoVariantMap(variantMap);
 
     return variantMap;
 }

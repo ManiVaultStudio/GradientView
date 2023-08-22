@@ -120,7 +120,6 @@ void ScatterplotPlugin::mousePositionChanged(Vector2f mousePos)
     notifyNewSelectedPoint();
 }
 
-int cc = 0;
 bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
 {
     auto shouldPaint = false;
@@ -161,21 +160,14 @@ bool ScatterplotPlugin::eventFilter(QObject* target, QEvent* event)
     {
         auto wheelEvent = static_cast<QWheelEvent*>(event);
 
-        if (!_maskDataset.isValid())
+        if (!_sliceDataset.isValid())
             break;
 
         int mv = wheelEvent->angleDelta().y() > 0 ? -1 : 1;
-        cc += mv;
-        cc = std::max(std::min(cc, (int)_maskDataset->getClusters().size() - 1), 0);
+        _currentSliceIndex += mv;
+        _currentSliceIndex = std::max(std::min(_currentSliceIndex, (int)_sliceDataset->getClusters().size() - 1), 0);
 
-        std::vector<uint32_t>& uindices = _maskDataset->getClusters()[cc].getIndices();
-        std::vector<int> indices;
-        indices.assign(uindices.begin(), uindices.end());
-
-        QString clusterName = _maskDataset->getClusters()[cc].getName();
-        _scatterPlotWidget->setClusterName(QString::number(cc) + ": " + clusterName);
-
-        useSelectionAsDataView(indices);
+        onSliceIndexChanged();
 
         break;
     }

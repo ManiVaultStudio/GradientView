@@ -242,7 +242,9 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
                 // Use the clusters set for points color
                 dropRegions << new DropWidget::DropRegion(this, "Mask", description, "palette", true, [this, candidateDataset]()
                 {
-                    _maskDataset = candidateDataset;
+                    _currentSliceIndex = 0;
+                    _sliceDataset = candidateDataset;
+                    onSliceIndexChanged();
                 });
             }
             else {
@@ -383,8 +385,9 @@ void ScatterplotPlugin::resetState()
     _sourceKnnGraph = KnnGraph();
     _preloadedKnnGraph = false;
 
-    // Mask
-    _maskDataset.reset();
+    // Slicing
+    _sliceDataset.reset();
+    _currentSliceIndex = 0;
 
     // MaskedKNN
     _maskedDataMatrix = DataMatrix();
@@ -419,7 +422,9 @@ void ScatterplotPlugin::positionDatasetChanged()
         return;
 
     qDebug() << "New data dropped on gradient explorer..";
-    resetState();
+    // Only reset state if we aren't loading the plugin from a saved project
+    if (!_loadingFromProject)
+        resetState();
 
     // Reset dataset references
     _positionSourceDataset.reset();
@@ -844,6 +849,18 @@ timer.mark("Filter");
     }
 }
 
+void ScatterplotPlugin::onSliceIndexChanged()
+{
+    std::vector<uint32_t>& uindices = _sliceDataset->getClusters()[_currentSliceIndex].getIndices();
+    std::vector<int> indices;
+    indices.assign(uindices.begin(), uindices.end());
+
+    QString clusterName = _sliceDataset->getClusters()[_currentSliceIndex].getName();
+    _scatterPlotWidget->setClusterName(QString::number(_currentSliceIndex) + ": " + clusterName);
+
+    useSelectionAsDataView(indices);
+}
+
 void ScatterplotPlugin::updateSelection()
 {
     if (!_positionDataset.isValid())
@@ -1015,6 +1032,8 @@ void ScatterplotPlugin::computeKnnGraph()
 
 void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
 {
+    _loadingFromProject = true;
+
     ViewPlugin::fromVariantMap(variantMap);
 
     variantMapMustContain(variantMap, "SettingsAction");
@@ -1056,6 +1075,13 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
         computeKnnGraph();
     }
 
+    // Load slice index from project if slice dataset has been set
+    if (_sliceDataset.isValid())
+    {
+        _currentSliceIndex = variantMap["currentSliceIndex"].toInt();
+        onSliceIndexChanged();
+    }
+
     // Load selected point from project
     {
         _selectedPoint = variantMap["selectedPoint"].toInt();
@@ -1064,6 +1090,8 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
         // Notify core of new selected point
         notifyNewSelectedPoint();
     }
+
+    _loadingFromProject = false;
 }
 
 QVariantMap ScatterplotPlugin::toVariantMap() const
@@ -1095,6 +1123,12 @@ QVariantMap ScatterplotPlugin::toVariantMap() const
         variantMap.insert("largeKnnGraph", qneighbours);
         variantMap.insert("numPoints", neighbours.size());
         variantMap.insert("numNeighbours", neighbours[0].size());
+    }
+
+    // Store current slice in project, if slice dataset is valid
+    if (_sliceDataset.isValid())
+    {
+        variantMap.insert("currentSliceIndex", _currentSliceIndex);
     }
 
     // Store selected point in project
