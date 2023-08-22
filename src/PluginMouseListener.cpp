@@ -115,7 +115,10 @@ void ScatterplotPlugin::mousePositionChanged(Vector2f mousePos)
         return;
 
     _selectedPoint = selectedPoint;
-    _globalSelectedPoint = _mask.empty() ? _selectedPoint : _mask[_selectedPoint];
+    if (!_dataStore.getViewIndices().empty())
+        _globalSelectedPoint = _dataStore.getViewIndices()[_selectedPoint];
+    else
+        _globalSelectedPoint = _mask.empty() ? _selectedPoint : _mask[_selectedPoint];
 
     notifyNewSelectedPoint();
 }
