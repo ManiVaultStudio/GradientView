@@ -346,10 +346,6 @@ void ScatterplotPlugin::init()
 
     // Do an initial update of the window title
     updateWindowTitle();
-
-    _floodScalars = _core->addDataset<Points>("Points", "Flood Nodes");
-
-    events().notifyDatasetAdded(_floodScalars);
 }
 
 void ScatterplotPlugin::resetState()
@@ -438,6 +434,16 @@ void ScatterplotPlugin::positionDatasetChanged()
 
     // Update the window title to reflect the position dataset change
     updateWindowTitle();
+
+    if (!_floodScalars.isValid())
+    {
+        if (!_loadingFromProject)
+        {
+            _floodScalars = _core->addDataset<Points>("Points", "Flood Nodes");
+
+            events().notifyDatasetAdded(_floodScalars);
+        }
+    }
 
     computeStaticData();
 
@@ -1044,6 +1050,10 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
 
     positionDatasetChanged();
 
+    // Load flood nodes
+    QString floodNodeId = variantMap["floodNodeGuid"].toString();
+    _floodScalars = _core->requestDataset(floodNodeId);
+
     // Load potential kNN graph from project
     bool knnAvailable = static_cast<bool>(variantMap["knnAvailable"].toBool());
     if (knnAvailable)
@@ -1136,6 +1146,9 @@ QVariantMap ScatterplotPlugin::toVariantMap() const
         variantMap.insert("selectedPoint", _selectedPoint);
         variantMap.insert("globalSelectedPoint", _globalSelectedPoint);
     }
+
+    // Store floodnode guid
+    variantMap.insert("floodNodeGuid", _floodScalars.getDatasetId());
 
     return variantMap;
 }
