@@ -10,7 +10,7 @@
 
 #include "Actions/SettingsAction.h"
 #include "graphics/Vector3f.h"
-#include "GradientGraph.h"
+#include "Graph/GraphView.h"
 
 #include "DataMatrix.h"
 #include "Logging.h"
@@ -244,7 +244,7 @@ private:
     FloodFill                       _floodFill;
 
     // Graph
-    GradientGraph*                  _gradientGraph;
+    GraphView*                      _graphView;
     std::vector<std::vector<int>>   _bins;
     QTimer*                         _graphTimer;
 

@@ -92,7 +92,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     _selectedView(),
     _dropWidget(nullptr),
     _settingsAction(this, "SettingsAction"),
-    _gradientGraph(new GradientGraph()),
+    _graphView(new GraphView()),
     _selectedDimension(-1),
     _floodFill(10),
     _filterType(filters::FilterType::SPATIAL_PEAK),
@@ -136,7 +136,7 @@ ScatterplotPlugin::ScatterplotPlugin(const PluginFactory* factory) :
     connect(_projectionViews[1], &ProjectionView::initialized, this, [this]() {_projectionViews[1]->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true)); });
     connect(_selectedView, &ProjectionView::initialized, this, [this]() {_selectedView->setColorMap(_colorMapAction.getColorMapImage().mirrored(false, true)); });
 
-    connect(_gradientGraph, &GradientGraph::lineClicked, this, &ScatterplotPlugin::onLineClicked);
+    connect(_graphView, &GraphView::lineClicked, this, &ScatterplotPlugin::onLineClicked);
     _graphTimer->setSingleShot(true);
     connect(_graphTimer, &QTimer::timeout, this, &ScatterplotPlugin::computeGraphs);
 
@@ -296,7 +296,7 @@ void ScatterplotPlugin::init()
     QLabel* sortedExpressionGraphLabel = new QLabel("Sorted Expression Graph");
     sortedExpressionGraphLabel->setFont(font);
     gradientViewLayout->addWidget(sortedExpressionGraphLabel);
-    gradientViewLayout->addWidget(_gradientGraph, 70);
+    gradientViewLayout->addWidget(_graphView, 70);
 
     auto leftPanel = new QVBoxLayout();
     leftPanel->addWidget(_scatterPlotWidget, 90);
@@ -397,7 +397,7 @@ void ScatterplotPlugin::resetState()
     _floodFill = FloodFill(10);
 
     // Graph
-    _gradientGraph->reset();
+    _graphView->reset();
     _bins.clear();
 
     // Local dimensionality
@@ -545,9 +545,6 @@ void ScatterplotPlugin::computeStaticData()
 
     std::cout << "Number of enabled dimensions in the dataset : " << _dataStore.getNumDimensions() << std::endl;
     _bins.resize(_dataStore.getNumDimensions(), std::vector<int>(30));
-
-    // Set up chart
-    _gradientGraph->setNumDimensions((bigint)_enabledDimNames.size());
 
     timer.finish("Graph init");
 }
@@ -742,7 +739,7 @@ timer.mark("Ranking");
             _selectedView->setProjectionName(_enabledDimNames[_selectedDimension]);
         }
 
-        _gradientGraph->setTopDimensions(dimRanking[0], dimRanking[1]);
+        _graphView->setTopDimensions(dimRanking[0], dimRanking[1]);
 
 timer.mark("Filter");
 
@@ -957,7 +954,8 @@ void ScatterplotPlugin::computeGraphs()
         }
     }
     qDebug() << "Graphs computed";
-    _gradientGraph->setBins(_bins);
+
+    _graphView->setBins(_bins);
 }
 
 void ScatterplotPlugin::onLineClicked(dint dim)

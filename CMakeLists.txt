@@ -18,7 +18,7 @@ endif(MSVC)
 
 file(TO_CMAKE_PATH $ENV{HDPS_INSTALL_DIR} INSTALL_DIR)
 
-find_package(Qt6 COMPONENTS Widgets WebEngineWidgets OpenGL OpenGLWidgets Charts REQUIRED)
+find_package(Qt6 COMPONENTS Widgets WebEngineWidgets OpenGL OpenGLWidgets REQUIRED)
 
 set(PLUGIN
     src/Common.h
@@ -34,6 +34,8 @@ set(PLUGIN
     src/DataStore.cpp
     src/Logging.h
     src/Logging.cpp
+    src/Graph/GraphView.h
+    src/Graph/GraphView.cpp
 )
 
 set(UI
@@ -43,8 +45,6 @@ set(UI
     src/CellRenderer.cpp
     src/ProjectionView.h
     src/ProjectionView.cpp
-    src/GradientGraph.h
-    src/GradientGraph.cpp
     src/ExportImageDialog.h
     src/ExportImageDialog.cpp
 )
@@ -169,7 +169,6 @@ target_link_libraries(${PROJECT} PRIVATE Qt6::Widgets)
 target_link_libraries(${PROJECT} PRIVATE Qt6::WebEngineWidgets)
 target_link_libraries(${PROJECT} PRIVATE Qt6::OpenGL)
 target_link_libraries(${PROJECT} PRIVATE Qt6::OpenGLWidgets)
-target_link_libraries(${PROJECT} PRIVATE Qt6::Charts)
 target_link_libraries(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/lib/$<CONFIGURATION>/faiss.lib)
 target_link_libraries(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/MKL/lib/mkl_core_dll.lib)
 target_link_libraries(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/MKL/lib/mkl_intel_lp64_dll.lib)
