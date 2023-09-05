@@ -88,7 +88,7 @@ void KnnGraph::build(const DataMatrix& data, const knn::Index& index, int numNei
     _neighbours.clear();
     _neighbours.resize(data.rows(), std::vector<int>(_numNeighbours));
 
-    int progressTick = std::max(1LL, data.rows() / 100);
+    int progressTick = std::max(1LL, static_cast<long long>(data.rows()) / 100);
 #pragma omp parallel for
     for (int i = 0; i < data.rows(); i++)
     {
