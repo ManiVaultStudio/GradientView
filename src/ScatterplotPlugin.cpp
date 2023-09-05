@@ -1052,7 +1052,7 @@ void ScatterplotPlugin::fromVariantMap(const QVariantMap& variantMap)
 
     _settingsAction.fromVariantMap(variantMap["SettingsAction"].toMap());
 
-    //_overlayType = static_cast<OverlayType>(variantMap["OverlayType"].toInt());
+    _overlayType = static_cast<OverlayType>(variantMap["OverlayType"].toInt());
 
     positionDatasetChanged();
 
@@ -1116,7 +1116,7 @@ QVariantMap ScatterplotPlugin::toVariantMap() const
 
     _settingsAction.insertIntoVariantMap(variantMap);
 
-    //variantMap.insert("OverlayType", static_cast<int>(_overlayType));
+    variantMap.insert("OverlayType", static_cast<int>(_overlayType));
 
     // Store potential KNN graph in project
     variantMap.insert("knnAvailable", _graphAvailable);
