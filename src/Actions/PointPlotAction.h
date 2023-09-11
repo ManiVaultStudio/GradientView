@@ -4,7 +4,7 @@
 
 #include "ScalarAction.h"
 
-class ScatterplotPlugin;
+class GradientExplorerPlugin;
 
 using namespace hdps::gui;
 
@@ -25,7 +25,7 @@ public:
      * Initialize the selection action with \p scatterplotPlugin
      * @param scatterplotPlugin Pointer to scatterplot plugin
      */
-    void initialize(ScatterplotPlugin* scatterplotPlugin);
+    void initialize(GradientExplorerPlugin* scatterplotPlugin);
 
     /**
      * Get action context menu
@@ -98,7 +98,7 @@ public: // Action getters
     ToggleAction& getFocusSelection() { return _focusSelection; }
 
 private:
-    ScatterplotPlugin*      _scatterplotPlugin;         /** Pointer to scatterplot plugin */
+    GradientExplorerPlugin* _plugin;                    /** Pointer to scatterplot plugin */
     ScalarAction            _sizeAction;                /** Point size action */
     ScalarAction            _opacityAction;             /** Point opacity action */
     std::vector<float>      _pointSizeScalars;          /** Cached point size scalars */
@@ -109,7 +109,7 @@ private:
     static constexpr double DEFAULT_POINT_SIZE      = 10.0;     /** Default point size */
     static constexpr double DEFAULT_POINT_OPACITY   = 100.0;    /** Default point opacity */
 
-    friend class ScatterplotPlugin;
+    friend class GradientExplorerPlugin;
     friend class hdps::AbstractActionsManager;
 };
 

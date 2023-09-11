@@ -1,12 +1,12 @@
 #include "PlotAction.h"
-#include "ScatterplotPlugin.h"
+#include "GradientExplorerPlugin.h"
 #include "ScatterplotWidget.h"
 
 using namespace hdps::gui;
 
 PlotAction::PlotAction(QObject* parent, const QString& title) :
     VerticalGroupAction(parent, title),
-    _scatterplotPlugin(nullptr),
+    _plugin(nullptr),
     _pointPlotAction(this, "Point"),
     _densityPlotAction(this, "Density")
 {
@@ -22,19 +22,19 @@ PlotAction::PlotAction(QObject* parent, const QString& title) :
     addAction(&_densityPlotAction.getContinuousUpdatesAction());
 }
 
-void PlotAction::initialize(ScatterplotPlugin* scatterplotPlugin)
+void PlotAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 {
     Q_ASSERT(scatterplotPlugin != nullptr);
 
     if (scatterplotPlugin == nullptr)
         return;
 
-    _scatterplotPlugin = scatterplotPlugin;
+    _plugin = scatterplotPlugin;
 
-    _pointPlotAction.initialize(_scatterplotPlugin);
-    _densityPlotAction.initialize(_scatterplotPlugin);
+    _pointPlotAction.initialize(_plugin);
+    _densityPlotAction.initialize(_plugin);
 
-    auto& scatterplotWidget = _scatterplotPlugin->getScatterplotWidget();
+    auto& scatterplotWidget = _plugin->getScatterplotWidget();
 
     const auto updateRenderMode = [this, &scatterplotWidget]() -> void {
         _pointPlotAction.setVisible(scatterplotWidget.getRenderMode() == ScatterplotWidget::SCATTERPLOT);
@@ -48,10 +48,10 @@ void PlotAction::initialize(ScatterplotPlugin* scatterplotPlugin)
 
 QMenu* PlotAction::getContextMenu()
 {
-    if (_scatterplotPlugin == nullptr)
+    if (_plugin == nullptr)
         return nullptr;
 
-    switch (_scatterplotPlugin->getScatterplotWidget().getRenderMode())
+    switch (_plugin->getScatterplotWidget().getRenderMode())
     {
         case ScatterplotWidget::RenderMode::SCATTERPLOT:
             return _pointPlotAction.getContextMenu();

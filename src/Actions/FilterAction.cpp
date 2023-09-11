@@ -1,6 +1,6 @@
 #include "FilterAction.h"
 
-#include "ScatterplotPlugin.h"
+#include "GradientExplorerPlugin.h"
 #include "ScatterplotWidget.h"
 
 #include <QMenu>
@@ -8,7 +8,7 @@
 
 FilterAction::FilterAction(QObject* parent, const QString& title) :
     WidgetAction(parent, "Filter Settings"),
-    _scatterplotPlugin(nullptr),
+    _plugin(nullptr),
     _spatialPeakFilterAction(this, "Spatial Peak Filter"),
     _hdPeakFilterAction(this, "HD Peak Filter"),
     _restrictToFloodAction(this, "Restrict to flood nodes", true),
@@ -22,7 +22,7 @@ FilterAction::FilterAction(QObject* parent, const QString& title) :
     setConfigurationFlag(WidgetAction::ConfigurationFlag::ForceCollapsedInGroup);
 }
 
-void FilterAction::initialize(ScatterplotPlugin* scatterplotPlugin)
+void FilterAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 {
     auto& spatialPeakFilter = scatterplotPlugin->getSpatialPeakFilter();
     auto& hdPeakFilter = scatterplotPlugin->getHDPeakFilter();

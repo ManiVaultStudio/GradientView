@@ -1,6 +1,6 @@
 #include "SettingsAction.h"
 
-#include "ScatterplotPlugin.h"
+#include "GradientExplorerPlugin.h"
 #include "ScatterplotWidget.h"
 #include "PointData/PointData.h"
 
@@ -10,7 +10,7 @@ using namespace hdps::gui;
 
 SettingsAction::SettingsAction(QObject* parent, const QString& title) :
     GroupAction(parent, title),
-    _scatterplotPlugin(dynamic_cast<ScatterplotPlugin*>(parent)),
+    _plugin(dynamic_cast<GradientExplorerPlugin*>(parent)),
     _currentDatasetAction(this, "Current dataset"),
     _renderModeAction(this, "Render Mode"),
     _positionAction(this, "Position"),
@@ -25,19 +25,19 @@ SettingsAction::SettingsAction(QObject* parent, const QString& title) :
 {
     setConnectionPermissionsToForceNone();
 
-    _currentDatasetAction.initialize(_scatterplotPlugin);
-    _renderModeAction.initialize(_scatterplotPlugin);
-    _plotAction.initialize(_scatterplotPlugin);
+    _currentDatasetAction.initialize(_plugin);
+    _renderModeAction.initialize(_plugin);
+    _plotAction.initialize(_plugin);
     //_exportImageAction.initialize(_scatterplotPlugin);
 
-    _filterAction.initialize(_scatterplotPlugin);
-    _overlayAction.initialize(_scatterplotPlugin);
-    _exportAction.initialize(_scatterplotPlugin);
+    _filterAction.initialize(_plugin);
+    _overlayAction.initialize(_plugin);
+    _exportAction.initialize(_plugin);
 
     //_exportImageAction.setEnabled(false);
 
     const auto updateEnabled = [this]() {
-        bool hasDataset = _scatterplotPlugin->getPositionDataset().isValid();
+        bool hasDataset = _plugin->getPositionDataset().isValid();
 
         _renderModeAction.setEnabled(hasDataset);
         _positionAction.setEnabled(hasDataset);
@@ -52,7 +52,7 @@ SettingsAction::SettingsAction(QObject* parent, const QString& title) :
         //setEnabled(_scatterplotPlugin->getPositionDataset().isValid());
     };
 
-    connect(&_scatterplotPlugin->getPositionDataset(), &Dataset<Points>::changed, this, updateEnabled);
+    connect(&_plugin->getPositionDataset(), &Dataset<Points>::changed, this, updateEnabled);
 
     updateEnabled();
 
@@ -60,11 +60,11 @@ SettingsAction::SettingsAction(QObject* parent, const QString& title) :
     //_exportImageAction.setDefaultWidgetFlags(TriggerAction::Icon);
 
     connect(&_selectionAsMaskAction, &TriggerAction::triggered, this, [this]() {
-        _scatterplotPlugin->useSelectionAsMask();
+        _plugin->useSelectionAsMask();
     });
 
     connect(&_clearMaskAction, &TriggerAction::triggered, this, [this]() {
-        _scatterplotPlugin->clearMask();
+        _plugin->clearMask();
     });
 }
 

@@ -7,7 +7,7 @@ using namespace hdps::gui;
 
 class QMenu;
 
-class ScatterplotPlugin;
+class GradientExplorerPlugin;
 
 /**
  * Miscellaneous action class
@@ -67,8 +67,8 @@ public: // Action getters
     ColorAction& getBackgroundColorAction() { return _backgroundColorAction; }
 
 private:
-    ScatterplotPlugin*  _scatterplotPlugin;         /** Pointer to scatter plot plugin */
-    ColorAction         _backgroundColorAction;     /** Color action for settings the background color action */
+    GradientExplorerPlugin* _plugin;                    /** Pointer to scatter plot plugin */
+    ColorAction             _backgroundColorAction;     /** Color action for settings the background color action */
 
     static const QColor DEFAULT_BACKGROUND_COLOR;
 

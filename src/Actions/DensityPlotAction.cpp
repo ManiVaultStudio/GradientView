@@ -1,5 +1,5 @@
 #include "DensityPlotAction.h"
-#include "ScatterplotPlugin.h"
+#include "GradientExplorerPlugin.h"
 #include "ScatterplotWidget.h"
 
 using namespace hdps::gui;
@@ -17,22 +17,22 @@ DensityPlotAction::DensityPlotAction(QObject* parent, const QString& title) :
     addAction(&_continuousUpdatesAction);
 }
 
-void DensityPlotAction::initialize(ScatterplotPlugin* scatterplotPlugin)
+void DensityPlotAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 {
     Q_ASSERT(scatterplotPlugin != nullptr);
 
     if (scatterplotPlugin == nullptr)
         return;
 
-    _scatterplotPlugin = scatterplotPlugin;
+    _plugin = scatterplotPlugin;
 
     const auto computeDensity = [this]() -> void {
-        if (static_cast<std::int32_t>(_scatterplotPlugin->getSettingsAction().getRenderModeAction().getCurrentIndex()) == ScatterplotWidget::RenderMode::SCATTERPLOT)
+        if (static_cast<std::int32_t>(_plugin->getSettingsAction().getRenderModeAction().getCurrentIndex()) == ScatterplotWidget::RenderMode::SCATTERPLOT)
             return;
 
-        _scatterplotPlugin->getScatterplotWidget().setSigma(_sigmaAction.getValue());
+        _plugin->getScatterplotWidget().setSigma(_sigmaAction.getValue());
 
-        const auto maxDensity = _scatterplotPlugin->getScatterplotWidget().getDensityRenderer().getMaxDensity();
+        const auto maxDensity = _plugin->getScatterplotWidget().getDensityRenderer().getMaxDensity();
 
         //if (maxDensity > 0)
             //_scatterplotPlugin->getSettingsAction().getColoringAction().getColorMap1DAction().getRangeAction(ColorMapAction::Axis::X).setRange({ 0.0f, maxDensity });
@@ -46,12 +46,12 @@ void DensityPlotAction::initialize(ScatterplotPlugin* scatterplotPlugin)
 
     connect(&_continuousUpdatesAction, &ToggleAction::toggled, updateSigmaAction);
 
-    connect(&_scatterplotPlugin->getPositionDataset(), &Dataset<Points>::changed, this, [this, updateSigmaAction, computeDensity](DatasetImpl* dataset) {
+    connect(&_plugin->getPositionDataset(), &Dataset<Points>::changed, this, [this, updateSigmaAction, computeDensity](DatasetImpl* dataset) {
         updateSigmaAction();
         computeDensity();
     });
 
-    connect(&_scatterplotPlugin->getSettingsAction().getRenderModeAction(), &OptionAction::currentIndexChanged, this, computeDensity);
+    connect(&_plugin->getSettingsAction().getRenderModeAction(), &OptionAction::currentIndexChanged, this, computeDensity);
 
     updateSigmaAction();
     computeDensity();
@@ -59,7 +59,7 @@ void DensityPlotAction::initialize(ScatterplotPlugin* scatterplotPlugin)
 
 QMenu* DensityPlotAction::getContextMenu()
 {
-    if (_scatterplotPlugin == nullptr)
+    if (_plugin == nullptr)
         return nullptr;
 
     auto menu = new QMenu("Plot settings");

@@ -1,5 +1,5 @@
 #include "ExportImageDialog.h"
-#include "ScatterplotPlugin.h"
+#include "GradientExplorerPlugin.h"
 
 #include <Application.h>
 
@@ -7,9 +7,9 @@
 
 using namespace hdps;
 
-ExportImageDialog::ExportImageDialog(QWidget* parent, ScatterplotPlugin& scatterplotPlugin) :
+ExportImageDialog::ExportImageDialog(QWidget* parent, GradientExplorerPlugin& scatterplotPlugin) :
     QDialog(parent),
-    _scatterplotPlugin(scatterplotPlugin),
+    _plugin(scatterplotPlugin),
     _exportImageAction(&scatterplotPlugin, "ExportImageAction")
 {
     setWindowTitle("Export " + scatterplotPlugin.getPositionDataset()->getGuiName() + " to image(s)");

@@ -1,12 +1,12 @@
 #include "RenderModeAction.h"
-#include "ScatterplotPlugin.h"
+#include "GradientExplorerPlugin.h"
 #include "ScatterplotWidget.h"
 
 using namespace hdps::gui;
 
 RenderModeAction::RenderModeAction(QObject* parent, const QString& title) :
     OptionAction(parent, title, { "Scatter", "Density", "Contour", "Cell"}),
-    _scatterplotPlugin(nullptr),
+    _plugin(nullptr),
     _scatterPlotAction(this, "Scatter"),
     _densityPlotAction(this, "Density"),
     _contourPlotAction(this, "Contour"),
@@ -37,19 +37,19 @@ RenderModeAction::RenderModeAction(QObject* parent, const QString& title) :
     _cellPlotAction.setToolTip("Set render mode to cell plot (V)");
 }
 
-void RenderModeAction::initialize(ScatterplotPlugin* scatterplotPlugin)
+void RenderModeAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 {
     Q_ASSERT(scatterplotPlugin != nullptr);
 
     if (scatterplotPlugin == nullptr)
         return;
 
-    _scatterplotPlugin = scatterplotPlugin;
+    _plugin = scatterplotPlugin;
 
-    _scatterplotPlugin->getWidget().addAction(&_scatterPlotAction);
+    _plugin->getWidget().addAction(&_scatterPlotAction);
     //_scatterplotPlugin->getWidget().addAction(&_densityPlotAction);
     //_scatterplotPlugin->getWidget().addAction(&_contourPlotAction);
-    _scatterplotPlugin->getWidget().addAction(&_cellPlotAction);
+    _plugin->getWidget().addAction(&_cellPlotAction);
 
     const auto currentIndexChanged = [this]() {
         const auto renderMode = static_cast<RenderMode>(getCurrentIndex());
@@ -59,7 +59,7 @@ void RenderModeAction::initialize(ScatterplotPlugin* scatterplotPlugin)
         _contourPlotAction.setChecked(renderMode == RenderMode::ContourPlot);
         _cellPlotAction.setChecked(renderMode == RenderMode::CellPlot);
 
-        _scatterplotPlugin->getScatterplotWidget().setRenderMode(static_cast<ScatterplotWidget::RenderMode>(getCurrentIndex()));
+        _plugin->getScatterplotWidget().setRenderMode(static_cast<ScatterplotWidget::RenderMode>(getCurrentIndex()));
     };
 
     currentIndexChanged();
@@ -89,12 +89,12 @@ void RenderModeAction::initialize(ScatterplotPlugin* scatterplotPlugin)
     setCurrentIndex(static_cast<std::int32_t>(RenderMode::ScatterPlot));
 
     const auto updateReadOnly = [this]() -> void {
-        setEnabled(_scatterplotPlugin->getPositionDataset().isValid());
+        setEnabled(_plugin->getPositionDataset().isValid());
     };
 
     updateReadOnly();
 
-    connect(&_scatterplotPlugin->getPositionDataset(), &Dataset<Points>::changed, this, updateReadOnly);
+    connect(&_plugin->getPositionDataset(), &Dataset<Points>::changed, this, updateReadOnly);
 }
 
 QMenu* RenderModeAction::getContextMenu()

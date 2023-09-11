@@ -1,5 +1,5 @@
 #include "LoadedDatasetsAction.h"
-#include "ScatterplotPlugin.h"
+#include "GradientExplorerPlugin.h"
 
 #include "PointData/PointData.h"
 #include "ColorData/ColorData.h"
@@ -48,25 +48,25 @@ LoadedDatasetsAction::LoadedDatasetsAction(QObject* parent, const QString& title
     //});
 }
 
-void LoadedDatasetsAction::initialize(ScatterplotPlugin* scatterplotPlugin)
+void LoadedDatasetsAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 {
     Q_ASSERT(scatterplotPlugin != nullptr);
 
     if (scatterplotPlugin == nullptr)
         return;
 
-    _scatterplotPlugin = scatterplotPlugin;
+    _plugin = scatterplotPlugin;
 
     connect(&_positionDatasetPickerAction, &DatasetPickerAction::datasetPicked, [this](Dataset<DatasetImpl> pickedDataset) -> void {
-        _scatterplotPlugin->getPositionDataset() = pickedDataset;
+        _plugin->getPositionDataset() = pickedDataset;
         //_scatterplotPlugin->positionDatasetChanged();
     });
 
-    connect(&_scatterplotPlugin->getPositionDataset(), &Dataset<Points>::changed, this, [this](DatasetImpl* dataset) -> void {
+    connect(&_plugin->getPositionDataset(), &Dataset<Points>::changed, this, [this](DatasetImpl* dataset) -> void {
         _positionDatasetPickerAction.setCurrentDataset(dataset);
     });
 
-    connect(&_scatterplotPlugin->getSliceDataset(), &Dataset<Clusters>::changed, this, [this](DatasetImpl* dataset) -> void {
+    connect(&_plugin->getSliceDataset(), &Dataset<Clusters>::changed, this, [this](DatasetImpl* dataset) -> void {
         _sliceDatasetPickerAction.setCurrentDataset(dataset);
     });
 }
@@ -84,7 +84,7 @@ void LoadedDatasetsAction::fromVariantMap(const QVariantMap& variantMap)
     if (positionDataset.isValid())
     {
         Dataset pickedDataset = core()->getDataManager().getSet(positionDataset.getDatasetId());
-        _scatterplotPlugin->getPositionDataset() = pickedDataset;
+        _plugin->getPositionDataset() = pickedDataset;
     }
 
     // Load slice dataset
@@ -93,7 +93,7 @@ void LoadedDatasetsAction::fromVariantMap(const QVariantMap& variantMap)
     {
         qDebug() << ">>>>> Found a slice dataset " << sliceDataset->getGuiName();
         Dataset pickedDataset = core()->getDataManager().getSet(sliceDataset.getDatasetId());
-        _scatterplotPlugin->getSliceDataset() = pickedDataset;
+        _plugin->getSliceDataset() = pickedDataset;
     }
 
     //_scatterplotPlugin->positionDatasetChanged();

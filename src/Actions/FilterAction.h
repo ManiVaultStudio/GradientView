@@ -9,7 +9,7 @@
 
 using namespace hdps::gui;
 
-class ScatterplotPlugin;
+class GradientExplorerPlugin;
 
 class FilterAction : public WidgetAction
 {
@@ -29,7 +29,7 @@ protected: // Widget
 public:
     Q_INVOKABLE FilterAction(QObject* parent, const QString& title);
 
-    void initialize(ScatterplotPlugin* scatterplotPlugin);
+    void initialize(GradientExplorerPlugin* scatterplotPlugin);
 
     QMenu* getContextMenu();
 
@@ -66,17 +66,17 @@ public: // Action getters
     //IntegralAction& getHDOuterFilterSizeAction() { return _hdOuterFilterSizeAction; }
 
 protected:
-    ScatterplotPlugin*  _scatterplotPlugin;             /** Pointer to scatterplot plugin */
-    TriggerAction       _spatialPeakFilterAction;
-    TriggerAction       _hdPeakFilterAction;
+    GradientExplorerPlugin* _plugin;             /** Pointer to scatterplot plugin */
+    TriggerAction           _spatialPeakFilterAction;
+    TriggerAction           _hdPeakFilterAction;
 
-    ToggleAction        _restrictToFloodAction;
+    ToggleAction            _restrictToFloodAction;
 
-    DecimalAction       _innerFilterSizeAction;
-    DecimalAction       _outerFilterSizeAction;
+    DecimalAction           _innerFilterSizeAction;
+    DecimalAction           _outerFilterSizeAction;
 
-    IntegralAction      _hdInnerFilterSizeAction;
-    //IntegralAction      _hdOuterFilterSizeAction;
+    IntegralAction          _hdInnerFilterSizeAction;
+    //IntegralAction        _hdOuterFilterSizeAction;
 };
 
 Q_DECLARE_METATYPE(FilterAction)

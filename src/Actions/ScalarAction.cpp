@@ -1,6 +1,6 @@
 #include "ScalarAction.h"
 #include "Models/ScalarSourceModel.h"
-#include "ScatterplotPlugin.h"
+#include "GradientExplorerPlugin.h"
 
 #include <QHBoxLayout>
 

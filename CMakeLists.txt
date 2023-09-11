@@ -22,8 +22,8 @@ find_package(Qt6 COMPONENTS Widgets WebEngineWidgets OpenGL OpenGLWidgets REQUIR
 
 set(PLUGIN
     src/Common.h
-    src/ScatterplotPlugin.h
-    src/ScatterplotPlugin.cpp
+    src/GradientExplorerPlugin.h
+    src/GradientExplorerPlugin.cpp
     src/PluginMouseListener.cpp
     src/Timer.h
     src/Timer.cpp

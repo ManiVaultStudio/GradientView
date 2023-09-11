@@ -5,7 +5,7 @@
 
 using namespace hdps::gui;
 
-class ScatterplotPlugin;
+class GradientExplorerPlugin;
 
 /**
  * Render mode action class
@@ -38,7 +38,7 @@ public:
      * Initialize the selection action with \p scatterplotPlugin
      * @param scatterplotPlugin Pointer to scatterplot plugin
      */
-    void initialize(ScatterplotPlugin* scatterplotPlugin);
+    void initialize(GradientExplorerPlugin* scatterplotPlugin);
 
     /**
      * Get action context menu
@@ -84,11 +84,11 @@ public: // Action getters
     ToggleAction& getCellPlotAction() { return _cellPlotAction; }
 
 private:
-    ScatterplotPlugin*  _scatterplotPlugin;     /** Pointer to scatterplot plugin */
-    ToggleAction        _scatterPlotAction;     /** Trigger action for activating the scatter plot render mode */
-    ToggleAction        _densityPlotAction;     /** Trigger action for activating the density plot render mode */
-    ToggleAction        _contourPlotAction;     /** Trigger action for activating the contour plot render mode */
-    ToggleAction        _cellPlotAction;        /** Trigger action for activating the cell plot render mode */
+    GradientExplorerPlugin* _plugin;                /** Pointer to scatterplot plugin */
+    ToggleAction            _scatterPlotAction;     /** Trigger action for activating the scatter plot render mode */
+    ToggleAction            _densityPlotAction;     /** Trigger action for activating the density plot render mode */
+    ToggleAction            _contourPlotAction;     /** Trigger action for activating the contour plot render mode */
+    ToggleAction            _cellPlotAction;        /** Trigger action for activating the cell plot render mode */
 
     friend class hdps::AbstractActionsManager;
 };

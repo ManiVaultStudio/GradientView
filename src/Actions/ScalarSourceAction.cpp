@@ -1,5 +1,5 @@
 #include "ScalarSourceAction.h"
-#include "ScatterplotPlugin.h"
+#include "GradientExplorerPlugin.h"
 
 #include <PointData/PointData.h>
 

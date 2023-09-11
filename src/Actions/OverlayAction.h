@@ -8,7 +8,7 @@
 
 using namespace hdps::gui;
 
-class ScatterplotPlugin;
+class GradientExplorerPlugin;
 
 class OverlayAction : public WidgetAction
 {
@@ -28,7 +28,7 @@ protected: // Widget
 public:
     Q_INVOKABLE OverlayAction(QObject* parent, const QString& title);
 
-    void initialize(ScatterplotPlugin* scatterplotPlugin);
+    void initialize(GradientExplorerPlugin* scatterplotPlugin);
 
     QMenu* getContextMenu();
 
@@ -64,16 +64,16 @@ public: // Action getters
     //GroupAction& getOverlayGroupAction() { return _overlayGroupAction; }
 
 private:
-    ScatterplotPlugin*  _scatterplotPlugin;             /** Pointer to scatterplot plugin */
-    TriggerAction       _computeKnnGraphAction;
+    GradientExplorerPlugin* _plugin;             /** Pointer to scatterplot plugin */
+    TriggerAction           _computeKnnGraphAction;
 
-    IntegralAction      _floodDecimal;
-    IntegralAction      _floodStepsAction;
-    ToggleAction        _sharedDistAction;
+    IntegralAction          _floodDecimal;
+    IntegralAction          _floodStepsAction;
+    ToggleAction            _sharedDistAction;
 
-    TriggerAction       _floodOverlayAction;
-    TriggerAction       _dimensionOverlayAction;
-    TriggerAction       _dimensionalityOverlayAction;
+    TriggerAction           _floodOverlayAction;
+    TriggerAction           _dimensionOverlayAction;
+    TriggerAction           _dimensionalityOverlayAction;
 
     //QVector<TriggersAction::Trigger>    _triggers;
     //GroupAction _overlayGroupAction;

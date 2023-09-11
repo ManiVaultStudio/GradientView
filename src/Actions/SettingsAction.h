@@ -15,7 +15,7 @@
 
 using namespace hdps::gui;
 
-class ScatterplotPlugin;
+class GradientExplorerPlugin;
 
 class SettingsAction : public GroupAction
 {
@@ -63,12 +63,12 @@ public: // Action getters
     TriggerAction& getClearMaskAction() { return _clearMaskAction; }
 
 protected:
-    ScatterplotPlugin*          _scatterplotPlugin;         /** Pointer to scatter plot plugin */
+    GradientExplorerPlugin*     _plugin;                    /** Pointer to scatter plot plugin */
     LoadedDatasetsAction        _currentDatasetAction;
     RenderModeAction            _renderModeAction;          /** Action for configuring render mode */
     PositionAction              _positionAction;            /** Action for configuring point positions */
     PlotAction                  _plotAction;                /** Action for configuring plot settings */
-    //ExportImageAction           _exportImageAction;
+    //ExportImageAction         _exportImageAction;
     MiscellaneousAction         _miscellaneousAction;       /** Action for miscellaneous settings */
 
     FilterAction                _filterAction;

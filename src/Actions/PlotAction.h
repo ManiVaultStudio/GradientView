@@ -5,7 +5,7 @@
 #include "PointPlotAction.h"
 #include "DensityPlotAction.h"
 
-class ScatterplotPlugin;
+class GradientExplorerPlugin;
 
 using namespace hdps::gui;
 
@@ -33,7 +33,7 @@ public:
      * Initialize the selection action with \p scatterplotPlugin
      * @param scatterplotPlugin Pointer to scatterplot plugin
      */
-    void initialize(ScatterplotPlugin* scatterplotPlugin);
+    void initialize(GradientExplorerPlugin* scatterplotPlugin);
 
     /**
      * Get action context menu
@@ -76,9 +76,9 @@ public: // Action getters
     DensityPlotAction& getDensityPlotAction() { return _densityPlotAction; }
 
 private:
-    ScatterplotPlugin*  _scatterplotPlugin;     /** Pointer to scatterplot plugin */
-    PointPlotAction     _pointPlotAction;       /** Point plot action */
-    DensityPlotAction   _densityPlotAction;     /** Density plot action */
+    GradientExplorerPlugin* _plugin;                /** Pointer to scatterplot plugin */
+    PointPlotAction         _pointPlotAction;       /** Point plot action */
+    DensityPlotAction       _densityPlotAction;     /** Density plot action */
 
     friend class hdps::AbstractActionsManager;
 };

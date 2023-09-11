@@ -6,7 +6,7 @@
 
 using namespace hdps::gui;
 
-class ScatterplotPlugin;
+class GradientExplorerPlugin;
 
 /**
  * Density plot action class
@@ -32,7 +32,7 @@ public:
      * Initialize the selection action with \p scatterplotPlugin
      * @param scatterplotPlugin Pointer to scatterplot plugin
      */
-    void initialize(ScatterplotPlugin* scatterplotPlugin);
+    void initialize(GradientExplorerPlugin* scatterplotPlugin);
 
     /**
      * Get action context menu
@@ -81,9 +81,9 @@ public: // Action getters
     ToggleAction& getContinuousUpdatesAction() { return _continuousUpdatesAction; }
 
 private:
-    ScatterplotPlugin*  _scatterplotPlugin;         /** Pointer to scatterplot plugin */
-    DecimalAction       _sigmaAction;               /** Density sigma action */
-    ToggleAction        _continuousUpdatesAction;   /** Live updates action */
+    GradientExplorerPlugin* _plugin;                    /** Pointer to scatterplot plugin */
+    DecimalAction           _sigmaAction;               /** Density sigma action */
+    ToggleAction            _continuousUpdatesAction;   /** Live updates action */
 
     static constexpr double DEFAULT_SIGMA = 0.15f;
     static constexpr bool DEFAULT_CONTINUOUS_UPDATES = true;

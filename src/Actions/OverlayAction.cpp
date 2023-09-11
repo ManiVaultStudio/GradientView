@@ -1,6 +1,6 @@
 #include "OverlayAction.h"
 
-#include "ScatterplotPlugin.h"
+#include "GradientExplorerPlugin.h"
 #include "ScatterplotWidget.h"
 
 #include <QMenu>
@@ -8,7 +8,7 @@
 
 OverlayAction::OverlayAction(QObject* parent, const QString& title) :
     WidgetAction(parent, "Overlay Settings"),
-    _scatterplotPlugin(nullptr),
+    _plugin(nullptr),
     _computeKnnGraphAction(this, "Compute Floods"),
     _floodDecimal(this, "Flood nodes", 10, 500, 10),
     _floodStepsAction(this, "Flood steps", 2, 50, 10),
@@ -45,7 +45,7 @@ OverlayAction::OverlayAction(QObject* parent, const QString& title) :
     //});
 }
 
-void OverlayAction::initialize(ScatterplotPlugin* scatterplotPlugin)
+void OverlayAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 {
     connect(&_computeKnnGraphAction, &TriggerAction::triggered, this, [scatterplotPlugin](bool enabled)
     {

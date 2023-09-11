@@ -1,5 +1,5 @@
 #include "ExportImageAction.h"
-#include "ScatterplotPlugin.h"
+#include "GradientExplorerPlugin.h"
 #include "ScatterplotWidget.h"
 
 const QMap<ExportImageAction::Scale, TriggersAction::Trigger> ExportImageAction::triggers = QMap<ExportImageAction::Scale, TriggersAction::Trigger>({
@@ -26,7 +26,7 @@ const QMap<ExportImageAction::Scale, float> ExportImageAction::scaleFactors = QM
 
 ExportImageAction::ExportImageAction(QObject* parent, const QString& title) :
     VerticalGroupAction(parent, title),
-    _scatterplotPlugin(nullptr),
+    _plugin(nullptr),
     _dimensionSelectionAction(this, "Dimensions"),
     _targetWidthAction(this, "Width ", 1, 10000),
     _targetHeightAction(this, "Height", 1, 10000),
@@ -68,22 +68,22 @@ ExportImageAction::ExportImageAction(QObject* parent, const QString& title) :
     _targetHeightAction.setSuffix("px");
 }
 
-void ExportImageAction::initialize(ScatterplotPlugin* scatterplotPlugin)
+void ExportImageAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 {
     Q_ASSERT(scatterplotPlugin != nullptr);
 
     if (scatterplotPlugin == nullptr)
         return;
 
-    _scatterplotPlugin = scatterplotPlugin;
+    _plugin = scatterplotPlugin;
 
-    _outputDirectoryAction.setSettingsPrefix(_scatterplotPlugin, "Screenshot/OutputDirectory");
+    _outputDirectoryAction.setSettingsPrefix(_plugin, "Screenshot/OutputDirectory");
 
-    connect(&_scatterplotPlugin->getPositionDataset(), &Dataset<Points>::changed, this, &ExportImageAction::updateDimensionsPickerAction);
+    connect(&_plugin->getPositionDataset(), &Dataset<Points>::changed, this, &ExportImageAction::updateDimensionsPickerAction);
 
     const auto scale = [this](float scaleFactor) {
-        _targetWidthAction.setValue(scaleFactor * static_cast<float>(_scatterplotPlugin->getScatterplotWidget().width()));
-        _targetHeightAction.setValue(scaleFactor * static_cast<float>(_scatterplotPlugin->getScatterplotWidget().height()));
+        _targetWidthAction.setValue(scaleFactor * static_cast<float>(_plugin->getScatterplotWidget().width()));
+        _targetHeightAction.setValue(scaleFactor * static_cast<float>(_plugin->getScatterplotWidget().height()));
     };
 
     connect(&_scaleAction, &TriggersAction::triggered, this, [this, scale](std::int32_t triggerIndex) {
@@ -91,7 +91,7 @@ void ExportImageAction::initialize(ScatterplotPlugin* scatterplotPlugin)
     });
 
     const auto positionDatasetChanged = [this]() -> void {
-        auto& positionDataset = _scatterplotPlugin->getPositionDataset();
+        auto& positionDataset = _plugin->getPositionDataset();
 
         if (!positionDataset.isValid())
             return;
@@ -100,7 +100,7 @@ void ExportImageAction::initialize(ScatterplotPlugin* scatterplotPlugin)
         _fileNamePrefixAction.setString(positionDataset->text() + "_");
     };
 
-    connect(&_scatterplotPlugin->getPositionDataset(), &Dataset<DatasetImpl>::changed, this, positionDatasetChanged);
+    connect(&_plugin->getPositionDataset(), &Dataset<DatasetImpl>::changed, this, positionDatasetChanged);
 
     const auto updateTargetHeightAction = [this]() -> void {
         _targetHeightAction.setEnabled(!_lockAspectRatioAction.isChecked());
@@ -154,7 +154,7 @@ void ExportImageAction::initialize(ScatterplotPlugin* scatterplotPlugin)
 
 void ExportImageAction::initializeTargetSize()
 {
-    const auto scatterPlotWidgetSize = _scatterplotPlugin->getScatterplotWidget().size();
+    const auto scatterPlotWidgetSize = _plugin->getScatterplotWidget().size();
 
     _targetWidthAction.initialize(1, 8 * scatterPlotWidgetSize.width(), scatterPlotWidgetSize.width());
     _targetHeightAction.initialize(1, 8 * scatterPlotWidgetSize.height(), scatterPlotWidgetSize.height());
@@ -183,7 +183,7 @@ void ExportImageAction::exportImages()
         const auto width                = _targetWidthAction.getValue();
         const auto height               = _targetHeightAction.getValue();
         const auto backgroundColor      = _backgroundColorAction.getColor();
-        const auto dimensionNames       = _scatterplotPlugin->getPositionDataset()->getDimensionNames();
+        const auto dimensionNames       = _plugin->getPositionDataset()->getDimensionNames();
 
         _statusAction.setStatus(StatusAction::Info);
 
@@ -205,7 +205,7 @@ void ExportImageAction::exportImages()
                 break;
             }
 
-            auto& scatterplotWidget = _scatterplotPlugin->getScatterplotWidget();
+            auto& scatterplotWidget = _plugin->getScatterplotWidget();
 
             //coloringAction.getDimensionAction().setCurrentDimensionName(dimensionNames[dimensionIndex]);
 
@@ -232,7 +232,7 @@ void ExportImageAction::exportImages()
 
 void ExportImageAction::updateDimensionsPickerAction()
 {
-    _dimensionSelectionAction.setPointsDataset(_scatterplotPlugin->getPositionDataset());
+    _dimensionSelectionAction.setPointsDataset(_plugin->getPositionDataset());
 
     connect(&_dimensionSelectionAction.getItemModel(), &QAbstractItemModel::dataChanged, this, &ExportImageAction::updateExportTrigger);
     connect(&_dimensionSelectionAction.getProxyModel(), &QAbstractItemModel::modelReset, this, &ExportImageAction::updateExportTrigger);
