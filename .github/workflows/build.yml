@@ -40,7 +40,7 @@ jobs:
             build-cxx: g++
             build-compiler: gcc
             build-cversion: 10
-            build-config: Releaseß
+            build-config: Release
             build-os: Linux
             build-libcxx: libstdc++
 
