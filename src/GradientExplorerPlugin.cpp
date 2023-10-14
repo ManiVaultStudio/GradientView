@@ -48,8 +48,8 @@
 
 Q_PLUGIN_METADATA(IID "nl.biovault.GradientExplorerPlugin")
 
-using namespace hdps;
-using namespace hdps::util;
+using namespace mv;
+using namespace mv::util;
 
 namespace
 {
@@ -622,7 +622,7 @@ void GradientExplorerPlugin::loadData(const Datasets& datasets)
     _positionDataset = datasets.first();
 }
 
-void GradientExplorerPlugin::onDataEvent(hdps::DatasetEvent* dataEvent)
+void GradientExplorerPlugin::onDataEvent(mv::DatasetEvent* dataEvent)
 {
     if (dataEvent->getType() == EventType::DatasetDataSelectionChanged)
     {
@@ -665,7 +665,7 @@ void GradientExplorerPlugin::onPointSelection()
     if (!_positionDataset.isValid() || !_positionSourceDataset.isValid() || !_dataInitialized)
         return;
 
-    hdps::Dataset<Points> selection = _positionSourceDataset->getSelection();
+    mv::Dataset<Points> selection = _positionSourceDataset->getSelection();
 
     if (selection->indices.size() > 0)
     {
@@ -1269,7 +1269,7 @@ ViewPlugin* GradientExplorerPluginFactory::produce()
     return new GradientExplorerPlugin(this);
 }
 
-PluginTriggerActions GradientExplorerPluginFactory::getPluginTriggerActions(const hdps::Datasets& datasets) const
+PluginTriggerActions GradientExplorerPluginFactory::getPluginTriggerActions(const mv::Datasets& datasets) const
 {
     PluginTriggerActions pluginTriggerActions;
 

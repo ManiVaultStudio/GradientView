@@ -5,7 +5,7 @@
 
 #include <QVBoxLayout>
 
-using namespace hdps;
+using namespace mv;
 
 ExportImageDialog::ExportImageDialog(QWidget* parent, GradientExplorerPlugin& scatterplotPlugin) :
     QDialog(parent),
