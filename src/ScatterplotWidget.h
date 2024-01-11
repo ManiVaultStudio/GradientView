@@ -179,6 +179,9 @@ public slots:
         update();
     }
 
+private slots:
+    void updatePixelRatio();
+
 private:
     const Matrix3f          toClipCoordinates = Matrix3f(2, 0, 0, 2, -1, -1);
     Matrix3f                toNormalisedCoordinates;
@@ -199,6 +202,7 @@ private:
     bool                    _showRandomWalk;
     bool                    _showDirections;
     bool                    _showFilterCircles = true;
+    float                   _pixelRatio;
 
     QString                 _projectionName;
     QString                 _coloredBy;

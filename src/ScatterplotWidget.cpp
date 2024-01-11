@@ -11,6 +11,7 @@
 #include <QPainter>
 #include <QDebug>
 #include <QOpenGLFramebufferObject>
+#include <QWindow>
 
 #include <math.h>
 
@@ -39,7 +40,8 @@ ScatterplotWidget::ScatterplotWidget() :
     _cellRenderer(),
     //_pixelSelectionTool(this),
     _showRandomWalk(false),
-    _showDirections(false)
+    _showDirections(false),
+    _pixelRatio(1.0)
 {
     setContextMenuPolicy(Qt::CustomContextMenu);
     setAcceptDrops(true);
@@ -81,6 +83,12 @@ ScatterplotWidget::ScatterplotWidget() :
     surfaceFormat.setSamples(16);
 
     setFormat(surfaceFormat);
+
+    // we connect screenChanged to updating the pixel ratio
+    // this is necessary in case the window is moved between hi and low dpi screens
+    // e.g., from a laptop display to a projector
+    winId(); // This is needed to produce a valid windowHandle
+    QObject::connect(windowHandle(), &QWindow::screenChanged, this, &ScatterplotWidget::updatePixelRatio);
 }
 
 bool ScatterplotWidget::isInitialized()
@@ -448,6 +456,15 @@ void ScatterplotWidget::initializeGL()
 
 void ScatterplotWidget::resizeGL(int w, int h)
 {
+    // we need this here as we do not have the screen yet to get the actual devicePixelRatio when the view is created
+    _pixelRatio = devicePixelRatio();
+
+    // Pixelration tells us how many pixels map to a point
+    // That is needed as macOS calculates in points and we do in pixels
+    // On macOS high dpi displays pixel ration is 2
+    w *= _pixelRatio;
+    h *= _pixelRatio;
+
     _windowSize.setWidth(w);
     _windowSize.setHeight(h);
 
@@ -632,6 +649,24 @@ void ScatterplotWidget::setColorMap(const QImage& colorMapImage)
 
     // Render
     update();
+}
+
+void ScatterplotWidget::updatePixelRatio()
+{
+    float pixelRatio = devicePixelRatio();
+
+#ifdef SCATTER_PLOT_WIDGET_VERBOSE
+    qDebug() << "Window moved to screen " << window()->screen() << ".";
+    qDebug() << "Pixelratio before was " << _pixelRatio << ". New pixelratio is: " << pixelRatio << ".";
+#endif // SCATTER_PLOT_WIDGET_VERBOSE
+
+    // we only update if the ratio actually changed
+    if (_pixelRatio != pixelRatio)
+    {
+        _pixelRatio = pixelRatio;
+        resizeGL(width(), height());
+        update();
+    }
 }
 
 ScatterplotWidget::~ScatterplotWidget()
