@@ -2,17 +2,12 @@
 
 #include <ViewPlugin.h>
 
-#include "util/PixelSelectionTool.h"
-
 #include "DataStore.h"
 #include "Types.h"
-#include "Common.h"
 
 #include "Actions/SettingsAction.h"
 #include "graphics/Vector3f.h"
 #include "Graph/GraphView.h"
-
-#include "DataMatrix.h"
 #include "Logging.h"
 
 #include <actions/HorizontalToolbarAction.h>
@@ -23,7 +18,7 @@
 #include "Compute/KnnGraph.h"
 #include "Compute/Filters.h"
 
-#include <QPoint>
+#include <vector>
 
 using namespace mv::plugin;
 using namespace mv::util;

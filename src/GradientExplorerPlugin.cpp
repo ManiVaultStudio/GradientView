@@ -3,9 +3,7 @@
 #include "ProjectionView.h"
 #include "DataHierarchyItem.h"
 #include "Application.h"
-#include "actions/GroupsAction.h"
 
-#include "util/PixelSelectionTool.h"
 #include "PointData/DimensionsPickerAction.h"
 
 #include "PointData/PointData.h"
@@ -18,32 +16,26 @@
 
 #include <DatasetsMimeData.h>
 
-#include <Eigen/Dense>
 #include "Compute/LocalDimensionality.h"
-#include "Compute/RandomWalks.h"
 #include "Compute/DataTransformations.h"
-#include "Compute/Directions.h"
 #include "IO/RankingExport.h"
 #include "IO/FloodNodeExport.h"
 #include "Timer.h"
-#include "Types.h"
 
 #include <QtCore>
-#include <QApplication>
 #include <QDebug>
 #include <QMenu>
 #include <QAction>
 #include <QMetaType>
 #include <QVector>
+#include <QPoint>
 #include <QFileDialog>
 
 #include <algorithm>
 #include <functional>
 #include <limits>
 #include <set>
-#include <vector>
 #include <iostream>
-#include <random>
 #include <chrono>
 
 Q_PLUGIN_METADATA(IID "nl.biovault.GradientExplorerPlugin")

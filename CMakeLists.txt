@@ -29,7 +29,6 @@ file(TO_CMAKE_PATH ${MV_INSTALL_DIR} MV_INSTALL_DIR)
 find_package(Qt6 COMPONENTS Widgets WebEngineWidgets OpenGL OpenGLWidgets REQUIRED)
 
 set(PLUGIN
-    src/Common.h
     src/GradientExplorerPlugin.h
     src/GradientExplorerPlugin.cpp
     src/PluginMouseListener.cpp
