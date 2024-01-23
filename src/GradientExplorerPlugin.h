@@ -145,8 +145,11 @@ public: // Flood fill
 
     void useSharedDistances(bool useSharedDistances) { _useSharedDistances = useSharedDistances; }
 
-public: // Slicing
+private: // Slicing
     void onSliceIndexChanged();
+
+private: // Metadata display
+    void onMetadataChanged();
 
 private: // Updating functions
     void updateProjectionData();
@@ -160,6 +163,10 @@ private: // Mouse Interaction
     void notifyNewSelectedPoint();
     void mousePositionChanged(Vector2f mousePos);
     bool eventFilter(QObject* target, QEvent* event);
+
+private: // Key Interaction
+    void onKeyPressed(QKeyEvent* event);
+    void onKeyReleased(QKeyEvent* event);
 
 public: // Import / Export
     void exportDimRankings();
@@ -230,6 +237,10 @@ private:
     // Slicing
     Dataset<Clusters>               _sliceDataset;
     int                             _currentSliceIndex = 0;
+
+    // Metadata visualisation
+    Dataset<Clusters>               _metadataDataset;
+    bool                            _showingMetadata = false;
 
     // Masked KNN
     DataMatrix                      _maskedDataMatrix;

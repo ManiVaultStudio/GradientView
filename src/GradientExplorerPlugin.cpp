@@ -212,17 +212,11 @@ GradientExplorerPlugin::GradientExplorerPlugin(const PluginFactory* factory) :
                     //    _settingsAction.getColoringAction().setCurrentColorDataset(candidateDataset);
                     //});
 
-                    // The number of points is equal, so offer the option to use the points dataset as source for points size
-                    dropRegions << new DropWidget::DropRegion(this, "Point size", QString("Size %1 points with %2").arg(_positionDataset->getGuiName(), candidateDataset->getGuiName()), "ruler-horizontal", true, [this, candidateDataset]() {
-                        _settingsAction.getPlotAction().getPointPlotAction().addPointSizeDataset(candidateDataset);
-                        _settingsAction.getPlotAction().getPointPlotAction().getSizeAction().setCurrentDataset(candidateDataset);
-                    });
-
-                    // The number of points is equal, so offer the option to use the points dataset as source for points opacity
-                    dropRegions << new DropWidget::DropRegion(this, "Point opacity", QString("Set %1 points opacity with %2").arg(_positionDataset->getGuiName(), candidateDataset->getGuiName()), "brush", true, [this, candidateDataset]() {
-                        _settingsAction.getPlotAction().getPointPlotAction().addPointOpacityDataset(candidateDataset);
-                        _settingsAction.getPlotAction().getPointPlotAction().getOpacityAction().setCurrentDataset(candidateDataset);
-                    });
+                    //// The number of points is equal, so offer the option to use the points dataset as metadata
+                    //dropRegions << new DropWidget::DropRegion(this, "Point coloring", QString("Color %1 points with %2").arg(_positionDataset->getGuiName(), candidateDataset->getGuiName()), "brush", true, [this, candidateDataset]() {
+                    //    _metadataDataset = candidateDataset;
+                    //    onMetadataChanged();
+                    //});
                 }
             }
         }
@@ -245,6 +239,11 @@ GradientExplorerPlugin::GradientExplorerPlugin(const PluginFactory* factory) :
                     _currentSliceIndex = 0;
                     _sliceDataset = candidateDataset;
                     onSliceIndexChanged();
+                });
+                // Offer the option to use the points dataset as metadata
+                dropRegions << new DropWidget::DropRegion(this, "Point coloring", QString("Color %1 points with %2").arg(_positionDataset->getGuiName(), candidateDataset->getGuiName()), "brush", true, [this, candidateDataset]() {
+                    _metadataDataset = candidateDataset;
+                    onMetadataChanged();
                 });
             }
             else {
@@ -862,6 +861,11 @@ void GradientExplorerPlugin::onSliceIndexChanged()
     _scatterPlotWidget->setClusterName(QString::number(_currentSliceIndex) + ": " + clusterName);
 
     useSelectionAsDataView(indices);
+}
+
+void GradientExplorerPlugin::onMetadataChanged()
+{
+
 }
 
 void GradientExplorerPlugin::updateSelection()

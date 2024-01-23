@@ -123,6 +123,39 @@ void GradientExplorerPlugin::mousePositionChanged(Vector2f mousePos)
     notifyNewSelectedPoint();
 }
 
+void GradientExplorerPlugin::onKeyPressed(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Control)
+    {
+        _showingMetadata = true;
+        _colorScalars.clear();
+        _colorScalars.resize(_positionDataset->getNumPoints(), 0);
+
+        std::vector<mv::Vector3f> colors;
+        colors.resize(_positionDataset->getNumPoints(), 0);
+        for (Cluster cluster : _metadataDataset->getClusters())
+        {
+            mv::Vector3f color(cluster.getColor().redF(), cluster.getColor().greenF(), cluster.getColor().blueF());
+            for (const int& index : cluster.getIndices())
+            {
+                colors[index] = color;
+            }
+        }
+
+        getScatterplotWidget().setColors(colors);
+        getScatterplotWidget().setScalarEffect(PointEffect::None);
+    }
+}
+
+void GradientExplorerPlugin::onKeyReleased(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Control)
+    {
+        _showingMetadata = false;
+        getScatterplotWidget().setScalarEffect(PointEffect::Color);
+    }
+}
+
 bool GradientExplorerPlugin::eventFilter(QObject* target, QEvent* event)
 {
     auto shouldPaint = false;
@@ -136,6 +169,20 @@ bool GradientExplorerPlugin::eventFilter(QObject* target, QEvent* event)
         break;
     }
 
+    // Keyboard input
+    case QEvent::KeyPress:
+    {
+        onKeyPressed(static_cast<QKeyEvent*>(event));
+        break;
+    }
+
+    case QEvent::KeyRelease:
+    {
+        onKeyReleased(static_cast<QKeyEvent*>(event));
+        break;
+    }
+
+    // Mouse input
     case QEvent::MouseButtonPress:
     {
         auto mouseEvent = static_cast<QMouseEvent*>(event);
