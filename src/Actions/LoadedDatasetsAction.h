@@ -1,6 +1,6 @@
 #pragma once
 
-#include <actions/VerticalGroupAction.h>
+#include <actions/GroupAction.h>
 
 #include "actions/DatasetPickerAction.h"
 
@@ -8,7 +8,7 @@ using namespace mv::gui;
 
 class GradientExplorerPlugin;
 
-class LoadedDatasetsAction : public VerticalGroupAction
+class LoadedDatasetsAction : public GroupAction
 {
     Q_OBJECT
 //protected:

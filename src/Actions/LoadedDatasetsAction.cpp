@@ -11,7 +11,7 @@ using namespace mv;
 using namespace mv::gui;
 
 LoadedDatasetsAction::LoadedDatasetsAction(QObject* parent, const QString& title) :
-    VerticalGroupAction(parent, "Loaded datasets"),
+    GroupAction(parent, "Loaded datasets"),
     _positionDatasetPickerAction(this, "Position"),
     _colorDatasetPickerAction(this, "Color"),
     _sliceDatasetPickerAction(this, "Cluster")
@@ -83,7 +83,7 @@ void LoadedDatasetsAction::fromVariantMap(const QVariantMap& variantMap)
     auto positionDataset = _positionDatasetPickerAction.getCurrentDataset();
     if (positionDataset.isValid())
     {
-        Dataset pickedDataset = core()->getDataManager().getSet(positionDataset.getDatasetId());
+        Dataset pickedDataset = mv::data().getDataset(positionDataset.getDatasetId());
         _plugin->getPositionDataset() = pickedDataset;
     }
 
@@ -91,8 +91,9 @@ void LoadedDatasetsAction::fromVariantMap(const QVariantMap& variantMap)
     auto sliceDataset = _sliceDatasetPickerAction.getCurrentDataset();
     if (sliceDataset.isValid())
     {
+        
         qDebug() << ">>>>> Found a slice dataset " << sliceDataset->getGuiName();
-        Dataset pickedDataset = core()->getDataManager().getSet(sliceDataset.getDatasetId());
+        Dataset pickedDataset = mv::data().getDataset(sliceDataset.getDatasetId());
         _plugin->getSliceDataset() = pickedDataset;
     }
 
@@ -101,38 +102,11 @@ void LoadedDatasetsAction::fromVariantMap(const QVariantMap& variantMap)
 
 QVariantMap LoadedDatasetsAction::toVariantMap() const
 {
-    QVariantMap variantMap = WidgetAction::toVariantMap();
+    QVariantMap variantMap = GroupAction::toVariantMap();
 
-    //variantMap.insert(
-    //    {
-    //    { "Value", _positionDatasetPickerAction.getCurrentDatasetGuid() }
-    //    }
-    //    "dataset", _positionDatasetPickerAction.getCurrentDataset());
     _positionDatasetPickerAction.insertIntoVariantMap(variantMap);
     _colorDatasetPickerAction.insertIntoVariantMap(variantMap);
     _sliceDatasetPickerAction.insertIntoVariantMap(variantMap);
 
     return variantMap;
 }
-
-//LoadedDatasetsAction::Widget::Widget(QWidget* parent, LoadedDatasetsAction* currentDatasetAction, const std::int32_t& widgetFlags) :
-//    WidgetActionWidget(parent, currentDatasetAction)
-//{
-//    setFixedWidth(300);
-//
-//    auto layout = new QGridLayout();
-//
-//    layout->addWidget(currentDatasetAction->_positionDatasetPickerAction.createLabelWidget(this), 0, 0);
-//    layout->addWidget(currentDatasetAction->_positionDatasetPickerAction.createWidget(this), 0, 1);
-//    layout->addWidget(currentDatasetAction->_colorDatasetPickerAction.createLabelWidget(this), 1, 0);
-//    layout->addWidget(currentDatasetAction->_colorDatasetPickerAction.createWidget(this), 1, 1);
-//
-//    if (widgetFlags & PopupLayout)
-//    {
-//        setPopupLayout(layout);
-//            
-//    } else {
-//        layout->setContentsMargins(0, 0, 0, 0);
-//        setLayout(layout);
-//    }
-//}
