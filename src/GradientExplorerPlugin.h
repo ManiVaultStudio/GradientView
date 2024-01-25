@@ -8,6 +8,7 @@
 #include "Actions/SettingsAction.h"
 #include "graphics/Vector3f.h"
 #include "Graph/GraphView.h"
+#include "Widgets/MetadataView.h"
 #include "Logging.h"
 
 #include <actions/HorizontalToolbarAction.h>
@@ -145,6 +146,7 @@ private: // Slicing
 
 private: // Metadata display
     void onMetadataChanged();
+    void computeCellMetadata();
 
 private: // Updating functions
     void updateProjectionData();
@@ -236,6 +238,9 @@ private:
     // Metadata visualisation
     Dataset<Clusters>               _metadataDataset;
     bool                            _showingMetadata = false;
+    QVector<Dataset<Clusters>>      _metadataDatasets;
+    MetadataView                    _metadataView;
+    std::vector<std::vector<int>>   _metadataIndexing;
 
     // Masked KNN
     DataMatrix                      _maskedDataMatrix;

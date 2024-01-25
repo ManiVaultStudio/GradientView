@@ -16,6 +16,7 @@
 
 #include <QMouseEvent>
 #include <QMenu>
+#include <QStringList>
 
 using namespace mv;
 using namespace mv::gui;
@@ -90,6 +91,8 @@ public:
 
     void setScalarEffect(PointEffect effect);
     void setPointScaling(mv::gui::PointScaling scalingMode);
+
+    void setMetadataList(QStringList metadataList) { _metadataList = metadataList; }
 
     void setCurrentPosition(Vector2f pos) { _currentPoint = pos; update(); }
     void setFilterRadii(Vector2f radii) { _radii = radii; update(); }
@@ -207,6 +210,8 @@ private:
     QString                 _projectionName;
     QString                 _coloredBy;
     QString                 _clusterName;
+
+    QStringList             _metadataList;
 
     Vector2f                _currentPoint;
     Vector2f                _radii;

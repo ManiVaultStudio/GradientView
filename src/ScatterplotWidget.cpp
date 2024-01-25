@@ -603,6 +603,17 @@ void ScatterplotWidget::paintGL()
             }
         }
 
+        // Draw metadata
+        int x = 10;
+        int y = 160;
+        painter.setFont(font);
+        painter.setPen(QPen(Qt::white));
+        for (QString s : _metadataList)
+        {
+            painter.drawText(x, y, s);
+            y += 20;
+        }
+
         //// Draw the pixel selection tool overlays if the pixel selection tool is enabled
         //if (_pixelSelectionTool.isEnabled()) {
         //    painter.drawPixmap(rect(), _pixelSelectionTool.getAreaPixmap());

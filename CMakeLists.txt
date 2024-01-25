@@ -43,6 +43,8 @@ set(PLUGIN
     src/Logging.cpp
     src/Graph/GraphView.h
     src/Graph/GraphView.cpp
+    src/Widgets/MetadataView.h
+    src/Widgets/MetadataView.cpp
 )
 
 set(UI

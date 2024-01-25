@@ -289,6 +289,7 @@ void GradientExplorerPlugin::init()
     sortedExpressionGraphLabel->setFont(font);
     gradientViewLayout->addWidget(sortedExpressionGraphLabel);
     gradientViewLayout->addWidget(_graphView, 70);
+    gradientViewLayout->addWidget(&_metadataView, 10);
 
     auto leftPanel = new QVBoxLayout();
     leftPanel->addWidget(_scatterPlotWidget, 90);
@@ -427,6 +428,39 @@ void GradientExplorerPlugin::positionDatasetChanged()
     // Update the window title to reflect the position dataset change
     updateWindowTitle();
 
+    // Collect metadata
+    auto* parentItem = dataHierarchy().getItem(_positionSourceDataset->getId());
+    DataHierarchyItems childrenItems = dataHierarchy().getChildren(*parentItem);
+
+    _metadataDatasets.clear();
+    for (DataHierarchyItem* item : childrenItems)
+    {
+        DataType type = item->getDataType();
+        if (type == ClusterType)
+        {
+            Dataset<Clusters> clusterDataset = item->getDataset<Clusters>();
+            _metadataDatasets.append(clusterDataset);
+            _metadataView.addListItem(clusterDataset);
+            qDebug() << clusterDataset->getGuiName();
+        }
+    }
+    // Compute metadata indices
+    _metadataIndexing.resize(_metadataDatasets.size(), std::vector<int>(_positionDataset->getNumPoints()));
+    for (int i = 0; i < _metadataDatasets.size(); i++)
+    {
+        Dataset<Clusters> metadata = _metadataDatasets[i];
+
+        for (int c = 0; c < metadata->getClusters().size(); c++)
+        {
+            Cluster& cluster = metadata->getClusters()[c];
+            for (int index : cluster.getIndices())
+            {
+                _metadataIndexing[i][index] = c;
+            }
+        }
+    }
+
+    // Create flood nodes dataset if it doesn't exist yet
     if (!_floodScalars.isValid())
     {
         if (!_loadingFromProject)
@@ -662,6 +696,9 @@ void GradientExplorerPlugin::onPointSelection()
     if (selection->indices.size() > 0)
     {
 timer.start();
+        computeCellMetadata();
+timer.mark("Metadata");
+
         Vector2f center = Vector2f(_dataStore.getProjectionView()(_selectedPoint, 0), _dataStore.getProjectionView()(_selectedPoint, 1));
 
         KnnGraph& knnGraph = !_maskedKnn ? _knnGraph : _maskedKnnGraph;
@@ -859,6 +896,26 @@ void GradientExplorerPlugin::onSliceIndexChanged()
 void GradientExplorerPlugin::onMetadataChanged()
 {
 
+}
+
+void GradientExplorerPlugin::computeCellMetadata()
+{
+    int selectedCell = _globalSelectedPoint;
+
+    QStringList metadataList;
+
+    for (int i = 0; i < _metadataDatasets.size(); i++)
+    {
+        Dataset<Clusters> dataset = _metadataDatasets[i];
+
+        int clusterIndex = _metadataIndexing[i][selectedCell];
+
+        QString clusterName = dataset->getClusters()[clusterIndex].getName();
+        metadataList.append(dataset->getGuiName() + ": " + clusterName);
+    }
+
+    _scatterPlotWidget->setMetadataList(metadataList);
+    qDebug() << metadataList;
 }
 
 void GradientExplorerPlugin::updateSelection()
