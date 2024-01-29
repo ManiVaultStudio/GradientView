@@ -128,22 +128,8 @@ void GradientExplorerPlugin::onKeyPressed(QKeyEvent* event)
     if (event->key() == Qt::Key_Control)
     {
         _showingMetadata = true;
-        _colorScalars.clear();
-        _colorScalars.resize(_positionDataset->getNumPoints(), 0);
 
-        std::vector<mv::Vector3f> colors;
-        colors.resize(_positionDataset->getNumPoints(), 0);
-        for (Cluster cluster : _metadataDataset->getClusters())
-        {
-            mv::Vector3f color(cluster.getColor().redF(), cluster.getColor().greenF(), cluster.getColor().blueF());
-            for (const int& index : cluster.getIndices())
-            {
-                colors[index] = color;
-            }
-        }
-
-        getScatterplotWidget().setColors(colors);
-        getScatterplotWidget().setScalarEffect(PointEffect::None);
+        getScatterplotWidget().setColoringMode(ScatterplotWidget::PointColoring::METADATA);
     }
 }
 
@@ -152,7 +138,7 @@ void GradientExplorerPlugin::onKeyReleased(QKeyEvent* event)
     if (event->key() == Qt::Key_Control)
     {
         _showingMetadata = false;
-        getScatterplotWidget().setScalarEffect(PointEffect::Color);
+        getScatterplotWidget().setColoringMode(ScatterplotWidget::PointColoring::FLOODFILL);
     }
 }
 

@@ -205,6 +205,7 @@ private:
     bool                            _dataInitialized = false;
     std::vector<nint>               _mask;
     std::vector<float>              _colorScalars;
+    std::vector<Vector3f>           _colors;
 
     // Interaction
     nint                            _selectedPoint = 0;

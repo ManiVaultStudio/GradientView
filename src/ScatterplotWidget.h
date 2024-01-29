@@ -34,6 +34,12 @@ public:
         CELL
     };
 
+    enum PointColoring
+    {
+        FLOODFILL,
+        METADATA
+    };
+    
     /** The way that point colors are determined */
     enum class ColoringMode {
         Constant,      /** Point color is a constant color */
@@ -74,6 +80,15 @@ public:
      * @param colors Vector of colors (size must match that of the loaded points dataset)
      */
     void setColors(const std::vector<Vector3f>& colors);
+
+    void setColoringMode(PointColoring coloringMode)
+    {
+        _coloringMode = coloringMode;
+        if (_coloringMode == PointColoring::FLOODFILL)
+            setScalarEffect(PointEffect::Color);
+        else
+            setScalarEffect(PointEffect::None);
+    }
 
     void setPointSize(float pointSize);
 
@@ -191,6 +206,7 @@ private:
     Matrix3f                toIsotropicCoordinates;
     bool                    _isInitialized = false;
     RenderMode              _renderMode = SCATTERPLOT;
+    PointColoring           _coloringMode = PointColoring::FLOODFILL;
     QColor                  _backgroundColor;
     //ColoringMode            _coloringMode = ColoringMode::Constant;
     PointRenderer           _pointRenderer;

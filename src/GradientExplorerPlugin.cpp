@@ -895,7 +895,18 @@ void GradientExplorerPlugin::onSliceIndexChanged()
 
 void GradientExplorerPlugin::onMetadataChanged()
 {
+    _colors.clear();
+    _colors.resize(_positionDataset->getNumPoints(), 0);
+    for (Cluster cluster : _metadataDataset->getClusters())
+    {
+        mv::Vector3f color(cluster.getColor().redF(), cluster.getColor().greenF(), cluster.getColor().blueF());
+        for (const int& index : cluster.getIndices())
+        {
+            _colors[index] = color;
+        }
+    }
 
+    getScatterplotWidget().setColors(_colors);
 }
 
 void GradientExplorerPlugin::computeCellMetadata()
@@ -928,7 +939,24 @@ void GradientExplorerPlugin::updateSelection()
     std::vector<bool> selected;
     std::vector<char> highlights;
 
-    _positionDataset->selectedLocalIndices(selection->indices, selected);
+    //_positionDataset->selectedLocalIndices(selection->indices, selected);
+
+    if (!_dataStore.getViewIndices().empty())
+    {
+        // In an array the size of the full raw data, mark selected points as true
+        std::vector<bool> globalSelection(_positionSourceDataset->getNumRawPoints(), false);
+
+        for (const unsigned int& selectionIndex : selection->indices)
+            globalSelection[selectionIndex] = true;
+
+        // For all local points find out which are selected
+        selected.resize(_dataStore.getViewIndices().size(), false);
+        for (int i = 0; i < _dataStore.getViewIndices().size(); i++)
+        {
+            if (globalSelection[_dataStore.getViewIndices()[i]])
+                selected[i] = true;
+        }
+    }
 
     highlights.resize(_positionDataset->getNumPoints(), 0);
 
@@ -1306,6 +1334,16 @@ void GradientExplorerPlugin::useSelectionAsDataView(std::vector<int>& indices)
             viewScalars[i] = _colorScalars[indices[i]];
         }
         getScatterplotWidget().setScalars(viewScalars);
+    }
+    // Update metadata colors
+    if (_colors.size() == _positionDataset->getNumPoints())
+    {
+        std::vector<Vector3f> viewColors(indices.size());
+        for (int i = 0; i < indices.size(); i++)
+        {
+            viewColors[i] = _colors[indices[i]];
+        }
+        getScatterplotWidget().setColors(viewColors);
     }
 }
 
