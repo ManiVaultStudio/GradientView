@@ -9,6 +9,7 @@
 #include <QPainter>
 #include <QEvent>
 #include <QMouseEvent>
+#include <QWindow>
 
 constexpr float MIN_POINT_SIZE = 0.5f;
 
@@ -31,7 +32,8 @@ namespace
 }
 
 ProjectionView::ProjectionView() :
-    _pointRenderer()
+    _pointRenderer(),
+    _pixelRatio(1.0)
 {
     //setContextMenuPolicy(Qt::CustomContextMenu);
     //setAcceptDrops(true);
@@ -66,6 +68,12 @@ ProjectionView::ProjectionView() :
     surfaceFormat.setSamples(16);
 
     setFormat(surfaceFormat);
+
+    // we connect screenChanged to updating the pixel ratio
+    // this is necessary in case the window is moved between hi and low dpi screens
+    // e.g., from a laptop display to a projector
+    winId(); // This is needed to produce a valid windowHandle
+    QObject::connect(windowHandle(), &QWindow::screenChanged, this, &ProjectionView::updatePixelRatio);
 
     setFocusPolicy(Qt::ClickFocus);
     installEventFilter(this);
@@ -183,6 +191,15 @@ void ProjectionView::initializeGL()
 
 void ProjectionView::resizeGL(int w, int h)
 {
+    // we need this here as we do not have the screen yet to get the actual devicePixelRatio when the view is created
+    _pixelRatio = devicePixelRatio();
+
+    // Pixelration tells us how many pixels map to a point
+    // That is needed as macOS calculates in points and we do in pixels
+    // On macOS high dpi displays pixel ration is 2
+    w *= _pixelRatio;
+    h *= _pixelRatio;
+
     _windowSize.setWidth(w);
     _windowSize.setHeight(h);
 
@@ -200,6 +217,24 @@ void ProjectionView::resizeGL(int w, int h)
     float hDiff = ((hAspect - 1) / 2.0);
 
     //toIsotropicCoordinates = Matrix3f(wAspect, 0, 0, hAspect, -wDiff, -hDiff);
+}
+
+void ProjectionView::updatePixelRatio()
+{
+    float pixelRatio = devicePixelRatio();
+
+#ifdef SCATTER_PLOT_WIDGET_VERBOSE
+    qDebug() << "Window moved to screen " << window()->screen() << ".";
+    qDebug() << "Pixelratio before was " << _pixelRatio << ". New pixelratio is: " << pixelRatio << ".";
+#endif // SCATTER_PLOT_WIDGET_VERBOSE
+
+    // we only update if the ratio actually changed
+    if (_pixelRatio != pixelRatio)
+    {
+        _pixelRatio = pixelRatio;
+        resizeGL(width(), height());
+        update();
+    }
 }
 
 namespace {

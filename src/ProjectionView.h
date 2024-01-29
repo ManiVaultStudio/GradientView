@@ -68,6 +68,9 @@ public:
         update();
     }
 
+private slots:
+    void updatePixelRatio();
+
 signals:
     void initialized();
     void viewSelected();
@@ -95,4 +98,6 @@ private:
 
     bool            _clicked = false;
     int             _shownDimension = 0;
+
+    float           _pixelRatio;
 };
