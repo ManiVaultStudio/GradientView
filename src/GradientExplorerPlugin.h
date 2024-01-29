@@ -275,11 +275,11 @@ protected:
     std::vector<ProjectionView*>    _projectionViews;
     ProjectionView*                 _selectedView;
 
-    mv::gui::DropWidget*      _dropWidget;
-    SettingsAction              _settingsAction;
-    ColorMap1DAction            _colorMapAction;            /** Color map action */
-    HorizontalToolbarAction     _primaryToolbarAction;      /** Horizontal toolbar for primary content */
-    HorizontalToolbarAction     _secondaryToolbarAction;    /** Secondary toolbar for secondary content */
+    mv::gui::DropWidget*            _dropWidget;
+    SettingsAction                  _settingsAction;
+    ColorMap1DAction                _colorMapAction;            /** Color map action */
+    HorizontalToolbarAction         _primaryToolbarAction;      /** Horizontal toolbar for primary content */
+    HorizontalToolbarAction         _secondaryToolbarAction;    /** Secondary toolbar for secondary content */
 };
 
 // =============================================================================
