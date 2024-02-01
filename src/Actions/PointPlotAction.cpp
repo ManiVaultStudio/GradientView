@@ -174,7 +174,7 @@ QMenu* PointPlotAction::getContextMenu()
 
     auto menu = new QMenu("Plot settings");
 
-    const auto renderMode = _plugin->getScatterplotWidget().getRenderMode();
+    const auto renderMode = _plugin->getMainView().getRenderMode();
 
     const auto addActionToMenu = [menu](QAction* action) {
         auto actionMenu = new QMenu(action->text());
@@ -247,7 +247,7 @@ void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
     //if (!_scatterplotPlugin->getDataStore().hasData())
     //    return;
 
-    _plugin->getScatterplotWidget().setPointSize(_sizeAction.getMagnitudeAction().getValue());
+    _plugin->getMainView().setPointSize(_sizeAction.getMagnitudeAction().getValue());
 
 
 
@@ -260,7 +260,7 @@ void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
 
     _plugin->getProjectionViews()[0]->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
     _plugin->getProjectionViews()[1]->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
-    _plugin->getSelectedView()->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
+    _plugin->getSelectedView().setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
 
     return;
 
@@ -312,7 +312,7 @@ void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
         }
     }
 
-    _plugin->getScatterplotWidget().setPointSizeScalars(_pointSizeScalars);
+    _plugin->getMainView().setPointSizeScalars(_pointSizeScalars);
 }
 
 void PointPlotAction::updateScatterPlotWidgetPointOpacityScalars()
@@ -387,7 +387,7 @@ void PointPlotAction::updateScatterPlotWidgetPointOpacityScalars()
         }
     }
 
-    _plugin->getScatterplotWidget().setPointOpacityScalars(_pointOpacityScalars);
+    _plugin->getMainView().setPointOpacityScalars(_pointOpacityScalars);
 }
 
 void PointPlotAction::connectToPublicAction(WidgetAction* publicAction, bool recursive)

@@ -2,17 +2,14 @@
 
 #include <ViewPlugin.h>
 
+#include "UserInterface.h"
 #include "DataStore.h"
 #include "Types.h"
 
-#include "Actions/SettingsAction.h"
 #include "graphics/Vector3f.h"
 #include "Graph/GraphView.h"
 #include "Widgets/MetadataView.h"
 #include "Logging.h"
-
-#include <actions/HorizontalToolbarAction.h>
-#include <actions/ColorMap1DAction.h>
 
 #include "Compute/FloodFill.h"
 #include "Compute/KnnIndex.h"
@@ -100,10 +97,18 @@ public: // Miscellaneous
     Dataset<Clusters>& getSliceDataset()                { return _sliceDataset; }
 
     void setOverlayType(OverlayType type)               { _overlayType = type; }
-    void setFilterLabelText(QString text)               { _filterLabel->setText(text); }
-    void setFilterType(filters::FilterType type)        { _filterType = type; }
 
-    SettingsAction& getSettingsAction()                 { return _settingsAction; }
+public: // User interface
+    /** Get reference to the scatter plot widget */
+    UserInterface&                  getUI()                 { return _userInterface; }
+
+    ScatterplotWidget&              getMainView()           { return _userInterface.getMainView(); }
+    std::vector<ProjectionView*>&   getProjectionViews()    { return _userInterface.getProjectionViews(); }
+    ProjectionView&                 getSelectedView()       { return _userInterface.getSelectionView(); }
+
+    SettingsAction&                 getSettingsAction()     { return _userInterface.getSettingsAction(); }
+    ColorMapAction&                 getColorMapAction()     { return _userInterface.getColorMapAction(); }
+    DropWidget&                     getDropWidget()         { return _userInterface.getDropWidget(); }
 
 protected:
 
@@ -114,17 +119,10 @@ protected:
     void updateColorMapActionScalarRange();
 
 public:
-
-    /** Get reference to the scatter plot widget */
-    ScatterplotWidget& getScatterplotWidget()           { return *_scatterPlotWidget; }
-    std::vector<ProjectionView*>& getProjectionViews()  { return _projectionViews; }
-    ProjectionView*& getSelectedView()                  { return _selectedView; }
-
-    filters::SpatialPeakFilter& getSpatialPeakFilter()  { return _spatialPeakFilter; }
-    filters::HDFloodPeakFilter& getHDPeakFilter()       { return _hdFloodPeakFilter; }
-    
     DataStorage& getDataStore()                         { return _dataStore; }
     float getProjectionSize()                           { return _dataStore.getProjectionSize(); }
+
+    filters::Filters& getFilters()                      { return _filters; }
 
 public: // Flood fill
     void createKnnIndex();
@@ -136,7 +134,7 @@ public: // Flood fill
     void setFloodSteps(int numFloodSteps)
     {
         _floodFill.setNumWaves(numFloodSteps);
-        _settingsAction.getFilterAction().setFloodSteps(numFloodSteps);
+        getSettingsAction().getFilterAction().setFloodSteps(numFloodSteps);
     }
 
     void useSharedDistances(bool useSharedDistances) { _useSharedDistances = useSharedDistances; }
@@ -217,10 +215,7 @@ private:
     bool                            _loadingFromProject = false;
 
     // Filters
-    QLabel*                         _filterLabel;
-    filters::FilterType             _filterType;
-    filters::SpatialPeakFilter      _spatialPeakFilter;
-    filters::HDFloodPeakFilter      _hdFloodPeakFilter;
+    filters::Filters                _filters;
 
     // KNN
     bool                            _computeOnLoad = false;
@@ -270,16 +265,7 @@ private:
     // Overlays
     OverlayType                     _overlayType;
 
-protected:
-    ScatterplotWidget*              _scatterPlotWidget;
-    std::vector<ProjectionView*>    _projectionViews;
-    ProjectionView*                 _selectedView;
-
-    mv::gui::DropWidget*            _dropWidget;
-    SettingsAction                  _settingsAction;
-    ColorMap1DAction                _colorMapAction;            /** Color map action */
-    HorizontalToolbarAction         _primaryToolbarAction;      /** Horizontal toolbar for primary content */
-    HorizontalToolbarAction         _secondaryToolbarAction;    /** Secondary toolbar for secondary content */
+    UserInterface                   _userInterface;
 };
 
 // =============================================================================

@@ -30,9 +30,9 @@ void DensityPlotAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
         if (static_cast<std::int32_t>(_plugin->getSettingsAction().getRenderModeAction().getCurrentIndex()) == ScatterplotWidget::RenderMode::SCATTERPLOT)
             return;
 
-        _plugin->getScatterplotWidget().setSigma(_sigmaAction.getValue());
+        _plugin->getMainView().setSigma(_sigmaAction.getValue());
 
-        const auto maxDensity = _plugin->getScatterplotWidget().getDensityRenderer().getMaxDensity();
+        const auto maxDensity = _plugin->getMainView().getDensityRenderer().getMaxDensity();
 
         //if (maxDensity > 0)
             //_scatterplotPlugin->getSettingsAction().getColoringAction().getColorMap1DAction().getRangeAction(ColorMapAction::Axis::X).setRange({ 0.0f, maxDensity });
