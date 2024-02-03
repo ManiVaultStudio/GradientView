@@ -1,6 +1,6 @@
 #include "ExportImageAction.h"
 #include "GradientExplorerPlugin.h"
-#include "Widgets/ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 
 const QMap<ExportImageAction::Scale, TriggersAction::Trigger> ExportImageAction::triggers = QMap<ExportImageAction::Scale, TriggersAction::Trigger>({
     { ExportImageAction::Eighth, TriggersAction::Trigger("12.5%", "Scale by 1/8th") },
@@ -154,10 +154,10 @@ void ExportImageAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 
 void ExportImageAction::initializeTargetSize()
 {
-    const auto scatterPlotWidgetSize = _plugin->getUI().getMainView().size();
+    const auto mainViewSize = _plugin->getUI().getMainView().size();
 
-    _targetWidthAction.initialize(1, 8 * scatterPlotWidgetSize.width(), scatterPlotWidgetSize.width());
-    _targetHeightAction.initialize(1, 8 * scatterPlotWidgetSize.height(), scatterPlotWidgetSize.height());
+    _targetWidthAction.initialize(1, 8 * mainViewSize.width(), mainViewSize.width());
+    _targetHeightAction.initialize(1, 8 * mainViewSize.height(), mainViewSize.height());
 
     _aspectRatio = static_cast<float>(_targetHeightAction.getValue()) / static_cast<float>(_targetWidthAction.getValue());
 }
@@ -205,7 +205,7 @@ void ExportImageAction::exportImages()
                 break;
             }
 
-            auto& scatterplotWidget = _plugin->getUI().getMainView();
+            auto& mainView = _plugin->getUI().getMainView();
 
             //coloringAction.getDimensionAction().setCurrentDimensionName(dimensionNames[dimensionIndex]);
 
@@ -215,7 +215,7 @@ void ExportImageAction::exportImages()
             //    rangeAction.initialize({ _fixedRangeAction.getMinimum(), _fixedRangeAction.getMaximum() }, { _fixedRangeAction.getMinimum(), _fixedRangeAction.getMaximum() });
             //}
 
-            scatterplotWidget.createScreenshot(width, height, imageFilePath, backgroundColor);
+            mainView.createScreenshot(width, height, imageFilePath, backgroundColor);
 
             numberOfExportedImages++;
         }

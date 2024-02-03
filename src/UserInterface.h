@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Widgets/ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 #include "Widgets/ProjectionView.h"
 
 #include <Widgets/DropWidget.h>
@@ -17,9 +17,9 @@ public:
     void initializeLabels();
 
 public:
-    ScatterplotWidget&              getMainView()                   { return *_scatterPlotWidget; }
+    MainView&                       getMainView()                   { return *_mainView; }
     std::vector<ProjectionView*>&   getProjectionViews()            { return _projectionViews; }
-    ProjectionView&                 getSelectedView()              { return *_selectedView; }
+    ProjectionView&                 getSelectedView()               { return *_selectedView; }
 
     SettingsAction&                 getSettingsAction()             { return _settingsAction; }
     const SettingsAction&           getSettingsAction() const       { return _settingsAction; }
@@ -33,7 +33,7 @@ public:
     QLabel&                         getSortedExpressionGraphLabel() { return *_sortedExpressionGraphLabel; }
 
 private:
-    ScatterplotWidget*              _scatterPlotWidget;
+    MainView*                       _mainView;
     std::vector<ProjectionView*>    _projectionViews;
     ProjectionView*                 _selectedView;
 

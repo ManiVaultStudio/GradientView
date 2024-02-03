@@ -1,6 +1,6 @@
 #include "GradientExplorerPlugin.h"
 
-#include "Widgets/ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 
 #include "ClusterData/ClusterData.h"
 
@@ -129,7 +129,7 @@ void GradientExplorerPlugin::onKeyPressed(QKeyEvent* event)
     {
         _showingMetadata = true;
 
-        getUI().getMainView().setColoringMode(ScatterplotWidget::PointColoring::METADATA);
+        getUI().getMainView().setColoringMode(MainView::PointColoring::METADATA);
     }
 }
 
@@ -138,7 +138,7 @@ void GradientExplorerPlugin::onKeyReleased(QKeyEvent* event)
     if (event->key() == Qt::Key_Control)
     {
         _showingMetadata = false;
-        getUI().getMainView().setColoringMode(ScatterplotWidget::PointColoring::FLOODFILL);
+        getUI().getMainView().setColoringMode(MainView::PointColoring::FLOODFILL);
     }
 }
 

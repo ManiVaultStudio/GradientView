@@ -1,7 +1,7 @@
 #include "SettingsAction.h"
 
 #include "GradientExplorerPlugin.h"
-#include "Widgets/ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 #include "PointData/PointData.h"
 
 #include <QMenu>

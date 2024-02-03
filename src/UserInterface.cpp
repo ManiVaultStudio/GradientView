@@ -1,7 +1,7 @@
 #include "UserInterface.h"
 
 UserInterface::UserInterface(QObject* parent) :
-    _scatterPlotWidget(new ScatterplotWidget()),
+    _mainView(new MainView()),
     _projectionViews(2, nullptr),
     _selectedView(),
     _dropWidget(nullptr),
@@ -25,7 +25,7 @@ void UserInterface::init()
     _primaryToolbarAction.addAction(&_settingsAction.getSelectionAsMaskAction());
     _primaryToolbarAction.addAction(&_settingsAction.getClearMaskAction());
 
-    _dropWidget = new DropWidget(_scatterPlotWidget);
+    _dropWidget = new DropWidget(_mainView);
 
     for (int i = 0; i < _projectionViews.size(); i++)
     {

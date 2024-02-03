@@ -1,7 +1,7 @@
 #include "PointPlotAction.h"
 #include "ScalarSourceAction.h"
 #include "GradientExplorerPlugin.h"
-#include "Widgets/ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 #include "Widgets/ProjectionView.h"
 
 #include <DataHierarchyItem.h>
@@ -142,8 +142,8 @@ void PointPlotAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 
         updateDefaultDatasets();
 
-        updateScatterPlotWidgetPointSizeScalars();
-        updateScatterPlotWidgetPointOpacityScalars();
+        updateMainViewPointSizeScalars();
+        updateMainViewPointOpacityScalars();
 
         _sizeAction.getSourceAction().getPickerAction().setCurrentIndex(0);
         _opacityAction.getSourceAction().getPickerAction().setCurrentIndex(0);
@@ -151,20 +151,20 @@ void PointPlotAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 
     connect(&_plugin->getPositionDataset(), &Dataset<Points>::childAdded, this, &PointPlotAction::updateDefaultDatasets);
     connect(&_plugin->getPositionDataset(), &Dataset<Points>::childRemoved, this, &PointPlotAction::updateDefaultDatasets);
-    connect(&_plugin->getPositionDataset(), &Dataset<Points>::dataSelectionChanged, this, &PointPlotAction::updateScatterPlotWidgetPointSizeScalars);
-    connect(&_plugin->getPositionDataset(), &Dataset<Points>::dataSelectionChanged, this, &PointPlotAction::updateScatterPlotWidgetPointOpacityScalars);
+    connect(&_plugin->getPositionDataset(), &Dataset<Points>::dataSelectionChanged, this, &PointPlotAction::updateMainViewPointSizeScalars);
+    connect(&_plugin->getPositionDataset(), &Dataset<Points>::dataSelectionChanged, this, &PointPlotAction::updateMainViewPointOpacityScalars);
 
-    connect(&_sizeAction, &ScalarAction::magnitudeChanged, this, &PointPlotAction::updateScatterPlotWidgetPointSizeScalars);
-    connect(&_sizeAction, &ScalarAction::offsetChanged, this, &PointPlotAction::updateScatterPlotWidgetPointSizeScalars);
-    connect(&_sizeAction, &ScalarAction::sourceSelectionChanged, this, &PointPlotAction::updateScatterPlotWidgetPointSizeScalars);
-    connect(&_sizeAction, &ScalarAction::sourceDataChanged, this, &PointPlotAction::updateScatterPlotWidgetPointSizeScalars);
-    connect(&_sizeAction, &ScalarAction::scalarRangeChanged, this, &PointPlotAction::updateScatterPlotWidgetPointSizeScalars);
+    connect(&_sizeAction, &ScalarAction::magnitudeChanged, this, &PointPlotAction::updateMainViewPointSizeScalars);
+    connect(&_sizeAction, &ScalarAction::offsetChanged, this, &PointPlotAction::updateMainViewPointSizeScalars);
+    connect(&_sizeAction, &ScalarAction::sourceSelectionChanged, this, &PointPlotAction::updateMainViewPointSizeScalars);
+    connect(&_sizeAction, &ScalarAction::sourceDataChanged, this, &PointPlotAction::updateMainViewPointSizeScalars);
+    connect(&_sizeAction, &ScalarAction::scalarRangeChanged, this, &PointPlotAction::updateMainViewPointSizeScalars);
 
-    connect(&_opacityAction, &ScalarAction::magnitudeChanged, this, &PointPlotAction::updateScatterPlotWidgetPointOpacityScalars);
-    connect(&_opacityAction, &ScalarAction::offsetChanged, this, &PointPlotAction::updateScatterPlotWidgetPointOpacityScalars);
-    connect(&_opacityAction, &ScalarAction::sourceSelectionChanged, this, &PointPlotAction::updateScatterPlotWidgetPointOpacityScalars);
-    connect(&_opacityAction, &ScalarAction::sourceDataChanged, this, &PointPlotAction::updateScatterPlotWidgetPointOpacityScalars);
-    connect(&_opacityAction, &ScalarAction::scalarRangeChanged, this, &PointPlotAction::updateScatterPlotWidgetPointOpacityScalars);
+    connect(&_opacityAction, &ScalarAction::magnitudeChanged, this, &PointPlotAction::updateMainViewPointOpacityScalars);
+    connect(&_opacityAction, &ScalarAction::offsetChanged, this, &PointPlotAction::updateMainViewPointOpacityScalars);
+    connect(&_opacityAction, &ScalarAction::sourceSelectionChanged, this, &PointPlotAction::updateMainViewPointOpacityScalars);
+    connect(&_opacityAction, &ScalarAction::sourceDataChanged, this, &PointPlotAction::updateMainViewPointOpacityScalars);
+    connect(&_opacityAction, &ScalarAction::scalarRangeChanged, this, &PointPlotAction::updateMainViewPointOpacityScalars);
 }
 
 QMenu* PointPlotAction::getContextMenu()
@@ -239,7 +239,7 @@ void PointPlotAction::updateDefaultDatasets()
     }
 }
 
-void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
+void PointPlotAction::updateMainViewPointSizeScalars()
 {
     if (_plugin == nullptr)
         return;
@@ -315,7 +315,7 @@ void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
     _plugin->getUI().getMainView().setPointSizeScalars(_pointSizeScalars);
 }
 
-void PointPlotAction::updateScatterPlotWidgetPointOpacityScalars()
+void PointPlotAction::updateMainViewPointOpacityScalars()
 {
     if (_plugin == nullptr)
         return;

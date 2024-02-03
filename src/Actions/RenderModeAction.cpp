@@ -1,6 +1,6 @@
 #include "RenderModeAction.h"
 #include "GradientExplorerPlugin.h"
-#include "Widgets/ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 
 using namespace mv::gui;
 
@@ -59,7 +59,7 @@ void RenderModeAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
         _contourPlotAction.setChecked(renderMode == RenderMode::ContourPlot);
         _cellPlotAction.setChecked(renderMode == RenderMode::CellPlot);
 
-        _plugin->getUI().getMainView().setRenderMode(static_cast<ScatterplotWidget::RenderMode>(getCurrentIndex()));
+        _plugin->getUI().getMainView().setRenderMode(static_cast<MainView::RenderMode>(getCurrentIndex()));
     };
 
     currentIndexChanged();

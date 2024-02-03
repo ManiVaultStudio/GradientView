@@ -46,8 +46,8 @@ set(PLUGIN
 set(UI
     src/UserInterface.h
     src/UserInterface.cpp
-    src/Widgets/ScatterplotWidget.h
-    src/Widgets/ScatterplotWidget.cpp
+    src/Widgets/MainView.h
+    src/Widgets/MainView.cpp
     src/CellRenderer.h
     src/CellRenderer.cpp
     src/Widgets/ProjectionView.h

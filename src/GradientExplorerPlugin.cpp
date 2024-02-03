@@ -1,5 +1,5 @@
 #include "GradientExplorerPlugin.h"
-#include "Widgets/ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 #include "Widgets/ProjectionView.h"
 #include "DataHierarchyItem.h"
 #include "Application.h"
@@ -96,7 +96,7 @@ GradientExplorerPlugin::GradientExplorerPlugin(const PluginFactory* factory) :
     connect(getUI().getProjectionViews()[1], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 2; updateViewScalars(); });
     connect(&getUI().getSelectedView(), &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 3; updateViewScalars(); });
 
-    connect(&getUI().getMainView(), &ScatterplotWidget::initialized, this, [this]()
+    connect(&getUI().getMainView(), &MainView::initialized, this, [this]()
     {
             getUI().getMainView().setColorMap(getUI().getColorMapAction().getColorMapImage().mirrored(false, true));
             getUI().getMainView().setScalarEffect(PointEffect::Color);
@@ -109,7 +109,7 @@ GradientExplorerPlugin::GradientExplorerPlugin(const PluginFactory* factory) :
     _graphTimer->setSingleShot(true);
     connect(_graphTimer, &QTimer::timeout, this, &GradientExplorerPlugin::computeGraphs);
 
-    connect(&getUI().getMainView(), &ScatterplotWidget::customContextMenuRequested, this, [this](const QPoint& point) {
+    connect(&getUI().getMainView(), &MainView::customContextMenuRequested, this, [this](const QPoint& point) {
         if (!_positionDataset.isValid())
             return;
 
@@ -290,7 +290,7 @@ void GradientExplorerPlugin::init()
     getWidget().setLayout(layout);
 
     // Update the data when the scatter plot widget is initialized
-    //connect(_scatterPlotWidget, &ScatterplotWidget::initialized, this, &ScatterplotPlugin::updateProjectionData);
+    //connect(_mainView, &MainView::initialized, this, &ScatterplotPlugin::updateProjectionData);
 
     //_eventListener.setEventCore(Application::core());
     _eventListener.addSupportedEventType(static_cast<std::uint32_t>(EventType::DatasetDataSelectionChanged));
@@ -514,9 +514,9 @@ void GradientExplorerPlugin::computeStaticData()
         //timer.mark("Local dimensionality");
 
         //compute::computeHDLocalDimensionality(_dataStore.getData(), _largeKnnGraph, _localHighDimensionality);
-        //getScatterplotWidget().setColorMap(_colorMapAction.getColorMapImage());
-        //getScatterplotWidget().setColorMapRange(0, 1);
-        //getScatterplotWidget().setScalars(_localHighDimensionality);
+        //getUI().getMainView().setColorMap(_colorMapAction.getColorMapImage());
+        //getUI().getMainView().setColorMapRange(0, 1);
+        //getUI().getMainView().setScalars(_localHighDimensionality);
 
         //Dataset<Points> localDims = _core->addDataset("Points", "Dimensionality");
 
@@ -525,7 +525,7 @@ void GradientExplorerPlugin::computeStaticData()
         //_core->notifyDatasetAdded(localDims);
 
         //computeDirection(_dataMatrix, _projMatrix, _knnGraph, _directions);
-        //getScatterplotWidget().setDirections(_directions);
+        //getUI().getMainView().setDirections(_directions);
         timer.mark("Directions");
     }
 

@@ -1,6 +1,6 @@
 #include "PlotAction.h"
 #include "GradientExplorerPlugin.h"
-#include "Widgets/ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 
 using namespace mv::gui;
 
@@ -34,16 +34,16 @@ void PlotAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
     _pointPlotAction.initialize(_plugin);
     _densityPlotAction.initialize(_plugin);
 
-    auto& scatterplotWidget = _plugin->getUI().getMainView();
+    auto& mainView = _plugin->getUI().getMainView();
 
-    const auto updateRenderMode = [this, &scatterplotWidget]() -> void {
-        _pointPlotAction.setVisible(scatterplotWidget.getRenderMode() == ScatterplotWidget::SCATTERPLOT);
-        _densityPlotAction.setVisible(scatterplotWidget.getRenderMode() != ScatterplotWidget::SCATTERPLOT);
+    const auto updateRenderMode = [this, &mainView]() -> void {
+        _pointPlotAction.setVisible(mainView.getRenderMode() == MainView::SCATTERPLOT);
+        _densityPlotAction.setVisible(mainView.getRenderMode() != MainView::SCATTERPLOT);
     };
 
     updateRenderMode();
 
-    connect(&scatterplotWidget, &ScatterplotWidget::renderModeChanged, this, updateRenderMode);
+    connect(&mainView, &MainView::renderModeChanged, this, updateRenderMode);
 }
 
 QMenu* PlotAction::getContextMenu()
@@ -53,12 +53,12 @@ QMenu* PlotAction::getContextMenu()
 
     switch (_plugin->getUI().getMainView().getRenderMode())
     {
-        case ScatterplotWidget::RenderMode::SCATTERPLOT:
+        case MainView::RenderMode::SCATTERPLOT:
             return _pointPlotAction.getContextMenu();
             break;
 
-        case ScatterplotWidget::RenderMode::DENSITY:
-        case ScatterplotWidget::RenderMode::LANDSCAPE:
+        case MainView::RenderMode::DENSITY:
+        case MainView::RenderMode::LANDSCAPE:
             return _densityPlotAction.getContextMenu();
             break;
 

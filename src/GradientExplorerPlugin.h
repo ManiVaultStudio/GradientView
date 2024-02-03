@@ -24,7 +24,7 @@ using namespace mv::util;
 class Points;
 class Clusters;
 
-class ScatterplotWidget;
+class MainView;
 class ProjectionView;
 
 namespace mv

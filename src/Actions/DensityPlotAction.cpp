@@ -1,6 +1,6 @@
 #include "DensityPlotAction.h"
 #include "GradientExplorerPlugin.h"
-#include "Widgets/ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 
 using namespace mv::gui;
 
@@ -27,7 +27,7 @@ void DensityPlotAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
     _plugin = scatterplotPlugin;
 
     const auto computeDensity = [this]() -> void {
-        if (static_cast<std::int32_t>(_plugin->getUI().getSettingsAction().getRenderModeAction().getCurrentIndex()) == ScatterplotWidget::RenderMode::SCATTERPLOT)
+        if (static_cast<std::int32_t>(_plugin->getUI().getSettingsAction().getRenderModeAction().getCurrentIndex()) == MainView::RenderMode::SCATTERPLOT)
             return;
 
         _plugin->getUI().getMainView().setSigma(_sigmaAction.getValue());
