@@ -20,7 +20,7 @@ MiscellaneousAction::MiscellaneousAction(QObject* parent, const QString& title) 
     _backgroundColorAction.setColor(DEFAULT_BACKGROUND_COLOR);
 
     const auto updateBackgroundColor = [this]() -> void {
-        _plugin->getMainView().setBackgroundColor(_backgroundColorAction.getColor());
+        _plugin->getUI().getMainView().setBackgroundColor(_backgroundColorAction.getColor());
     };
 
     connect(&_backgroundColorAction, &ColorAction::colorChanged, this, [this, updateBackgroundColor](const QColor& color) {

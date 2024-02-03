@@ -41,10 +41,6 @@ set(PLUGIN
     src/DataStore.cpp
     src/Logging.h
     src/Logging.cpp
-    src/Graph/GraphView.h
-    src/Graph/GraphView.cpp
-    src/Widgets/MetadataView.h
-    src/Widgets/MetadataView.cpp
 )
 
 set(UI
@@ -54,8 +50,12 @@ set(UI
     src/ScatterplotWidget.cpp
     src/CellRenderer.h
     src/CellRenderer.cpp
-    src/ProjectionView.h
-    src/ProjectionView.cpp
+    src/Widgets/ProjectionView.h
+    src/Widgets/ProjectionView.cpp
+    src/Widgets/GraphView.h
+    src/Widgets/GraphView.cpp
+    src/Widgets/MetadataView.h
+    src/Widgets/MetadataView.cpp
     src/ExportImageDialog.h
     src/ExportImageDialog.cpp
 )

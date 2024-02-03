@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ScatterplotWidget.h"
-#include "ProjectionView.h"
+#include "Widgets/ProjectionView.h"
 
 #include <Widgets/DropWidget.h>
 #include <Actions/SettingsAction.h>
@@ -19,7 +19,7 @@ public:
 public:
     ScatterplotWidget&              getMainView()                   { return *_scatterPlotWidget; }
     std::vector<ProjectionView*>&   getProjectionViews()            { return _projectionViews; }
-    ProjectionView&                 getSelectionView()              { return *_selectedView; }
+    ProjectionView&                 getSelectedView()              { return *_selectedView; }
 
     SettingsAction&                 getSettingsAction()             { return _settingsAction; }
     const SettingsAction&           getSettingsAction() const       { return _settingsAction; }

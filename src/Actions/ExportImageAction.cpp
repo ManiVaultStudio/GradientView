@@ -82,8 +82,8 @@ void ExportImageAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
     connect(&_plugin->getPositionDataset(), &Dataset<Points>::changed, this, &ExportImageAction::updateDimensionsPickerAction);
 
     const auto scale = [this](float scaleFactor) {
-        _targetWidthAction.setValue(scaleFactor * static_cast<float>(_plugin->getMainView().width()));
-        _targetHeightAction.setValue(scaleFactor * static_cast<float>(_plugin->getMainView().height()));
+        _targetWidthAction.setValue(scaleFactor * static_cast<float>(_plugin->getUI().getMainView().width()));
+        _targetHeightAction.setValue(scaleFactor * static_cast<float>(_plugin->getUI().getMainView().height()));
     };
 
     connect(&_scaleAction, &TriggersAction::triggered, this, [this, scale](std::int32_t triggerIndex) {
@@ -154,7 +154,7 @@ void ExportImageAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 
 void ExportImageAction::initializeTargetSize()
 {
-    const auto scatterPlotWidgetSize = _plugin->getMainView().size();
+    const auto scatterPlotWidgetSize = _plugin->getUI().getMainView().size();
 
     _targetWidthAction.initialize(1, 8 * scatterPlotWidgetSize.width(), scatterPlotWidgetSize.width());
     _targetHeightAction.initialize(1, 8 * scatterPlotWidgetSize.height(), scatterPlotWidgetSize.height());
@@ -205,7 +205,7 @@ void ExportImageAction::exportImages()
                 break;
             }
 
-            auto& scatterplotWidget = _plugin->getMainView();
+            auto& scatterplotWidget = _plugin->getUI().getMainView();
 
             //coloringAction.getDimensionAction().setCurrentDimensionName(dimensionNames[dimensionIndex]);
 

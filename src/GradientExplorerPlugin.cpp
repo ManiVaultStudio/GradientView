@@ -1,6 +1,6 @@
 #include "GradientExplorerPlugin.h"
 #include "ScatterplotWidget.h"
-#include "ProjectionView.h"
+#include "Widgets/ProjectionView.h"
 #include "DataHierarchyItem.h"
 #include "Application.h"
 #include "event/Event.h"
@@ -92,28 +92,28 @@ GradientExplorerPlugin::GradientExplorerPlugin(const PluginFactory* factory) :
     _userInterface.init();
 
     // Connect signals from views
-    connect(getProjectionViews()[0], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 1; updateViewScalars(); });
-    connect(getProjectionViews()[1], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 2; updateViewScalars(); });
-    connect(&getSelectedView(), &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 3; updateViewScalars(); });
+    connect(getUI().getProjectionViews()[0], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 1; updateViewScalars(); });
+    connect(getUI().getProjectionViews()[1], &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 2; updateViewScalars(); });
+    connect(&getUI().getSelectedView(), &ProjectionView::viewSelected, this, [this]() { _selectedViewIndex = 3; updateViewScalars(); });
 
-    connect(&getMainView(), &ScatterplotWidget::initialized, this, [this]()
+    connect(&getUI().getMainView(), &ScatterplotWidget::initialized, this, [this]()
     {
-        getMainView().setColorMap(getColorMapAction().getColorMapImage().mirrored(false, true));
-        getMainView().setScalarEffect(PointEffect::Color);
+            getUI().getMainView().setColorMap(getUI().getColorMapAction().getColorMapImage().mirrored(false, true));
+            getUI().getMainView().setScalarEffect(PointEffect::Color);
     });
-    connect(getProjectionViews()[0], &ProjectionView::initialized, this, [this]() {getProjectionViews()[0]->setColorMap(getColorMapAction().getColorMapImage().mirrored(false, true)); });
-    connect(getProjectionViews()[1], &ProjectionView::initialized, this, [this]() {getProjectionViews()[1]->setColorMap(getColorMapAction().getColorMapImage().mirrored(false, true)); });
-    connect(&getSelectedView(), &ProjectionView::initialized, this, [this]() {getSelectedView().setColorMap(getColorMapAction().getColorMapImage().mirrored(false, true)); });
+    connect(getUI().getProjectionViews()[0], &ProjectionView::initialized, this, [this]() {getUI().getProjectionViews()[0]->setColorMap(getUI().getColorMapAction().getColorMapImage().mirrored(false, true)); });
+    connect(getUI().getProjectionViews()[1], &ProjectionView::initialized, this, [this]() {getUI().getProjectionViews()[1]->setColorMap(getUI().getColorMapAction().getColorMapImage().mirrored(false, true)); });
+    connect(&getUI().getSelectedView(), &ProjectionView::initialized, this, [this]() {getUI().getSelectedView().setColorMap(getUI().getColorMapAction().getColorMapImage().mirrored(false, true)); });
 
     connect(_graphView, &GraphView::lineClicked, this, &GradientExplorerPlugin::onLineClicked);
     _graphTimer->setSingleShot(true);
     connect(_graphTimer, &QTimer::timeout, this, &GradientExplorerPlugin::computeGraphs);
 
-    connect(&getMainView(), &ScatterplotWidget::customContextMenuRequested, this, [this](const QPoint& point) {
+    connect(&getUI().getMainView(), &ScatterplotWidget::customContextMenuRequested, this, [this](const QPoint& point) {
         if (!_positionDataset.isValid())
             return;
 
-        auto contextMenu = getSettingsAction().getContextMenu();
+        auto contextMenu = getUI().getSettingsAction().getContextMenu();
         
         contextMenu->addSeparator();
 
@@ -122,8 +122,8 @@ GradientExplorerPlugin::GradientExplorerPlugin(const PluginFactory* factory) :
         contextMenu->exec(getWidget().mapToGlobal(point));
     });
 
-    getDropWidget().setDropIndicatorWidget(new DropWidget::DropIndicatorWidget(&getWidget(), "No data loaded", "Drag an item from the data hierarchy and drop it here to visualize data..."));
-    getDropWidget().initialize([this](const QMimeData* mimeData) -> DropWidget::DropRegions {
+    getUI().getDropWidget().setDropIndicatorWidget(new DropWidget::DropIndicatorWidget(&getWidget(), "No data loaded", "Drag an item from the data hierarchy and drop it here to visualize data..."));
+    getUI().getDropWidget().initialize([this](const QMimeData* mimeData) -> DropWidget::DropRegions {
         DropWidget::DropRegions dropRegions;
 
         const auto datasetsMimeData = dynamic_cast<const DatasetsMimeData*>(mimeData);
@@ -225,7 +225,7 @@ GradientExplorerPlugin::GradientExplorerPlugin(const PluginFactory* factory) :
         return dropRegions;
     });
 
-    getMainView().installEventFilter(this);
+    getUI().getMainView().installEventFilter(this);
 }
 
 GradientExplorerPlugin::~GradientExplorerPlugin()
@@ -241,29 +241,29 @@ void GradientExplorerPlugin::init()
 
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    layout->addWidget(_userInterface.getPrimaryToolbar().createWidget(&getWidget()));
+    layout->addWidget(getUI().getPrimaryToolbar().createWidget(&getWidget()));
 
-    _userInterface.initializeLabels();
+    getUI().initializeLabels();
 
     QFont sansFont("Helvetica [Cronyx]", 18);
-    _userInterface.getFilterLabel().setFont(sansFont);
+    getUI().getFilterLabel().setFont(sansFont);
 
     gradientViewLayout->setContentsMargins(6, 0, 6, 0);
-    gradientViewLayout->addWidget(&_userInterface.getFilterLabel());
-    gradientViewLayout->addWidget(getProjectionViews()[0], 50);
-    gradientViewLayout->addWidget(getProjectionViews()[1], 50);
+    gradientViewLayout->addWidget(&getUI().getFilterLabel());
+    gradientViewLayout->addWidget(getUI().getProjectionViews()[0], 50);
+    gradientViewLayout->addWidget(getUI().getProjectionViews()[1], 50);
 
     // Dimension selection
-    gradientViewLayout->addWidget(&_userInterface.getDimensionSelectionLabel());
-    gradientViewLayout->addWidget(&getSelectedView(), 50);
+    gradientViewLayout->addWidget(&getUI().getDimensionSelectionLabel());
+    gradientViewLayout->addWidget(&getUI().getSelectedView(), 50);
 
     // Expression graph
-    gradientViewLayout->addWidget(&_userInterface.getSortedExpressionGraphLabel());
+    gradientViewLayout->addWidget(&getUI().getSortedExpressionGraphLabel());
     gradientViewLayout->addWidget(_graphView, 70);
     gradientViewLayout->addWidget(&_metadataView, 10);
 
     auto leftPanel = new QVBoxLayout();
-    leftPanel->addWidget(&getMainView(), 90);
+    leftPanel->addWidget(&getUI().getMainView(), 90);
 
     auto centralPanel = new QHBoxLayout();
     centralPanel->addLayout(leftPanel, 80);
@@ -280,10 +280,10 @@ void GradientExplorerPlugin::init()
     bottomToolbarLayout->setContentsMargins(0, 0, 0, 0);
     //bottomToolbarLayout->addWidget(_settingsAction.getColoringAction().getColorMapAction().createLabelWidget(&getWidget()));
     //bottomToolbarLayout->addWidget(_settingsAction.getColoringAction().getColorMapAction().createWidget(&getWidget()));
-    bottomToolbarLayout->addWidget(getSettingsAction().getPlotAction().getPointPlotAction().getFocusSelection().createWidget(&getWidget()));
+    bottomToolbarLayout->addWidget(getUI().getSettingsAction().getPlotAction().getPointPlotAction().getFocusSelection().createWidget(&getWidget()));
     bottomToolbarLayout->addStretch(1);
     //bottomToolbarLayout->addWidget(_settingsAction.getExportImageAction().createWidget(&getWidget()));
-    bottomToolbarLayout->addWidget(getSettingsAction().getMiscellaneousAction().createCollapsedWidget(&getWidget()));
+    bottomToolbarLayout->addWidget(getUI().getSettingsAction().getMiscellaneousAction().createCollapsedWidget(&getWidget()));
 
     layout->addWidget(_userInterface.getSecondaryToolbar().createWidget(&getWidget()));
 
@@ -394,7 +394,7 @@ void GradientExplorerPlugin::positionDatasetChanged()
         _positionSourceDataset = _positionDataset->getSourceDataset<Points>();
 
     // Do not show the drop indicator if there is a valid point positions dataset
-    getDropWidget().setShowDropIndicator(!_positionDataset.isValid());
+    getUI().getDropWidget().setShowDropIndicator(!_positionDataset.isValid());
 
     // Update the window title to reflect the position dataset change
     updateWindowTitle();
@@ -550,7 +550,7 @@ void GradientExplorerPlugin::computeStaticData()
 void GradientExplorerPlugin::updateProjectionData()
 {
     // Check if the scatter plot is initialized, if not, don't do anything
-    if (!getMainView().isInitialized())
+    if (!getUI().getMainView().isInitialized())
     {
         qCritical() << "Tried to update projection data while view widgets are uninitialized";
         exit(1);
@@ -560,8 +560,8 @@ void GradientExplorerPlugin::updateProjectionData()
     {
         logger() << "Adjusting projection matrix...";
 
-        int xDim = getSettingsAction().getPositionAction().getDimensionX();
-        int yDim = getSettingsAction().getPositionAction().getDimensionY();
+        int xDim = getUI().getSettingsAction().getPositionAction().getDimensionX();
+        int yDim = getUI().getSettingsAction().getPositionAction().getDimensionY();
         _dataStore.createProjectionView(xDim, yDim);
     }
 
@@ -579,7 +579,7 @@ void GradientExplorerPlugin::updateProjectionData()
     updateSelection();
 
     // Update the projection size
-    Bounds bounds = getMainView().getBounds();
+    Bounds bounds = getUI().getMainView().getBounds();
     _dataStore.setProjectionSize(bounds.getWidth() > bounds.getHeight() ? bounds.getWidth() : bounds.getHeight());
     std::cout << "Projection bounds: x:" << bounds.getLeft() << ", " << bounds.getRight() << " y: " << bounds.getBottom() << ", " << bounds.getTop() << std::endl;
     std::cout << "Projection size: " << _dataStore.getProjectionSize() << std::endl;
@@ -589,24 +589,24 @@ void GradientExplorerPlugin::updateViewData(std::vector<Vector2f>& positions)
 {
     // TODO: Can save some time here only computing data bounds once
     // Pass the 2D points to the scatter plot widget
-    getMainView().setData(&positions);
-    for (int i = 0; i < (int)getProjectionViews().size(); i++)
-        getProjectionViews()[i]->setData(&positions);
-    getSelectedView().setData(&positions);
+    getUI().getMainView().setData(&positions);
+    for (int i = 0; i < (int)getUI().getProjectionViews().size(); i++)
+        getUI().getProjectionViews()[i]->setData(&positions);
+    getUI().getSelectedView().setData(&positions);
 }
 
 void GradientExplorerPlugin::updateColorMapActionScalarRange()
 {
     // Get the color map range from the scatter plot widget
-    const auto colorMapRange = getMainView().getColorMapRange();
+    const auto colorMapRange = getUI().getMainView().getColorMapRange();
     const auto colorMapRangeMin = colorMapRange.x;
     const auto colorMapRangeMax = colorMapRange.y;
 
     // Get reference to color map range action
-    const auto& colorMapRangeAction = getColorMapAction().getRangeAction(ColorMapAction::Axis::X);
+    const auto& colorMapRangeAction = getUI().getColorMapAction().getRangeAction(ColorMapAction::Axis::X);
 
     // Initialize the color map range action with the color map range from the scatter plot 
-    getColorMapAction().getDataRangeAction(ColorMapAction::Axis::X).setRange({colorMapRangeMin, colorMapRangeMax});
+    getUI().getColorMapAction().getDataRangeAction(ColorMapAction::Axis::X).setRange({colorMapRangeMin, colorMapRangeMax});
 }
 
 void GradientExplorerPlugin::loadData(const Datasets& datasets)
@@ -681,11 +681,11 @@ timer.mark("Metadata");
         int numPoints = _dataStore.getNumPoints();
         int numDimensions = _dataStore.getNumDimensions();
 
-        getMainView().setCurrentPosition(center);
-        getProjectionViews()[0]->setCurrentPosition(center);
-        getProjectionViews()[1]->setCurrentPosition(center);
-        getSelectedView().setCurrentPosition(center);
-        getMainView().setFilterRadii(Vector2f(_filters.getSpatialPeakFilter().getInnerFilterRadius() * projectionSize, _filters.getSpatialPeakFilter().getOuterFilterRadius() * projectionSize));
+        getUI().getMainView().setCurrentPosition(center);
+        getUI().getProjectionViews()[0]->setCurrentPosition(center);
+        getUI().getProjectionViews()[1]->setCurrentPosition(center);
+        getUI().getSelectedView().setCurrentPosition(center);
+        getUI().getMainView().setFilterRadii(Vector2f(_filters.getSpatialPeakFilter().getInnerFilterRadius() * projectionSize, _filters.getSpatialPeakFilter().getOuterFilterRadius() * projectionSize));
 
         //////////////////
         // Do floodfill //
@@ -705,7 +705,7 @@ timer.mark("Floodfill");
         {
         case filters::FilterType::SPATIAL_PEAK:
         {
-            if (getSettingsAction().getFilterAction().getRestrictToFloodAction().isChecked())
+            if (getUI().getSettingsAction().getFilterAction().getRestrictToFloodAction().isChecked())
                 _filters.getSpatialPeakFilter().computeDimensionRanking(_selectedPoint, dataMatrix, variances, projMatrix, projectionSize, dimRanking, _floodFill.getAllNodes());
             else
                 _filters.getSpatialPeakFilter().computeDimensionRanking(_selectedPoint, dataMatrix, variances, projMatrix, projectionSize, dimRanking);
@@ -720,13 +720,13 @@ timer.mark("Floodfill");
 timer.mark("Ranking");
 
         // Set appropriate coloring of gradient view, FIXME use colormap later
-        for (int pi = 0; pi < getProjectionViews().size(); pi++)
+        for (int pi = 0; pi < getUI().getProjectionViews().size(); pi++)
         {
             const auto dimValues = dataMatrix(Eigen::all, dimRanking[pi]);
             std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
-            getProjectionViews()[pi]->setShownDimension(dimRanking[pi]);
-            getProjectionViews()[pi]->setScalars(dimV, _globalSelectedPoint);
-            getProjectionViews()[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
+            getUI().getProjectionViews()[pi]->setShownDimension(dimRanking[pi]);
+            getUI().getProjectionViews()[pi]->setScalars(dimV, _globalSelectedPoint);
+            getUI().getProjectionViews()[pi]->setProjectionName(_enabledDimNames[dimRanking[pi]]);
         }
         // Set selected gradient view
         if (_selectedDimension >= 0)
@@ -734,9 +734,9 @@ timer.mark("Ranking");
             qDebug() << "SEL DIM:" << _selectedDimension;
             const auto dimValues = dataMatrix(Eigen::all, _selectedDimension);
             std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
-            getSelectedView().setShownDimension(_selectedDimension);
-            getSelectedView().setScalars(dimV, _globalSelectedPoint);
-            getSelectedView().setProjectionName(_enabledDimNames[_selectedDimension]);
+            getUI().getSelectedView().setShownDimension(_selectedDimension);
+            getUI().getSelectedView().setScalars(dimV, _globalSelectedPoint);
+            getUI().getSelectedView().setProjectionName(_enabledDimNames[_selectedDimension]);
         }
 
         _graphView->setTopDimensions(dimRanking[0], dimRanking[1]);
@@ -757,7 +757,7 @@ timer.mark("Filter");
             {
                 if (_floodFill.getNumWaves() > 0)
                 {
-                    getMainView().setColoredBy("Colored by - Flood fill step");
+                    getUI().getMainView().setColoredBy("Colored by - Flood fill step");
                     for (int i = 0; i < _floodFill.getNumWaves(); i++)
                     {
                         for (int j = 0; j < _floodFill.getWaves()[i].size(); j++)
@@ -768,13 +768,13 @@ timer.mark("Filter");
                     }
                 }
                 else
-                    getMainView().setColoredBy("Colored by - None");
+                    getUI().getMainView().setColoredBy("Colored by - None");
 
                 break;
             }
             case OverlayType::DIM_VALUES:
             {
-                getMainView().setColoredBy("Colored by - Dim: " + _enabledDimNames[dimRanking[0]]);
+                getUI().getMainView().setColoredBy("Colored by - Dim: " + _enabledDimNames[dimRanking[0]]);
                 for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
                 {
                     int node = _floodFill.getAllNodes()[i];
@@ -789,7 +789,7 @@ timer.mark("Filter");
             }
             case OverlayType::LOCAL_DIMENSIONALITY:
             {
-                getMainView().setColoredBy("Colored by - Local Dimensionality");
+                getUI().getMainView().setColoredBy("Colored by - Local Dimensionality");
                 if (_localHighDimensionality.empty()) break;
 
                 for (int i = 0; i < _floodFill.getTotalNumNodes(); i++)
@@ -812,7 +812,7 @@ timer.mark("Filter");
                     directions[i * 2 + 1] = _directions[idx * 2 + 1];
                     scalars[idx] = 0.5f;
                 }
-                getMainView().setDirections(directions);
+                getUI().getMainView().setDirections(directions);
 
                 break;
             }
@@ -828,10 +828,10 @@ timer.mark("Filter");
             {
                 viewScalars[i] = _colorScalars[viewIndices[i]];
             }
-            getMainView().setScalars(viewScalars);
+            getUI().getMainView().setScalars(viewScalars);
         }
         else
-            getMainView().setScalars(_colorScalars);
+            getUI().getMainView().setScalars(_colorScalars);
 
         timer.mark("Compute color scalars");
 
@@ -859,7 +859,7 @@ void GradientExplorerPlugin::onSliceIndexChanged()
     indices.assign(uindices.begin(), uindices.end());
 
     QString clusterName = _sliceDataset->getClusters()[_currentSliceIndex].getName();
-    getMainView().setClusterName(QString::number(_currentSliceIndex) + ": " + clusterName);
+    getUI().getMainView().setClusterName(QString::number(_currentSliceIndex) + ": " + clusterName);
 
     useSelectionAsDataView(indices);
 }
@@ -877,7 +877,7 @@ void GradientExplorerPlugin::onMetadataChanged()
         }
     }
 
-    getMainView().setColors(_colors);
+    getUI().getMainView().setColors(_colors);
 }
 
 void GradientExplorerPlugin::computeCellMetadata()
@@ -896,7 +896,7 @@ void GradientExplorerPlugin::computeCellMetadata()
         metadataList.append(dataset->getGuiName() + ": " + clusterName);
     }
 
-    getMainView().setMetadataList(metadataList);
+    getUI().getMainView().setMetadataList(metadataList);
     qDebug() << metadataList;
 }
 
@@ -934,19 +934,19 @@ void GradientExplorerPlugin::updateSelection()
     for (int i = 0; i < selected.size(); i++)
         highlights[i] = selected[i] ? 1 : 0;
 
-    getMainView().setHighlights(highlights, static_cast<std::int32_t>(selection->indices.size()));
+    getUI().getMainView().setHighlights(highlights, static_cast<std::int32_t>(selection->indices.size()));
 }
 
 void GradientExplorerPlugin::updateViewScalars()
 {
-    getProjectionViews()[0]->selectView(false);
-    getProjectionViews()[1]->selectView(false);
-    getSelectedView().selectView(false);
+    getUI().getProjectionViews()[0]->selectView(false);
+    getUI().getProjectionViews()[1]->selectView(false);
+    getUI().getSelectedView().selectView(false);
 
     ProjectionView* selectedView = nullptr;
-    if (_selectedViewIndex == 1) selectedView = getProjectionViews()[0];
-    else if (_selectedViewIndex == 2) selectedView = getProjectionViews()[1];
-    else if (_selectedViewIndex == 3) selectedView = &getSelectedView();
+    if (_selectedViewIndex == 1) selectedView = getUI().getProjectionViews()[0];
+    else if (_selectedViewIndex == 2) selectedView = getUI().getProjectionViews()[1];
+    else if (_selectedViewIndex == 3) selectedView = &getUI().getSelectedView();
 
     if (selectedView != nullptr)
     {
@@ -955,9 +955,9 @@ void GradientExplorerPlugin::updateViewScalars()
         int selectedDimension = selectedView->getShownDimension();
         const auto dimValues = _dataStore.getDataView()(Eigen::all, selectedDimension);
         std::vector<float> dimV(dimValues.data(), dimValues.data() + dimValues.size());
-        getMainView().setScalars(dimV);
-        getMainView().setProjectionName("Dimension View: " + _enabledDimNames[selectedDimension]);
-        getMainView().setColoredBy("");
+        getUI().getMainView().setScalars(dimV);
+        getUI().getMainView().setProjectionName("Dimension View: " + _enabledDimNames[selectedDimension]);
+        getUI().getMainView().setColoredBy("");
 
         // Put full dimension scalars in output dataset
         const auto fullDimValues = _dataStore.getBaseData()(Eigen::all, selectedDimension);
@@ -969,7 +969,7 @@ void GradientExplorerPlugin::updateViewScalars()
     }
     else
     {
-        getMainView().setProjectionName("Floodfill View");
+        getUI().getMainView().setProjectionName("Floodfill View");
     }
 }
 
@@ -1016,7 +1016,7 @@ void GradientExplorerPlugin::onLineClicked(dint dim)
     qDebug() << "Dim: " << dim;
     _selectedDimension = dim;
 
-    getSelectedView().setProjectionName(_enabledDimNames[_selectedDimension]);
+    getUI().getSelectedView().setProjectionName(_enabledDimNames[_selectedDimension]);
 
     onPointSelection();
     updateViewScalars();
@@ -1028,7 +1028,7 @@ void GradientExplorerPlugin::onLineClicked(dint dim)
 
 void GradientExplorerPlugin::exportDimRankings()
 {
-    bool restrictToFloodNodes = getSettingsAction().getFilterAction().getRestrictToFloodAction().isChecked();
+    bool restrictToFloodNodes = getUI().getSettingsAction().getFilterAction().getRestrictToFloodAction().isChecked();
     exportRankings(_dataStore, _floodFill, _knnGraph, _filters, restrictToFloodNodes, _enabledDimNames);
 }
 
@@ -1103,7 +1103,7 @@ void GradientExplorerPlugin::fromVariantMap(const QVariantMap& variantMap)
 
     variantMapMustContain(variantMap, "SettingsAction");
 
-    getSettingsAction().fromVariantMap(variantMap["SettingsAction"].toMap());
+    getUI().getSettingsAction().fromVariantMap(variantMap["SettingsAction"].toMap());
 
     _overlayType = static_cast<OverlayType>(variantMap["OverlayType"].toInt());
 
@@ -1229,7 +1229,7 @@ void GradientExplorerPlugin::clearMask()
 
     // Set point opacity
     std::vector<float> opacityScalars(_dataStore.getNumPoints(), 1.0f);
-    getMainView().setPointOpacityScalars(opacityScalars);
+    getUI().getMainView().setPointOpacityScalars(opacityScalars);
 }
 
 void GradientExplorerPlugin::useSelectionAsMask()
@@ -1245,7 +1245,7 @@ void GradientExplorerPlugin::useSelectionAsMask()
     std::vector<float> opacityScalars(_dataStore.getNumPoints(), 0.2f);
     for (const int maskIndex : _mask)
         opacityScalars[maskIndex] = 1.0f;
-    getMainView().setPointOpacityScalars(opacityScalars);
+    getUI().getMainView().setPointOpacityScalars(opacityScalars);
 
     _maskedDataMatrix = _dataStore.getDataView()(_mask, Eigen::all);
     _maskedProjMatrix = _dataStore.getProjectionView()(_mask, Eigen::all);
@@ -1281,8 +1281,8 @@ void GradientExplorerPlugin::useSelectionAsDataView(std::vector<int>& indices)
 
     _dataStore.createDataView(indices);
 
-    int xDim = getSettingsAction().getPositionAction().getDimensionX();
-    int yDim = getSettingsAction().getPositionAction().getDimensionY();
+    int xDim = getUI().getSettingsAction().getPositionAction().getDimensionX();
+    int yDim = getUI().getSettingsAction().getPositionAction().getDimensionY();
     qDebug() << "Selected dimensions: " << xDim << yDim;
     _dataStore.createProjectionView(xDim, yDim);
 
@@ -1305,7 +1305,7 @@ void GradientExplorerPlugin::useSelectionAsDataView(std::vector<int>& indices)
         {
             viewScalars[i] = _colorScalars[indices[i]];
         }
-        getMainView().setScalars(viewScalars);
+        getUI().getMainView().setScalars(viewScalars);
     }
     // Update metadata colors
     if (_colors.size() == _positionDataset->getNumPoints())
@@ -1315,7 +1315,7 @@ void GradientExplorerPlugin::useSelectionAsDataView(std::vector<int>& indices)
         {
             viewColors[i] = _colors[indices[i]];
         }
-        getMainView().setColors(viewColors);
+        getUI().getMainView().setColors(viewColors);
     }
 }
 

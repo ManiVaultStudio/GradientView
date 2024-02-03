@@ -34,7 +34,7 @@ void PlotAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
     _pointPlotAction.initialize(_plugin);
     _densityPlotAction.initialize(_plugin);
 
-    auto& scatterplotWidget = _plugin->getMainView();
+    auto& scatterplotWidget = _plugin->getUI().getMainView();
 
     const auto updateRenderMode = [this, &scatterplotWidget]() -> void {
         _pointPlotAction.setVisible(scatterplotWidget.getRenderMode() == ScatterplotWidget::SCATTERPLOT);
@@ -51,7 +51,7 @@ QMenu* PlotAction::getContextMenu()
     if (_plugin == nullptr)
         return nullptr;
 
-    switch (_plugin->getMainView().getRenderMode())
+    switch (_plugin->getUI().getMainView().getRenderMode())
     {
         case ScatterplotWidget::RenderMode::SCATTERPLOT:
             return _pointPlotAction.getContextMenu();

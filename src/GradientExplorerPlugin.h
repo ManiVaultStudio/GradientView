@@ -7,7 +7,7 @@
 #include "Types.h"
 
 #include "graphics/Vector3f.h"
-#include "Graph/GraphView.h"
+#include "Widgets/GraphView.h"
 #include "Widgets/MetadataView.h"
 #include "Logging.h"
 
@@ -99,16 +99,8 @@ public: // Miscellaneous
     void setOverlayType(OverlayType type)               { _overlayType = type; }
 
 public: // User interface
-    /** Get reference to the scatter plot widget */
-    UserInterface&                  getUI()                 { return _userInterface; }
-
-    ScatterplotWidget&              getMainView()           { return _userInterface.getMainView(); }
-    std::vector<ProjectionView*>&   getProjectionViews()    { return _userInterface.getProjectionViews(); }
-    ProjectionView&                 getSelectedView()       { return _userInterface.getSelectionView(); }
-
-    SettingsAction&                 getSettingsAction()     { return _userInterface.getSettingsAction(); }
-    ColorMapAction&                 getColorMapAction()     { return _userInterface.getColorMapAction(); }
-    DropWidget&                     getDropWidget()         { return _userInterface.getDropWidget(); }
+    /** Get reference to the user interface elements */
+    UserInterface&                  getUI()             { return _userInterface; }
 
 protected:
 
@@ -134,7 +126,7 @@ public: // Flood fill
     void setFloodSteps(int numFloodSteps)
     {
         _floodFill.setNumWaves(numFloodSteps);
-        getSettingsAction().getFilterAction().setFloodSteps(numFloodSteps);
+        getUI().getSettingsAction().getFilterAction().setFloodSteps(numFloodSteps);
     }
 
     void useSharedDistances(bool useSharedDistances) { _useSharedDistances = useSharedDistances; }

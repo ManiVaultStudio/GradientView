@@ -32,8 +32,8 @@ void FilterAction::initialize(GradientExplorerPlugin* plugin)
     connect(&_spatialPeakFilterAction, &TriggerAction::triggered, this, [plugin, &filters]() {
         filters.setFilterType(filters::FilterType::SPATIAL_PEAK);
         plugin->getUI().getFilterLabel().setText("Spatial Peak Ranking");
-        plugin->getMainView().showFiltersCircles(true);
-        plugin->getMainView().update();
+        plugin->getUI().getMainView().showFiltersCircles(true);
+        plugin->getUI().getMainView().update();
         });
     connect(&_hdPeakFilterAction, &TriggerAction::triggered, this, [plugin, &filters]() {
         if (plugin->getFloodFill().getNumWaves() == 0)
@@ -44,20 +44,20 @@ void FilterAction::initialize(GradientExplorerPlugin* plugin)
         
         filters.setFilterType(filters::FilterType::HD_PEAK);
         plugin->getUI().getFilterLabel().setText("HD Peak Ranking");
-        plugin->getMainView().showFiltersCircles(false);
-        plugin->getMainView().update();
+        plugin->getUI().getMainView().showFiltersCircles(false);
+        plugin->getUI().getMainView().update();
         });
 
     connect(&_innerFilterSizeAction, &DecimalAction::valueChanged, [plugin, &spatialPeakFilter](const float& value) {
         float projSize = plugin->getProjectionSize();
         spatialPeakFilter.setInnerFilterRadius(value * 0.01f);
-        plugin->getMainView().setFilterRadii(Vector2f(spatialPeakFilter.getInnerFilterRadius() * projSize, spatialPeakFilter.getOuterFilterRadius() * projSize));
+        plugin->getUI().getMainView().setFilterRadii(Vector2f(spatialPeakFilter.getInnerFilterRadius() * projSize, spatialPeakFilter.getOuterFilterRadius() * projSize));
         plugin->onPointSelection();
         });
     connect(&_outerFilterSizeAction, &DecimalAction::valueChanged, [plugin, &spatialPeakFilter](const float& value) {
         float projSize = plugin->getProjectionSize();
         spatialPeakFilter.setOuterFilterRadius(value * 0.01f);
-        plugin->getMainView().setFilterRadii(Vector2f(spatialPeakFilter.getInnerFilterRadius() * projSize, spatialPeakFilter.getOuterFilterRadius() * projSize));
+        plugin->getUI().getMainView().setFilterRadii(Vector2f(spatialPeakFilter.getInnerFilterRadius() * projSize, spatialPeakFilter.getOuterFilterRadius() * projSize));
         plugin->onPointSelection();
         });
 

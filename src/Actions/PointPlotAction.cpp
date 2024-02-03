@@ -2,7 +2,7 @@
 #include "ScalarSourceAction.h"
 #include "GradientExplorerPlugin.h"
 #include "ScatterplotWidget.h"
-#include "ProjectionView.h"
+#include "Widgets/ProjectionView.h"
 
 #include <DataHierarchyItem.h>
 
@@ -174,7 +174,7 @@ QMenu* PointPlotAction::getContextMenu()
 
     auto menu = new QMenu("Plot settings");
 
-    const auto renderMode = _plugin->getMainView().getRenderMode();
+    const auto renderMode = _plugin->getUI().getMainView().getRenderMode();
 
     const auto addActionToMenu = [menu](QAction* action) {
         auto actionMenu = new QMenu(action->text());
@@ -247,7 +247,7 @@ void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
     //if (!_scatterplotPlugin->getDataStore().hasData())
     //    return;
 
-    _plugin->getMainView().setPointSize(_sizeAction.getMagnitudeAction().getValue());
+    _plugin->getUI().getMainView().setPointSize(_sizeAction.getMagnitudeAction().getValue());
 
 
 
@@ -258,9 +258,9 @@ void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
 
     //std::fill(_pointSizeScalars.begin(), _pointSizeScalars.end(), _sizeAction.getMagnitudeAction().getValue());
 
-    _plugin->getProjectionViews()[0]->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
-    _plugin->getProjectionViews()[1]->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
-    _plugin->getSelectedView().setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
+    _plugin->getUI().getProjectionViews()[0]->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
+    _plugin->getUI().getProjectionViews()[1]->setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
+    _plugin->getUI().getSelectedView().setSourcePointSize(_sizeAction.getMagnitudeAction().getValue());
 
     return;
 
@@ -312,7 +312,7 @@ void PointPlotAction::updateScatterPlotWidgetPointSizeScalars()
         }
     }
 
-    _plugin->getMainView().setPointSizeScalars(_pointSizeScalars);
+    _plugin->getUI().getMainView().setPointSizeScalars(_pointSizeScalars);
 }
 
 void PointPlotAction::updateScatterPlotWidgetPointOpacityScalars()
@@ -387,7 +387,7 @@ void PointPlotAction::updateScatterPlotWidgetPointOpacityScalars()
         }
     }
 
-    _plugin->getMainView().setPointOpacityScalars(_pointOpacityScalars);
+    _plugin->getUI().getMainView().setPointOpacityScalars(_pointOpacityScalars);
 }
 
 void PointPlotAction::connectToPublicAction(WidgetAction* publicAction, bool recursive)

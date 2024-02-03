@@ -59,7 +59,7 @@ void RenderModeAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
         _contourPlotAction.setChecked(renderMode == RenderMode::ContourPlot);
         _cellPlotAction.setChecked(renderMode == RenderMode::CellPlot);
 
-        _plugin->getMainView().setRenderMode(static_cast<ScatterplotWidget::RenderMode>(getCurrentIndex()));
+        _plugin->getUI().getMainView().setRenderMode(static_cast<ScatterplotWidget::RenderMode>(getCurrentIndex()));
     };
 
     currentIndexChanged();
