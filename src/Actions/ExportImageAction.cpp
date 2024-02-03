@@ -1,6 +1,6 @@
 #include "ExportImageAction.h"
 #include "GradientExplorerPlugin.h"
-#include "ScatterplotWidget.h"
+#include "Widgets/ScatterplotWidget.h"
 
 const QMap<ExportImageAction::Scale, TriggersAction::Trigger> ExportImageAction::triggers = QMap<ExportImageAction::Scale, TriggersAction::Trigger>({
     { ExportImageAction::Eighth, TriggersAction::Trigger("12.5%", "Scale by 1/8th") },

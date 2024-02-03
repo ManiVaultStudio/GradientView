@@ -1,7 +1,7 @@
 #include "PointPlotAction.h"
 #include "ScalarSourceAction.h"
 #include "GradientExplorerPlugin.h"
-#include "ScatterplotWidget.h"
+#include "Widgets/ScatterplotWidget.h"
 #include "Widgets/ProjectionView.h"
 
 #include <DataHierarchyItem.h>

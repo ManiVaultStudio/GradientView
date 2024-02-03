@@ -1,6 +1,6 @@
 #include "MiscellaneousAction.h"
 #include "GradientExplorerPlugin.h"
-#include "ScatterplotWidget.h"
+#include "Widgets/ScatterplotWidget.h"
 
 using namespace mv::gui;
 

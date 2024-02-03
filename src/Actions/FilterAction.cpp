@@ -1,7 +1,7 @@
 #include "FilterAction.h"
 
 #include "GradientExplorerPlugin.h"
-#include "ScatterplotWidget.h"
+#include "Widgets/ScatterplotWidget.h"
 
 #include <QMenu>
 #include <QGroupBox>

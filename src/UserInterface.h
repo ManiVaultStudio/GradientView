@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ScatterplotWidget.h"
+#include "Widgets/ScatterplotWidget.h"
 #include "Widgets/ProjectionView.h"
 
 #include <Widgets/DropWidget.h>
