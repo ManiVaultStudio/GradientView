@@ -13,6 +13,8 @@
 #include "OverlayAction.h"
 #include "ExportAction.h"
 
+#include <actions/IntegralAction.h>
+
 using namespace mv::gui;
 
 class GradientExplorerPlugin;
@@ -62,6 +64,8 @@ public: // Action getters
     TriggerAction& getSelectionAsMaskAction() { return _selectionAsMaskAction; }
     TriggerAction& getClearMaskAction() { return _clearMaskAction; }
 
+    IntegralAction& getSliceAction() { return _sliceAction; }
+
 protected:
     GradientExplorerPlugin*     _plugin;                    /** Pointer to scatter plot plugin */
     LoadedDatasetsAction        _currentDatasetAction;
@@ -76,4 +80,6 @@ protected:
     ExportAction                _exportAction;
     TriggerAction               _selectionAsMaskAction;
     TriggerAction               _clearMaskAction;
+
+    IntegralAction              _sliceAction;
 };

@@ -21,7 +21,8 @@ SettingsAction::SettingsAction(QObject* parent, const QString& title) :
     _overlayAction(this, "Overlay"),
     _exportAction(this, "Export"),
     _selectionAsMaskAction(this, "Selection As Mask"),
-    _clearMaskAction(this, "Clear Mask")
+    _clearMaskAction(this, "Clear Mask"),
+    _sliceAction(this, "Slice")
 {
     setConnectionPermissionsToForceNone();
 

@@ -891,6 +891,9 @@ void GradientExplorerPlugin::onSliceIndexChanged()
     _scatterPlotWidget->setClusterName(QString::number(_currentSliceIndex) + ": " + clusterName);
 
     useSelectionAsDataView(indices);
+
+    // for sharing slice with another plugin
+    _settingsAction.getSliceAction().setValue(_currentSliceIndex);
 }
 
 void GradientExplorerPlugin::onMetadataChanged()
