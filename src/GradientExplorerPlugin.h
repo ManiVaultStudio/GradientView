@@ -254,6 +254,7 @@ private:
     // Floodfill
     Dataset<Points>                 _floodScalars;
     FloodFill                       _floodFill;
+    Dataset<Points>                 _allFloodNodes;// for sending floodfill to another plugin
 
     // Graph
     GraphView*                      _graphView;
