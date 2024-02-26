@@ -470,6 +470,16 @@ void GradientExplorerPlugin::positionDatasetChanged()
             events().notifyDatasetAdded(_floodScalars);
         }
     }
+
+    // Create all flood nodes dataset if it doesn't exist yet
+    if (!_allFloodNodes.isValid())
+    {
+        if (!_loadingFromProject)
+        {
+            _allFloodNodes = mv::data().createDataset<Points>("Points", "allFloodNodes");
+            events().notifyDatasetAdded(_allFloodNodes);
+        }
+    }
     
     computeStaticData();
 
@@ -1145,6 +1155,10 @@ void GradientExplorerPlugin::fromVariantMap(const QVariantMap& variantMap)
     QString floodNodeId = variantMap["floodNodeGuid"].toString();
     _floodScalars = mv::data().getDataset<Points>(floodNodeId);
 
+    // Load all flood nodes
+    QString allFloodNodesId = variantMap["allFloodNodes"].toString();
+    _allFloodNodes = mv::data().getDataset<Points>(allFloodNodesId);
+
     // Load potential kNN graph from project
     bool knnAvailable = static_cast<bool>(variantMap["knnAvailable"].toBool());
     if (knnAvailable)
@@ -1240,6 +1254,9 @@ QVariantMap GradientExplorerPlugin::toVariantMap() const
 
     // Store floodnode guid
     variantMap.insert("floodNodeGuid", _floodScalars.getDatasetId());
+
+    // Store allFloodNodes 
+    variantMap.insert("allFloodNodes", _allFloodNodes.getDatasetId());
 
     return variantMap;
 }
