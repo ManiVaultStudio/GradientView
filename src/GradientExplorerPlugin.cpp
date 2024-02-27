@@ -476,7 +476,7 @@ void GradientExplorerPlugin::positionDatasetChanged()
     {
         if (!_loadingFromProject)
         {
-            _allFloodNodes = mv::data().createDataset<Points>("Points", "allFloodNodes");
+            _allFloodNodes = mv::data().createDataset<Points>("Points", "allFloodNodesIndices");
             events().notifyDatasetAdded(_allFloodNodes);
         }
     }

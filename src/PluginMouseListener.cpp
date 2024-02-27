@@ -192,7 +192,7 @@ bool GradientExplorerPlugin::eventFilter(QObject* target, QEvent* event)
         // adding floodfill data for another plugin
         const std::vector<std::vector<nint>> waves = _floodFill.getWaves();
         if (!_allFloodNodes.isValid()) {
-            _allFloodNodes = mv::data().createDataset<Points>("Points", "allFloodNodes");
+            _allFloodNodes = mv::data().createDataset<Points>("Points", "allFloodNodesIndices");
         }
         std::vector<float> allNodesWave;// with -1 as marker between waves
         for (const auto& wave : waves) {
