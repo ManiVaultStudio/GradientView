@@ -97,6 +97,8 @@ void SettingsAction::fromVariantMap(const QVariantMap& variantMap)
     _filterAction.fromParentVariantMap(variantMap);
     _overlayAction.fromParentVariantMap(variantMap);
     _miscellaneousAction.fromParentVariantMap(variantMap);
+
+    _sliceAction.fromParentVariantMap(variantMap);
 }
 
 QVariantMap SettingsAction::toVariantMap() const
@@ -109,6 +111,8 @@ QVariantMap SettingsAction::toVariantMap() const
     _filterAction.insertIntoVariantMap(variantMap);
     _overlayAction.insertIntoVariantMap(variantMap);
     _miscellaneousAction.insertIntoVariantMap(variantMap);
+
+    _sliceAction.insertIntoVariantMap(variantMap);
 
     return variantMap;
 }
