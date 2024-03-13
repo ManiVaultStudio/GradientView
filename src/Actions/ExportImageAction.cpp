@@ -1,6 +1,6 @@
 #include "ExportImageAction.h"
 #include "GradientExplorerPlugin.h"
-#include "ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 
 const QMap<ExportImageAction::Scale, TriggersAction::Trigger> ExportImageAction::triggers = QMap<ExportImageAction::Scale, TriggersAction::Trigger>({
     { ExportImageAction::Eighth, TriggersAction::Trigger("12.5%", "Scale by 1/8th") },
@@ -82,8 +82,8 @@ void ExportImageAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
     connect(&_plugin->getPositionDataset(), &Dataset<Points>::changed, this, &ExportImageAction::updateDimensionsPickerAction);
 
     const auto scale = [this](float scaleFactor) {
-        _targetWidthAction.setValue(scaleFactor * static_cast<float>(_plugin->getScatterplotWidget().width()));
-        _targetHeightAction.setValue(scaleFactor * static_cast<float>(_plugin->getScatterplotWidget().height()));
+        _targetWidthAction.setValue(scaleFactor * static_cast<float>(_plugin->getUI().getMainView().width()));
+        _targetHeightAction.setValue(scaleFactor * static_cast<float>(_plugin->getUI().getMainView().height()));
     };
 
     connect(&_scaleAction, &TriggersAction::triggered, this, [this, scale](std::int32_t triggerIndex) {
@@ -154,10 +154,10 @@ void ExportImageAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 
 void ExportImageAction::initializeTargetSize()
 {
-    const auto scatterPlotWidgetSize = _plugin->getScatterplotWidget().size();
+    const auto mainViewSize = _plugin->getUI().getMainView().size();
 
-    _targetWidthAction.initialize(1, 8 * scatterPlotWidgetSize.width(), scatterPlotWidgetSize.width());
-    _targetHeightAction.initialize(1, 8 * scatterPlotWidgetSize.height(), scatterPlotWidgetSize.height());
+    _targetWidthAction.initialize(1, 8 * mainViewSize.width(), mainViewSize.width());
+    _targetHeightAction.initialize(1, 8 * mainViewSize.height(), mainViewSize.height());
 
     _aspectRatio = static_cast<float>(_targetHeightAction.getValue()) / static_cast<float>(_targetWidthAction.getValue());
 }
@@ -205,7 +205,7 @@ void ExportImageAction::exportImages()
                 break;
             }
 
-            auto& scatterplotWidget = _plugin->getScatterplotWidget();
+            auto& mainView = _plugin->getUI().getMainView();
 
             //coloringAction.getDimensionAction().setCurrentDimensionName(dimensionNames[dimensionIndex]);
 
@@ -215,7 +215,7 @@ void ExportImageAction::exportImages()
             //    rangeAction.initialize({ _fixedRangeAction.getMinimum(), _fixedRangeAction.getMaximum() }, { _fixedRangeAction.getMinimum(), _fixedRangeAction.getMaximum() });
             //}
 
-            scatterplotWidget.createScreenshot(width, height, imageFilePath, backgroundColor);
+            mainView.createScreenshot(width, height, imageFilePath, backgroundColor);
 
             numberOfExportedImages++;
         }

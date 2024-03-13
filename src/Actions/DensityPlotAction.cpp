@@ -1,6 +1,6 @@
 #include "DensityPlotAction.h"
 #include "GradientExplorerPlugin.h"
-#include "ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 
 using namespace mv::gui;
 
@@ -27,12 +27,12 @@ void DensityPlotAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
     _plugin = scatterplotPlugin;
 
     const auto computeDensity = [this]() -> void {
-        if (static_cast<std::int32_t>(_plugin->getSettingsAction().getRenderModeAction().getCurrentIndex()) == ScatterplotWidget::RenderMode::SCATTERPLOT)
+        if (static_cast<std::int32_t>(_plugin->getUI().getSettingsAction().getRenderModeAction().getCurrentIndex()) == MainView::RenderMode::SCATTERPLOT)
             return;
 
-        _plugin->getScatterplotWidget().setSigma(_sigmaAction.getValue());
+        _plugin->getUI().getMainView().setSigma(_sigmaAction.getValue());
 
-        const auto maxDensity = _plugin->getScatterplotWidget().getDensityRenderer().getMaxDensity();
+        const auto maxDensity = _plugin->getUI().getMainView().getDensityRenderer().getMaxDensity();
 
         //if (maxDensity > 0)
             //_scatterplotPlugin->getSettingsAction().getColoringAction().getColorMap1DAction().getRangeAction(ColorMapAction::Axis::X).setRange({ 0.0f, maxDensity });
@@ -51,7 +51,7 @@ void DensityPlotAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
         computeDensity();
     });
 
-    connect(&_plugin->getSettingsAction().getRenderModeAction(), &OptionAction::currentIndexChanged, this, computeDensity);
+    connect(&_plugin->getUI().getSettingsAction().getRenderModeAction(), &OptionAction::currentIndexChanged, this, computeDensity);
 
     updateSigmaAction();
     computeDensity();
