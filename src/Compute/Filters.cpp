@@ -120,7 +120,7 @@ namespace filters
 
     void SpatialPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const DataMatrix& projMatrix, float projSize, std::vector<int>& dimRanking, const std::vector<int>& mask) const
     {
-        Timer t;
+        ge::util::Timer t;
         t.start();
         int numDimensions = dataMatrix.cols();
 

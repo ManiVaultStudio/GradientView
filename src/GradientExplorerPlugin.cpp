@@ -468,7 +468,7 @@ void GradientExplorerPlugin::computeStaticData()
         qWarning() << "!!! Shown dimension names may not be correct.";
     }
 
-    Timer timer;
+    ge::util::Timer timer;
     timer.start();
 
     {
@@ -657,7 +657,7 @@ void GradientExplorerPlugin::createSubset(const bool& fromSourceData /*= false*/
 
 void GradientExplorerPlugin::onPointSelection()
 {
-    Timer timer;
+    ge::util::Timer timer;
 
     if (!_positionDataset.isValid() || !_positionSourceDataset.isValid() || !_dataInitialized)
         return;
