@@ -873,8 +873,8 @@ void GradientExplorerPlugin::onSliceIndexChanged()
 
     useSelectionAsDataView(indices);
 
-    // for sharing slice with another plugin
-    _settingsAction.getSliceAction().setValue(_currentSliceIndex);
+    // for sharing slice with GeneExplorer
+    getUI().getSettingsAction().getSliceAction().setValue(_currentSliceIndex);
 }
 
 void GradientExplorerPlugin::onMetadataChanged()
