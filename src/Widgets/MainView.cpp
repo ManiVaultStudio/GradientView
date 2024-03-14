@@ -1,4 +1,4 @@
-#include "ScatterplotWidget.h"
+#include "MainView.h"
 #include "Application.h"
 
 #include "util/PixelSelectionTool.h"
@@ -33,7 +33,7 @@ namespace
     }
 }
 
-ScatterplotWidget::ScatterplotWidget() :
+MainView::MainView() :
     _densityRenderer(DensityRenderer::RenderMode::DENSITY),
     _backgroundColor(0, 0, 22, 255),
     _pointRenderer(),
@@ -88,20 +88,20 @@ ScatterplotWidget::ScatterplotWidget() :
     // this is necessary in case the window is moved between hi and low dpi screens
     // e.g., from a laptop display to a projector
     winId(); // This is needed to produce a valid windowHandle
-    QObject::connect(windowHandle(), &QWindow::screenChanged, this, &ScatterplotWidget::updatePixelRatio);
+    QObject::connect(windowHandle(), &QWindow::screenChanged, this, &MainView::updatePixelRatio);
 }
 
-bool ScatterplotWidget::isInitialized()
+bool MainView::isInitialized()
 {
     return _isInitialized;
 }
 
-ScatterplotWidget::RenderMode ScatterplotWidget::getRenderMode() const
+MainView::RenderMode MainView::getRenderMode() const
 {
     return _renderMode;
 }
 
-void ScatterplotWidget::setRenderMode(const RenderMode& renderMode)
+void MainView::setRenderMode(const RenderMode& renderMode)
 {
     if (renderMode == _renderMode)
         return;
@@ -112,14 +112,14 @@ void ScatterplotWidget::setRenderMode(const RenderMode& renderMode)
 
     switch (_renderMode)
     {
-        case ScatterplotWidget::SCATTERPLOT:
+        case MainView::SCATTERPLOT:
             break;
         
-        case ScatterplotWidget::DENSITY:
+        case MainView::DENSITY:
             computeDensity();
             break;
 
-        case ScatterplotWidget::LANDSCAPE:
+        case MainView::LANDSCAPE:
             computeDensity();
             break;
 
@@ -130,12 +130,12 @@ void ScatterplotWidget::setRenderMode(const RenderMode& renderMode)
     update();
 }
 
-//ScatterplotWidget::ColoringMode ScatterplotWidget::getColoringMode() const
+//MainView::ColoringMode MainView::getColoringMode() const
 //{
 //    return _coloringMode;
 //}
 
-//void ScatterplotWidget::setColoringMode(const ColoringMode& coloringMode)
+//void MainView::setColoringMode(const ColoringMode& coloringMode)
 //{
 //    if (coloringMode == _coloringMode)
 //        return;
@@ -145,12 +145,12 @@ void ScatterplotWidget::setRenderMode(const RenderMode& renderMode)
 //    emit coloringModeChanged(_coloringMode);
 //}
 
-//PixelSelectionTool& ScatterplotWidget::getPixelSelectionTool()
+//PixelSelectionTool& MainView::getPixelSelectionTool()
 //{
 //    return _pixelSelectionTool;
 //}
 
-void ScatterplotWidget::computeDensity()
+void MainView::computeDensity()
 {
     emit densityComputationStarted();
 
@@ -175,7 +175,7 @@ Matrix3f createProjectionMatrix(Bounds bounds)
 // Positions need to be passed as a pointer as we need to store them locally in order
 // to be able to find the subset of data that's part of a selection. If passed
 // by reference then we can upload the data to the GPU, but not store it in the widget.
-void ScatterplotWidget::setData(const std::vector<Vector2f>* points)
+void MainView::setData(const std::vector<Vector2f>* points)
 {
     auto dataBounds = getDataBounds(*points);
 
@@ -196,11 +196,11 @@ void ScatterplotWidget::setData(const std::vector<Vector2f>* points)
 
     switch (_renderMode)
     {
-        case ScatterplotWidget::SCATTERPLOT:
+        case MainView::SCATTERPLOT:
             break;
         
-        case ScatterplotWidget::DENSITY:
-        case ScatterplotWidget::LANDSCAPE:
+        case MainView::DENSITY:
+        case MainView::LANDSCAPE:
         {
             _densityRenderer.computeDensity();
             break;
@@ -215,26 +215,26 @@ void ScatterplotWidget::setData(const std::vector<Vector2f>* points)
     update();
 }
 
-QColor ScatterplotWidget::getBackgroundColor()
+QColor MainView::getBackgroundColor()
 {
     return _backgroundColor;
 }
 
-void ScatterplotWidget::setBackgroundColor(QColor color)
+void MainView::setBackgroundColor(QColor color)
 {
     _backgroundColor = color;
 
     update();
 }
 
-void ScatterplotWidget::setHighlights(const std::vector<char>& highlights, const std::int32_t& numSelectedPoints)
+void MainView::setHighlights(const std::vector<char>& highlights, const std::int32_t& numSelectedPoints)
 {
     _pointRenderer.setHighlights(highlights, numSelectedPoints);
 
     update();
 }
 
-void ScatterplotWidget::setScalars(const std::vector<float>& scalars)
+void MainView::setScalars(const std::vector<float>& scalars)
 {
     _pointRenderer.setColorChannelScalars(scalars);
     _cellRenderer.setColorChannelScalars(scalars);
@@ -242,7 +242,7 @@ void ScatterplotWidget::setScalars(const std::vector<float>& scalars)
     update();
 }
 
-void ScatterplotWidget::setColors(const std::vector<Vector3f>& colors)
+void MainView::setColors(const std::vector<Vector3f>& colors)
 {
     _pointRenderer.setColors(colors);
     //_pointRenderer.setScalarEffect(None);
@@ -250,14 +250,14 @@ void ScatterplotWidget::setColors(const std::vector<Vector3f>& colors)
     update();
 }
 
-void ScatterplotWidget::setPointSize(float pointSize)
+void MainView::setPointSize(float pointSize)
 {
     _pointRenderer.setPointSize(pointSize);
 
     update();
 }
 
-void ScatterplotWidget::setPointSizeScalars(const std::vector<float>& pointSizeScalars)
+void MainView::setPointSizeScalars(const std::vector<float>& pointSizeScalars)
 {
     _pointRenderer.setSizeChannelScalars(pointSizeScalars);
     _pointRenderer.setPointSize(*std::max_element(pointSizeScalars.begin(), pointSizeScalars.end()));
@@ -265,19 +265,19 @@ void ScatterplotWidget::setPointSizeScalars(const std::vector<float>& pointSizeS
     update();
 }
 
-void ScatterplotWidget::setPointOpacityScalars(const std::vector<float>& pointOpacityScalars)
+void MainView::setPointOpacityScalars(const std::vector<float>& pointOpacityScalars)
 {
     _pointRenderer.setOpacityChannelScalars(pointOpacityScalars);
 
     update();
 }
 
-void ScatterplotWidget::setPointScaling(mv::gui::PointScaling scalingMode)
+void MainView::setPointScaling(mv::gui::PointScaling scalingMode)
 {
     _pointRenderer.setPointScaling(scalingMode);
 }
 
-void ScatterplotWidget::setScalarEffect(PointEffect effect)
+void MainView::setScalarEffect(PointEffect effect)
 {
     _pointRenderer.setScalarEffect(effect);
     _cellRenderer.setScalarEffect(ScalarEffect::Color);
@@ -285,14 +285,14 @@ void ScatterplotWidget::setScalarEffect(PointEffect effect)
     update();
 }
 
-void ScatterplotWidget::setSigma(const float sigma)
+void MainView::setSigma(const float sigma)
 {
     _densityRenderer.setSigma(sigma);
 
     update();
 }
 
-mv::Vector3f ScatterplotWidget::getColorMapRange() const
+mv::Vector3f MainView::getColorMapRange() const
 {
     switch (_renderMode) {
         case SCATTERPLOT:
@@ -308,7 +308,7 @@ mv::Vector3f ScatterplotWidget::getColorMapRange() const
     return Vector3f();
 }
 
-void ScatterplotWidget::setColorMapRange(const float& min, const float& max)
+void MainView::setColorMapRange(const float& min, const float& max)
 {
     switch (_renderMode) {
         case SCATTERPLOT:
@@ -335,7 +335,7 @@ void ScatterplotWidget::setColorMapRange(const float& min, const float& max)
     update();
 }
 
-void ScatterplotWidget::createScreenshot(std::int32_t width, std::int32_t height, const QString& fileName, const QColor& backgroundColor)
+void MainView::createScreenshot(std::int32_t width, std::int32_t height, const QString& fileName, const QColor& backgroundColor)
 {
     // Exit if the viewer is not initialized
     if (!_isInitialized)
@@ -413,17 +413,17 @@ void ScatterplotWidget::createScreenshot(std::int32_t width, std::int32_t height
     }
 }
 
-void ScatterplotWidget::setRandomWalks(const std::vector<std::vector<Vector2f>>& randomWalks)
+void MainView::setRandomWalks(const std::vector<std::vector<Vector2f>>& randomWalks)
 {
     _randomWalks = randomWalks;
 }
 
-void ScatterplotWidget::setDirections(const std::vector<Vector2f>& directions)
+void MainView::setDirections(const std::vector<Vector2f>& directions)
 {
     _directions = directions;
 }
 
-void ScatterplotWidget::initializeGL()
+void MainView::initializeGL()
 {
     initializeOpenGLFunctions();
 
@@ -435,7 +435,7 @@ void ScatterplotWidget::initializeGL()
     qDebug() << versionString.c_str();
 #endif
 
-    connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &ScatterplotWidget::cleanup);
+    connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &MainView::cleanup);
 
     // Initialize renderers
     _pointRenderer.init();
@@ -454,7 +454,7 @@ void ScatterplotWidget::initializeGL()
     emit initialized();
 }
 
-void ScatterplotWidget::resizeGL(int w, int h)
+void MainView::resizeGL(int w, int h)
 {
     // we need this here as we do not have the screen yet to get the actual devicePixelRatio when the view is created
     _pixelRatio = devicePixelRatio();
@@ -486,7 +486,7 @@ void ScatterplotWidget::resizeGL(int w, int h)
     toIsotropicCoordinates = Matrix3f(wAspect, 0, 0, hAspect, -wDiff, -hDiff);
 }
 
-void ScatterplotWidget::paintGL()
+void MainView::paintGL()
 {
     try {
         QPainter painter;
@@ -631,7 +631,7 @@ void ScatterplotWidget::paintGL()
     }
 }
 
-void ScatterplotWidget::cleanup()
+void MainView::cleanup()
 {
     qDebug() << "Deleting scatterplot widget, performing clean up...";
     _isInitialized = false;
@@ -642,7 +642,7 @@ void ScatterplotWidget::cleanup()
     _cellRenderer.destroy();
 }
 
-void ScatterplotWidget::setColorMap(const QImage& colorMapImage)
+void MainView::setColorMap(const QImage& colorMapImage)
 {
     _colorMapImage = colorMapImage;
 
@@ -662,7 +662,7 @@ void ScatterplotWidget::setColorMap(const QImage& colorMapImage)
     update();
 }
 
-void ScatterplotWidget::updatePixelRatio()
+void MainView::updatePixelRatio()
 {
     float pixelRatio = devicePixelRatio();
 
@@ -680,8 +680,8 @@ void ScatterplotWidget::updatePixelRatio()
     }
 }
 
-ScatterplotWidget::~ScatterplotWidget()
+MainView::~MainView()
 {
-    disconnect(QOpenGLWidget::context(), &QOpenGLContext::aboutToBeDestroyed, this, &ScatterplotWidget::cleanup);
+    disconnect(QOpenGLWidget::context(), &QOpenGLContext::aboutToBeDestroyed, this, &MainView::cleanup);
     cleanup();
 }

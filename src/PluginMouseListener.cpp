@@ -1,6 +1,6 @@
 #include "GradientExplorerPlugin.h"
 
-#include "ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 
 #include "ClusterData/ClusterData.h"
 
@@ -102,12 +102,12 @@ void GradientExplorerPlugin::notifyNewSelectedPoint()
 
 void GradientExplorerPlugin::mousePositionChanged(Vector2f mousePos)
 {
-    mv::Bounds bounds = _scatterPlotWidget->getBounds();
+    mv::Bounds bounds = getUI().getMainView().getBounds();
 
     // Loop over either all points or only the masked points and establish whether they are selected or not
     std::vector<int> full(_dataStore.getNumPoints());
     std::iota(full.begin(), full.end(), 0);
-    QSizeF widgetDimensions(_scatterPlotWidget->width(), _scatterPlotWidget->height());
+    QSizeF widgetDimensions(getUI().getMainView().width(), getUI().getMainView().height());
     int selectedPoint = findClosestPointToMouse(_dataStore.getProjectionView(), bounds, widgetDimensions, mousePos, _mask.empty() ? full : _mask);
 
     // Check if the selected point is the same as the previous, then dont update
@@ -129,7 +129,7 @@ void GradientExplorerPlugin::onKeyPressed(QKeyEvent* event)
     {
         _showingMetadata = true;
 
-        getScatterplotWidget().setColoringMode(ScatterplotWidget::PointColoring::METADATA);
+        getUI().getMainView().setColoringMode(MainView::PointColoring::METADATA);
     }
 }
 
@@ -138,7 +138,7 @@ void GradientExplorerPlugin::onKeyReleased(QKeyEvent* event)
     if (event->key() == Qt::Key_Control)
     {
         _showingMetadata = false;
-        getScatterplotWidget().setColoringMode(ScatterplotWidget::PointColoring::FLOODFILL);
+        getUI().getMainView().setColoringMode(MainView::PointColoring::FLOODFILL);
     }
 }
 

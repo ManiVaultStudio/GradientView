@@ -5,6 +5,8 @@
 #include "graphics/Vector2f.h"
 #include "graphics/Vector3f.h"
 
+#include "Timer.h"
+
 #include <numeric>
 #include <iostream>
 #include <fstream>
@@ -14,54 +16,57 @@
 
 using namespace mv;
 
-void findPointsInRadius(Vector2f center, float radius, const DataMatrix& projMatrix, std::vector<int>& indices)
+namespace
 {
-    float radiusSqr = radius * radius;
-    for (int i = 0; i < projMatrix.rows(); i++)
+    void findPointsInRadius(Vector2f center, float radius, const DataMatrix& projMatrix, std::vector<int>& indices)
     {
-        Vector2f pos(projMatrix(i, 0), projMatrix(i, 1));
-
-        Vector2f diff = center - pos;
-        float sqrLen = diff.x * diff.x + diff.y * diff.y;
-
-        if (sqrLen < radiusSqr)
+        float radiusSqr = radius * radius;
+        for (int i = 0; i < projMatrix.rows(); i++)
         {
-            indices.push_back(i);
+            Vector2f pos(projMatrix(i, 0), projMatrix(i, 1));
+
+            Vector2f diff = center - pos;
+            float sqrLen = diff.x * diff.x + diff.y * diff.y;
+
+            if (sqrLen < radiusSqr)
+            {
+                indices.push_back(i);
+            }
         }
     }
-}
 
-void computeDimensionAverage(const DataMatrix& data, const std::vector<int>& indices, std::vector<float>& averages)
-{
-    int numDimensions = data.cols();
-    averages.resize(numDimensions, 0);
+    void computeDimensionAverage(const DataMatrix& data, const std::vector<int>& indices, std::vector<float>& averages)
+    {
+        int numDimensions = data.cols();
+        averages.resize(numDimensions, 0);
 
 #pragma omp parallel for
-    for (int d = 0; d < numDimensions; d++)
-    {
-        for (const int& index : indices)
+        for (int d = 0; d < numDimensions; d++)
         {
-            float v = data(index, d);
-            averages[d] += v;
+            for (const int& index : indices)
+            {
+                float v = data(index, d);
+                averages[d] += v;
+            }
+            averages[d] /= indices.size();
         }
-        averages[d] /= indices.size();
     }
-}
 
-void maskPoints(std::vector<int>& indices, const std::vector<int>& mask, std::vector<int>& intersection)
-{
-    // Find the intersection of points that are selected, and the given indices
-    std::vector<int>& smallVector = indices;
-    const std::vector<int>& largeVector = mask;
-
-    // Sort the smallest vector
-    sort(smallVector.begin(), smallVector.end());
-
-    // Loop over large vector and binary search which values are in the smaller vector
-    std::copy_if(largeVector.begin(), largeVector.end(), std::back_inserter(intersection), [smallVector](int x)
+    void maskPoints(std::vector<int>& indices, const std::vector<int>& mask, std::vector<int>& intersection)
     {
-        return std::binary_search(smallVector.begin(), smallVector.end(), x);
-    });
+        // Find the intersection of points that are selected, and the given indices
+        std::vector<int>& smallVector = indices;
+        const std::vector<int>& largeVector = mask;
+
+        // Sort the smallest vector
+        sort(smallVector.begin(), smallVector.end());
+
+        // Loop over large vector and binary search which values are in the smaller vector
+        std::copy_if(largeVector.begin(), largeVector.end(), std::back_inserter(intersection), [smallVector](int x)
+            {
+                return std::binary_search(smallVector.begin(), smallVector.end(), x);
+            });
+    }
 }
 
 namespace filters
@@ -83,7 +88,7 @@ namespace filters
         _outerFilterRadius = radius;
     }
 
-    void SpatialPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const DataMatrix& projMatrix, float projSize, std::vector<int>& dimRanking)
+    void SpatialPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const DataMatrix& projMatrix, float projSize, std::vector<int>& dimRanking) const
     {
         int numDimensions = dataMatrix.cols();
 
@@ -113,8 +118,10 @@ namespace filters
         std::stable_sort(dimRanking.begin(), dimRanking.end(), [&diffAverages](size_t i1, size_t i2) {return diffAverages[i1] > diffAverages[i2]; });
     }
 
-    void SpatialPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const DataMatrix& projMatrix, float projSize, std::vector<int>& dimRanking, const std::vector<int>& mask)
+    void SpatialPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const DataMatrix& projMatrix, float projSize, std::vector<int>& dimRanking, const std::vector<int>& mask) const
     {
+        ge::util::Timer t;
+        t.start();
         int numDimensions = dataMatrix.cols();
 
         // Small and large circle averages
@@ -124,17 +131,19 @@ namespace filters
         Vector2f center = Vector2f(projMatrix(pointId, 0), projMatrix(pointId, 1));
 
         findPointsInRadius(center, _innerFilterRadius * projSize, projMatrix, circleIndices[0]);
+        t.mark("Radius1");
         // Apply mask
         //std::vector<int> maskedIndicesInner;
         //maskPoints(circleIndices[0], mask, maskedIndicesInner);
         computeDimensionAverage(dataMatrix, circleIndices[0], averages[0]);
-
+        t.mark("Average1");
         findPointsInRadius(center, _outerFilterRadius * projSize, projMatrix, circleIndices[1]);
+        t.mark("Radius2");
         // Apply mask
         //std::vector<int> maskedIndicesOuter;
         //maskPoints(circleIndices[1], mask, maskedIndicesOuter);
         computeDimensionAverage(dataMatrix, circleIndices[1], averages[1]);
-
+        t.mark("Average2");
         std::vector<float> diffAverages(numDimensions);
         for (int d = 0; d < numDimensions; d++)
         {
@@ -142,12 +151,14 @@ namespace filters
             if (variances[d] > 0)
                 diffAverages[d] = (averages[0][d] - averages[1][d]);// / variances[d];
         }
-
+        t.mark("Diff averages");
         // Sort averages from high to low
         dimRanking.resize(numDimensions);
         std::iota(dimRanking.begin(), dimRanking.end(), 0);
 
         std::stable_sort(dimRanking.begin(), dimRanking.end(), [&diffAverages](size_t i1, size_t i2) {return diffAverages[i1] > diffAverages[i2]; });
+        t.mark("Sort");
+        t.finish("Spatial filter");
     }
 
     HDFloodPeakFilter::HDFloodPeakFilter() :
@@ -167,7 +178,7 @@ namespace filters
     //    _outerFilterSize = size;
     //}
 
-    void HDFloodPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const FloodFill& floodFill, std::vector<int>& dimRanking)
+    void HDFloodPeakFilter::computeDimensionRanking(int pointId, const DataMatrix& dataMatrix, const std::vector<float>& variances, const FloodFill& floodFill, std::vector<int>& dimRanking) const
     {
         int numDimensions = dataMatrix.cols();
 

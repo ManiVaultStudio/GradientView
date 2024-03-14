@@ -1,7 +1,7 @@
 #include "OverlayAction.h"
 
 #include "GradientExplorerPlugin.h"
-#include "ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 
 #include <QMenu>
 #include <QGroupBox>
@@ -16,33 +16,10 @@ OverlayAction::OverlayAction(QObject* parent, const QString& title) :
     _floodOverlayAction(this, "Flood Steps"),
     _dimensionOverlayAction(this, "Top Dimension Values"),
     _dimensionalityOverlayAction(this, "Local Dimensionality")
-    //_overlayGroupAction(this, true)
 {
     setIcon(mv::Application::getIconFont("FontAwesome").getIcon("image"));
 
     setConfigurationFlag(WidgetAction::ConfigurationFlag::ForceCollapsedInGroup);
-
-    //_triggers << TriggersAction::Trigger("Flood Steps", "Color flood points by closeness to seed point in HD space");
-    //_triggers << TriggersAction::Trigger("Top Dimension Values", "Color flood points by values of top ranked dimension");
-    //_triggers << TriggersAction::Trigger("Local Dimensionality", "Color flood points by local intrinsic dimensionality");
-    //_triggers << TriggersAction::Trigger("Directions", "Show major eigenvector directions over flood points");
-
-    //_overlayGroupAction.setText("Flood Nodes Overlay");
-    //_overlayGroupAction.setShowLabels(false);
-
-    //TriggersAction* overlayTriggers = new TriggersAction(&_overlayGroupAction, "Overlay Triggers", _triggers);
-
-    //connect(overlayTriggers, &TriggersAction::triggered, this, [scatterplotPlugin](int32_t triggerIndex)
-    //{
-    //    scatterplotPlugin->getScatterplotWidget().showDirections(false);
-    //    switch (triggerIndex)
-    //    {
-    //    case 0: scatterplotPlugin->setOverlayType(OverlayType::NONE); break;
-    //    case 1: scatterplotPlugin->setOverlayType(OverlayType::DIM_VALUES); break;
-    //    case 2: scatterplotPlugin->setOverlayType(OverlayType::LOCAL_DIMENSIONALITY); break;
-    //    case 3: {scatterplotPlugin->setOverlayType(OverlayType::DIRECTIONS); scatterplotPlugin->getScatterplotWidget().showDirections(true); break; }
-    //    }
-    //});
 }
 
 void OverlayAction::initialize(GradientExplorerPlugin* scatterplotPlugin)

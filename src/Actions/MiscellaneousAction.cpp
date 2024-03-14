@@ -1,6 +1,6 @@
 #include "MiscellaneousAction.h"
 #include "GradientExplorerPlugin.h"
-#include "ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 
 using namespace mv::gui;
 
@@ -20,7 +20,7 @@ MiscellaneousAction::MiscellaneousAction(QObject* parent, const QString& title) 
     _backgroundColorAction.setColor(DEFAULT_BACKGROUND_COLOR);
 
     const auto updateBackgroundColor = [this]() -> void {
-        _plugin->getScatterplotWidget().setBackgroundColor(_backgroundColorAction.getColor());
+        _plugin->getUI().getMainView().setBackgroundColor(_backgroundColorAction.getColor());
     };
 
     connect(&_backgroundColorAction, &ColorAction::colorChanged, this, [this, updateBackgroundColor](const QColor& color) {

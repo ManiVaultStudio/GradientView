@@ -1,7 +1,7 @@
 #include "FilterAction.h"
 
 #include "GradientExplorerPlugin.h"
-#include "ScatterplotWidget.h"
+#include "Widgets/MainView.h"
 
 #include <QMenu>
 #include <QGroupBox>
@@ -22,40 +22,43 @@ FilterAction::FilterAction(QObject* parent, const QString& title) :
     setConfigurationFlag(WidgetAction::ConfigurationFlag::ForceCollapsedInGroup);
 }
 
-void FilterAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
+void FilterAction::initialize(GradientExplorerPlugin* plugin)
 {
-    auto& spatialPeakFilter = scatterplotPlugin->getSpatialPeakFilter();
-    auto& hdPeakFilter = scatterplotPlugin->getHDPeakFilter();
+    filters::Filters& filters = plugin->getFilters();
 
-    connect(&_spatialPeakFilterAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
-        scatterplotPlugin->setFilterType(filters::FilterType::SPATIAL_PEAK);
-        scatterplotPlugin->setFilterLabelText("Spatial Peak Ranking");
-        scatterplotPlugin->getScatterplotWidget().showFiltersCircles(true);
-        scatterplotPlugin->getScatterplotWidget().update();
+    auto& spatialPeakFilter = filters.getSpatialPeakFilter();
+    auto& hdPeakFilter = filters.getHDPeakFilter();
+
+    connect(&_spatialPeakFilterAction, &TriggerAction::triggered, this, [plugin, &filters]() {
+        filters.setFilterType(filters::FilterType::SPATIAL_PEAK);
+        plugin->getUI().getFilterLabel().setText("Spatial Peak Ranking");
+        plugin->getUI().getMainView().showFiltersCircles(true);
+        plugin->getUI().getMainView().update();
         });
-    connect(&_hdPeakFilterAction, &TriggerAction::triggered, this, [scatterplotPlugin]() {
-        if (scatterplotPlugin->getFloodFill().getNumWaves() == 0)
+    connect(&_hdPeakFilterAction, &TriggerAction::triggered, this, [plugin, &filters]() {
+        if (plugin->getFloodFill().getNumWaves() == 0)
         {
             qDebug() << "No flood-fill loaded, cannot do HD ranking";
             return;
         }
-        scatterplotPlugin->setFilterType(filters::FilterType::HD_PEAK);
-        scatterplotPlugin->setFilterLabelText("HD Peak Ranking");
-        scatterplotPlugin->getScatterplotWidget().showFiltersCircles(false);
-        scatterplotPlugin->getScatterplotWidget().update();
+        
+        filters.setFilterType(filters::FilterType::HD_PEAK);
+        plugin->getUI().getFilterLabel().setText("HD Peak Ranking");
+        plugin->getUI().getMainView().showFiltersCircles(false);
+        plugin->getUI().getMainView().update();
         });
 
-    connect(&_innerFilterSizeAction, &DecimalAction::valueChanged, [scatterplotPlugin, &spatialPeakFilter](const float& value) {
-        float projSize = scatterplotPlugin->getProjectionSize();
+    connect(&_innerFilterSizeAction, &DecimalAction::valueChanged, [plugin, &spatialPeakFilter](const float& value) {
+        float projSize = plugin->getProjectionSize();
         spatialPeakFilter.setInnerFilterRadius(value * 0.01f);
-        scatterplotPlugin->getScatterplotWidget().setFilterRadii(Vector2f(spatialPeakFilter.getInnerFilterRadius() * projSize, spatialPeakFilter.getOuterFilterRadius() * projSize));
-        scatterplotPlugin->onPointSelection();
+        plugin->getUI().getMainView().setFilterRadii(Vector2f(spatialPeakFilter.getInnerFilterRadius() * projSize, spatialPeakFilter.getOuterFilterRadius() * projSize));
+        plugin->onPointSelection();
         });
-    connect(&_outerFilterSizeAction, &DecimalAction::valueChanged, [scatterplotPlugin, &spatialPeakFilter](const float& value) {
-        float projSize = scatterplotPlugin->getProjectionSize();
+    connect(&_outerFilterSizeAction, &DecimalAction::valueChanged, [plugin, &spatialPeakFilter](const float& value) {
+        float projSize = plugin->getProjectionSize();
         spatialPeakFilter.setOuterFilterRadius(value * 0.01f);
-        scatterplotPlugin->getScatterplotWidget().setFilterRadii(Vector2f(spatialPeakFilter.getInnerFilterRadius() * projSize, spatialPeakFilter.getOuterFilterRadius() * projSize));
-        scatterplotPlugin->onPointSelection();
+        plugin->getUI().getMainView().setFilterRadii(Vector2f(spatialPeakFilter.getInnerFilterRadius() * projSize, spatialPeakFilter.getOuterFilterRadius() * projSize));
+        plugin->onPointSelection();
         });
 
     connect(&_hdInnerFilterSizeAction, &IntegralAction::valueChanged, [&hdPeakFilter](int value) { hdPeakFilter.setInnerFilterSize(value); });

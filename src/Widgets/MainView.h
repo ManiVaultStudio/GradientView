@@ -22,7 +22,7 @@ using namespace mv;
 using namespace mv::gui;
 using namespace mv::util;
 
-class ScatterplotWidget : public QOpenGLWidget, QOpenGLFunctions_3_3_Core
+class MainView : public QOpenGLWidget, QOpenGLFunctions_3_3_Core
 {
     Q_OBJECT
 
@@ -47,8 +47,8 @@ public:
     };
 
 public:
-    ScatterplotWidget();
-    ~ScatterplotWidget();
+    MainView();
+    ~MainView();
 
     /** Returns true when the widget was initialized and is ready to be used. */
     bool isInitialized();

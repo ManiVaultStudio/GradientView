@@ -41,7 +41,7 @@ void writeDimensionRanking(const std::vector<std::vector<int>>& ranking, const s
 }
 #pragma warning(pop)
 
-void exportRankings(DataStorage& dataStore, FloodFill& floodFill, KnnGraph& knnGraph, filters::FilterType filterType, filters::SpatialPeakFilter spatialFilter, filters::HDFloodPeakFilter hdFilter, bool restrictToFloodNodes, const std::vector<QString>& names)
+void exportRankings(DataStorage& dataStore, FloodFill& floodFill, KnnGraph& knnGraph, const filters::Filters& filters, bool restrictToFloodNodes, const std::vector<QString>& names)
 {
     std::vector<std::vector<int>> perPointDimRankings(dataStore.getNumPoints());
     for (int i = 0; i < dataStore.getNumPoints(); i++)
@@ -49,16 +49,16 @@ void exportRankings(DataStorage& dataStore, FloodFill& floodFill, KnnGraph& knnG
         FloodFill exportFloodFill(floodFill.getNumWaves());
         exportFloodFill.compute(knnGraph, i);
 
-        switch (filterType)
+        switch (filters.getFilterType())
         {
         case filters::FilterType::SPATIAL_PEAK:
             if (restrictToFloodNodes)
-                spatialFilter.computeDimensionRanking(i, dataStore.getDataView(), dataStore.getVariances(), dataStore.getProjectionView(), dataStore.getProjectionSize(), perPointDimRankings[i], exportFloodFill.getAllNodes());
+                filters.getSpatialPeakFilter().computeDimensionRanking(i, dataStore.getDataView(), dataStore.getVariances(), dataStore.getProjectionView(), dataStore.getProjectionSize(), perPointDimRankings[i], exportFloodFill.getAllNodes());
             else
-                spatialFilter.computeDimensionRanking(i, dataStore.getDataView(), dataStore.getVariances(), dataStore.getProjectionView(), dataStore.getProjectionSize(), perPointDimRankings[i]);
+                filters.getSpatialPeakFilter().computeDimensionRanking(i, dataStore.getDataView(), dataStore.getVariances(), dataStore.getProjectionView(), dataStore.getProjectionSize(), perPointDimRankings[i]);
             break;
         case filters::FilterType::HD_PEAK:
-            hdFilter.computeDimensionRanking(i, dataStore.getDataView(), dataStore.getVariances(), exportFloodFill, perPointDimRankings[i]);
+            filters.getHDPeakFilter().computeDimensionRanking(i, dataStore.getDataView(), dataStore.getVariances(), exportFloodFill, perPointDimRankings[i]);
             break;
         }
     }

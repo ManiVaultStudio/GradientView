@@ -57,10 +57,10 @@ protected:
     void updateDefaultDatasets();
 
     /** Update the scatter plot widget point size scalars */
-    void updateScatterPlotWidgetPointSizeScalars();
+    void updateMainViewPointSizeScalars();
 
     /** Update the scatter plot widget point opacity scalars */
-    void updateScatterPlotWidgetPointOpacityScalars();
+    void updateMainViewPointOpacityScalars();
 
 protected: // Linking
 
