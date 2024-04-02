@@ -1,10 +1,10 @@
 #pragma once
 
+#include "Actions/SettingsAction.h"
 #include "Widgets/MainView.h"
 #include "Widgets/ProjectionView.h"
 
 #include <widgets/DropWidget.h>
-#include <actions/SettingsAction.h>
 #include <actions/HorizontalToolbarAction.h>
 #include <actions/ColorMap1DAction.h>
 
