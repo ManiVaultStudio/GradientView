@@ -3,10 +3,10 @@
 #include "Widgets/MainView.h"
 #include "Widgets/ProjectionView.h"
 
-#include <Widgets/DropWidget.h>
-#include <Actions/SettingsAction.h>
-#include <Actions/HorizontalToolbarAction.h>
-#include <Actions/ColorMap1DAction.h>
+#include <widgets/DropWidget.h>
+#include <actions/SettingsAction.h>
+#include <actions/HorizontalToolbarAction.h>
+#include <actions/ColorMap1DAction.h>
 
 class UserInterface
 {
