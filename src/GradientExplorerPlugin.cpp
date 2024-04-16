@@ -563,7 +563,7 @@ void GradientExplorerPlugin::updateProjectionData()
     if (!getUI().getMainView().isInitialized())
     {
         qCritical() << "Tried to update projection data while view widgets are uninitialized";
-        exit(1);
+        return;
     }
 
     // Subset the new projection matrix from the one with all the dimensions
