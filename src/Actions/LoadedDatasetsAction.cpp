@@ -19,24 +19,12 @@ LoadedDatasetsAction::LoadedDatasetsAction(QObject* parent, const QString& title
     setIcon(mv::Application::getIconFont("FontAwesome").getIcon("database"));
     setToolTip("Manage loaded datasets for position and/or color");
 
-    _positionDatasetPickerAction.setDatasetsFilterFunction([](const mv::Datasets& datasets) -> Datasets {
-        Datasets pointDatasets;
-
-        for (auto dataset : datasets)
-            if (dataset->getDataType() == PointType)
-                pointDatasets << dataset;
-
-        return pointDatasets;
+    _positionDatasetPickerAction.setFilterFunction([](const mv::Dataset<DatasetImpl>& dataset) -> bool {
+        return dataset->getDataType() == PointType;
     });
 
-    _colorDatasetPickerAction.setDatasetsFilterFunction([](const mv::Datasets& datasets) -> Datasets {
-        Datasets colorDatasets;
-
-        for (auto dataset : datasets)
-            if (dataset->getDataType() == PointType || dataset->getDataType() == ColorType || dataset->getDataType() == ClusterType)
-                colorDatasets << dataset;
-
-        return colorDatasets;
+    _colorDatasetPickerAction.setFilterFunction([](const mv::Dataset<DatasetImpl>& dataset) -> bool {
+        return dataset->getDataType() == PointType || dataset->getDataType() == ColorType || dataset->getDataType() == ClusterType;
     });
 
     //connect(&_colorDatasetPickerAction, &DatasetPickerAction::datasetPicked, [this](Dataset<DatasetImpl> pickedDataset) -> void {
