@@ -19,25 +19,14 @@ LoadedDatasetsAction::LoadedDatasetsAction(QObject* parent, const QString& title
     setIcon(mv::Application::getIconFont("FontAwesome").getIcon("database"));
     setToolTip("Manage loaded datasets for position and/or color");
 
-    _positionDatasetPickerAction.setDatasetsFilterFunction([](const mv::Datasets& datasets) -> Datasets {
-        Datasets pointDatasets;
+    _positionDatasetPickerAction.setFilterFunction([](const mv::Dataset<DatasetImpl>& dataset) -> bool {
+        return dataset->getDataType() == PointType;
+        });
 
-        for (auto dataset : datasets)
-            if (dataset->getDataType() == PointType)
-                pointDatasets << dataset;
+    _colorDatasetPickerAction.setFilterFunction([](const mv::Dataset<DatasetImpl>& dataset) -> bool {
+        return dataset->getDataType() == PointType || dataset->getDataType() == ColorType || dataset->getDataType() == ClusterType;
+        });
 
-        return pointDatasets;
-    });
-
-    _colorDatasetPickerAction.setDatasetsFilterFunction([](const mv::Datasets& datasets) -> Datasets {
-        Datasets colorDatasets;
-
-        for (auto dataset : datasets)
-            if (dataset->getDataType() == PointType || dataset->getDataType() == ColorType || dataset->getDataType() == ClusterType)
-                colorDatasets << dataset;
-
-        return colorDatasets;
-    });
 
     //connect(&_colorDatasetPickerAction, &DatasetPickerAction::datasetPicked, [this](Dataset<DatasetImpl> pickedDataset) -> void {
     //    _scatterplotPlugin->getSettingsAction().getColoringAction().setCurrentColorDataset(pickedDataset);
