@@ -160,15 +160,22 @@ target_compile_definitions(${PROJECT} PRIVATE NOGDI)
 target_include_directories(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(${PROJECT} PRIVATE "${MV_INSTALL_DIR}/$<CONFIGURATION>/include/")
 
-include(InstallArtifactoryPackage)
+# Common artifactory logic
+include(FetchContent)
+FetchContent_Declare(cmakesupport
+	GIT_REPOSITORY https://github.com/ManiVaultStudio/github-actions
+	GIT_TAG main
+	GIT_SHALLOW TRUE
+	SOURCE_SUBDIR CMakeSupport
+)
+FetchContent_MakeAvailable(cmakesupport)
+
+include("${cmakesupport_SOURCE_DIR}/CMakeSupport/InstallArtifactoryPackage.cmake")
 set(LIBRARY_INSTALL_DIR ${PROJECT_BINARY_DIR})
 if (USE_ARTIFACTORY_LIBS)
 	if (NOT ARTIFACTORY_LIBS_INSTALLED) 
 		message(STATUS "Installing artifactory packages to: ${LIBRARY_INSTALL_DIR}")
-		# Both HDILib and flann are available prebuilt in the lkeb-artifactory as combined Debug/Release packages
-		# lz4 is also available in the lkb-artifactory in separate Debug and |Release packages
-		install_artifactory_package(PACKAGE_NAME faiss PACKAGE_VERSION ${faiss_VERSION} PACKAGE_BUILDER lkeb COMBINED_PACKAGE TRUE) 
-
+		install_artifactory_package(faiss ${faiss_VERSION} lkeb TRUE) 
 		message(STATUS "faiss root path ${faiss_ROOT}")
 	endif()
 	set(faiss_ROOT ${LIBRARY_INSTALL_DIR}/${package_name})
