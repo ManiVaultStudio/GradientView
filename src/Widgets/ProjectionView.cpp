@@ -47,33 +47,41 @@ ProjectionView::ProjectionView() :
     QSurfaceFormat surfaceFormat;
 
     surfaceFormat.setRenderableType(QSurfaceFormat::OpenGL);
-
-#ifdef __APPLE__
-    // Ask for an OpenGL 3.3 Core Context as the default
     surfaceFormat.setVersion(3, 3);
     surfaceFormat.setProfile(QSurfaceFormat::CoreProfile);
     surfaceFormat.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-    //QSurfaceFormat::setDefaultFormat(defaultFormat);
-#else
-    // Ask for an OpenGL 4.3 Core Context as the default
-    surfaceFormat.setVersion(4, 3);
-    surfaceFormat.setProfile(QSurfaceFormat::CoreProfile);
-    surfaceFormat.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-#endif
+    surfaceFormat.setSamples(16);
+    surfaceFormat.setStencilBufferSize(8);
 
 #ifdef _DEBUG
     surfaceFormat.setOption(QSurfaceFormat::DebugContext);
 #endif
 
-    surfaceFormat.setSamples(16);
-
     setFormat(surfaceFormat);
 
-    // we connect screenChanged to updating the pixel ratio
-    // this is necessary in case the window is moved between hi and low dpi screens
+    // Call updatePixelRatio when the window is moved between hi and low dpi screens
     // e.g., from a laptop display to a projector
-    winId(); // This is needed to produce a valid windowHandle
-    QObject::connect(windowHandle(), &QWindow::screenChanged, this, &ProjectionView::updatePixelRatio);
+    // Wait with the connection until we are sure that the window is created
+    connect(this, &ProjectionView::created, this, [this](){
+        [[maybe_unused]] auto windowID = this->window()->winId(); // This is needed to produce a valid windowHandle on some systems
+
+        QWindow* winHandle = windowHandle();
+
+        // On some systems we might need to use a different windowHandle
+        if(!winHandle)
+        {
+            const QWidget* nativeParent = nativeParentWidget();
+            winHandle = nativeParent->windowHandle();
+        }
+
+        if(winHandle == nullptr)
+        {
+            qDebug() << "ProjectionView: Not connecting updatePixelRatio - could not get window handle";
+            return;
+        }
+
+        QObject::connect(winHandle, &QWindow::screenChanged, this, &ProjectionView::updatePixelRatio, Qt::UniqueConnection);
+    });
 
     setFocusPolicy(Qt::ClickFocus);
     installEventFilter(this);

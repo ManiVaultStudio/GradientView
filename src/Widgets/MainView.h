@@ -146,6 +146,12 @@ protected:
     void paintGL()              Q_DECL_OVERRIDE;
     void cleanup();
     
+    void showEvent(QShowEvent* event) Q_DECL_OVERRIDE
+    {
+        emit created();
+        QWidget::showEvent(event);
+    }
+
 public: // Const access to renderers
 
     const PointRenderer& getPointRenderer() const { 
@@ -163,6 +169,7 @@ public:
 
 signals:
     void initialized();
+    void created();
 
     /**
      * Signals that the render mode changed
