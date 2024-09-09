@@ -948,7 +948,7 @@ void GradientExplorerPlugin::updateViewScalars()
     else if (_selectedViewIndex == 2) selectedView = getUI().getProjectionViews()[1];
     else if (_selectedViewIndex == 3) selectedView = &getUI().getSelectedView();
 
-    if (selectedView != nullptr)
+    if (_positionDataset.isValid() && _dataStore.hasData() && selectedView != nullptr)
     {
         selectedView->selectView(true);
 

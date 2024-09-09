@@ -73,6 +73,7 @@ private slots:
 
 signals:
     void initialized();
+    void created();
     void viewSelected();
 
 protected:
@@ -82,6 +83,12 @@ protected:
     void cleanup();
 
     bool eventFilter(QObject* target, QEvent* event);
+
+    void showEvent(QShowEvent* event) Q_DECL_OVERRIDE
+    {
+        emit created();
+        QWidget::showEvent(event);
+    }
 
 private:
     PointRenderer   _pointRenderer;
