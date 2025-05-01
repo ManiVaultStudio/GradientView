@@ -272,15 +272,9 @@ class GradientExplorerPluginFactory : public ViewPluginFactory
                       FILE  "GradientExplorerPlugin.json")
     
 public:
-    GradientExplorerPluginFactory(void) {}
-    ~GradientExplorerPluginFactory(void) override {}
+    GradientExplorerPluginFactory(void);
 
-    /**
-     * Get plugin icon
-     * @param color Icon color for flat (font) icons
-     * @return Icon
-     */
-    QIcon getIcon(const QColor& color = Qt::black) const override;
+    ~GradientExplorerPluginFactory(void) override {}
 
     ViewPlugin* produce() override;
 

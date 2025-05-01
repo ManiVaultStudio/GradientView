@@ -5,6 +5,7 @@
 #include <Set.h>
 
 using namespace mv;
+using namespace mv::util;
 
 ColorSourceModel::ColorSourceModel(QObject* parent /*= nullptr*/) :
     QAbstractListModel(parent),
@@ -45,7 +46,7 @@ QVariant ColorSourceModel::data(const QModelIndex& index, int role) const
     {
         // Return palette icon for constant color and dataset icon otherwise
         case Qt::DecorationRole:
-            return row > 0 ? dataset->getIcon() : Application::getIconFont("FontAwesome").getIcon("palette");
+            return row > 0 ? dataset->icon() : StyledIcon("palette");
 
         // Return 'Constant' for constant color and dataset (full path) GUI name otherwise
         case Qt::DisplayRole:

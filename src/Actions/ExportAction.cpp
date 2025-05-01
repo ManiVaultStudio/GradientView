@@ -14,7 +14,7 @@ ExportAction::ExportAction(QObject* parent, const QString& title) :
     _exportFloodnodesAction(this, "Export floodnodes"),
     _importKnnGraphAction(this, "Import KNN Graph")
 {
-    setIcon(mv::Application::getIconFont("FontAwesome").getIcon("file-export"));
+    setIconByName("file-export");
 
     setConfigurationFlag(WidgetAction::ConfigurationFlag::ForceCollapsedInGroup);
 }

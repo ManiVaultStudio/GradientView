@@ -6,6 +6,7 @@
 #include <QVBoxLayout>
 
 using namespace mv;
+using namespace mv::util;
 
 ExportImageDialog::ExportImageDialog(QWidget* parent, GradientExplorerPlugin& scatterplotPlugin) :
     QDialog(parent),
@@ -13,7 +14,7 @@ ExportImageDialog::ExportImageDialog(QWidget* parent, GradientExplorerPlugin& sc
     _exportImageAction(&scatterplotPlugin, "ExportImageAction")
 {
     setWindowTitle("Export " + scatterplotPlugin.getPositionDataset()->getGuiName() + " to image(s)");
-    setWindowIcon(Application::getIconFont("FontAwesome").getIcon("file-export"));
+    setWindowIcon(StyledIcon("file-export"));
     setModal(true);
 
     auto layout = new QVBoxLayout();

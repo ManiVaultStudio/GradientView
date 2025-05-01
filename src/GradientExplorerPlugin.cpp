@@ -1323,9 +1323,9 @@ void GradientExplorerPlugin::useSelectionAsDataView(std::vector<int>& indices)
  * Factory
  ******************************************************************************/
 
-QIcon GradientExplorerPluginFactory::getIcon(const QColor& color /*= Qt::black*/) const
+GradientExplorerPluginFactory::GradientExplorerPluginFactory()
 {
-    return Application::getIconFont("FontAwesome").getIcon("braille", color);
+    setIconByName("braille");
 }
 
 ViewPlugin* GradientExplorerPluginFactory::produce()
