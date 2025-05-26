@@ -11,7 +11,7 @@ MiscellaneousAction::MiscellaneousAction(QObject* parent, const QString& title) 
     _plugin(dynamic_cast<GradientExplorerPlugin*>(parent->parent())),
     _backgroundColorAction(this, "Background color")
 {
-    setIcon(Application::getIconFont("FontAwesome").getIcon("cog"));
+    setIconByName("cog");
     setLabelSizingType(LabelSizingType::Auto);
     setConfigurationFlag(WidgetAction::ConfigurationFlag::ForceCollapsedInGroup);
 
