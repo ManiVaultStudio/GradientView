@@ -138,17 +138,26 @@ GradientExplorerPlugin::GradientExplorerPlugin(const PluginFactory* factory) :
         const auto datasetGuiName = dataset->text();
         const auto datasetId = dataset->getId();
         const auto dataType = dataset->getDataType();
-        const auto dataTypes = DataTypes({ PointType , ColorType, ClusterType });
+        const auto dataTypes = DataTypes({ PointType, ClusterType });
 
         // Check if the data type can be dropped
         if (!dataTypes.contains(dataType))
+        {
             dropRegions << new DropWidget::DropRegion(this, "Incompatible data", "This type of data is not supported", "exclamation-circle", false);
+            return dropRegions;
+        }
 
         // Points dataset is about to be dropped
         if (dataType == PointType) {
 
             // Get points dataset from the core
             auto candidateDataset = mv::data().getDataset<Points>(datasetId);
+
+            if (!candidateDataset->isDerivedData())
+            {
+                dropRegions << new DropWidget::DropRegion(this, "Incompatible data", "Data must be an embedding", "exclamation-circle", false);
+                return dropRegions;
+            }
 
             // Establish drop region description
             const auto description = QString("Visualize %1 as points or density/contour map").arg(datasetGuiName);
@@ -189,10 +198,8 @@ GradientExplorerPlugin::GradientExplorerPlugin(const PluginFactory* factory) :
                 }
             }
         }
-
-        // Cluster dataset is about to be dropped
-        if (dataType == ClusterType) {
-
+        else if (dataType == ClusterType) // Cluster dataset is about to be dropped
+        {
             // Get clusters dataset from the core
             auto candidateDataset = mv::data().getDataset<Clusters>(datasetId);
 
@@ -241,7 +248,7 @@ void GradientExplorerPlugin::init()
 
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    layout->addWidget(getUI().getPrimaryToolbar().createWidget(&getWidget()));
+    //layout->addWidget(getUI().getPrimaryToolbar().createWidget(&getWidget()));
 
     getUI().initializeLabels();
 
@@ -265,11 +272,15 @@ void GradientExplorerPlugin::init()
     auto leftPanel = new QVBoxLayout();
     leftPanel->addWidget(&getUI().getMainView(), 90);
 
-    auto centralPanel = new QHBoxLayout();
-    centralPanel->addLayout(leftPanel, 80);
-    centralPanel->addLayout(gradientViewLayout, 20);
+    auto centralPanelWidget = new QWidget();
+    auto centralPanelLayout = new QHBoxLayout();
 
-    layout->addLayout(centralPanel, 100);
+    centralPanelLayout->setContentsMargins(0, 0, 0, 0);
+
+    centralPanelLayout->addLayout(leftPanel, 80);
+    centralPanelLayout->addLayout(gradientViewLayout, 20);
+
+    centralPanelWidget->setLayout(centralPanelLayout);
 
     auto bottomToolbarWidget = new QWidget();
     auto bottomToolbarLayout = new QHBoxLayout();
@@ -285,7 +296,9 @@ void GradientExplorerPlugin::init()
     //bottomToolbarLayout->addWidget(_settingsAction.getExportImageAction().createWidget(&getWidget()));
     bottomToolbarLayout->addWidget(getUI().getSettingsAction().getMiscellaneousAction().createCollapsedWidget(&getWidget()));
 
-    layout->addWidget(_userInterface.getSecondaryToolbar().createWidget(&getWidget()));
+    layout->addWidget(getUI().getPrimaryToolbar().createWidget(&getWidget()));
+    layout->addWidget(centralPanelWidget, 100);
+    layout->addWidget(getUI().getSecondaryToolbar().createWidget(&getWidget()));
 
     getWidget().setLayout(layout);
 
@@ -1058,7 +1071,7 @@ void GradientExplorerPlugin::createKnnIndex()
     if (_dataStore.getNumDimensions() <= 200)
         _knnIndex.create(_dataStore.getNumDimensions(), knn::Metric::MANHATTAN);
     else
-        _knnIndex.create(_dataStore.getNumDimensions(), knn::Metric::COSINE);
+        _knnIndex.create(_dataStore.getBaseData(), _dataStore.getNumDimensions(), knn::Metric::COSINE);
     qDebug() << "Adding data";
     _knnIndex.addData(_dataStore.getBaseData());
     qDebug() << "Done creating index";
