@@ -511,7 +511,7 @@ void GradientExplorerPlugin::computeStaticData()
     if (_computeOnLoad)
     {
         logger() << "Computing KNN graph";
-        createKnnIndex();
+        createKnnIndex(getUI().getSettingsAction().getOverlayAction().getPreciseKnnAction().isChecked());
         timer.mark("Computing KNN index");
         computeKnnGraph();
         timer.mark("Computing KNN graph");
@@ -1065,11 +1065,12 @@ void GradientExplorerPlugin::importKnnGraph()
  * Flooding
  ******************************************************************************/
 
-void GradientExplorerPlugin::createKnnIndex()
+void GradientExplorerPlugin::createKnnIndex(bool preciseKnn)
 {
+    _knnIndex.setPrecise(preciseKnn);
     qDebug() << "Creating index";
     if (_dataStore.getNumDimensions() <= 200)
-        _knnIndex.create(_dataStore.getNumDimensions(), knn::Metric::MANHATTAN);
+        _knnIndex.create(_dataStore.getBaseData(), _dataStore.getNumDimensions(), knn::Metric::MANHATTAN);
     else
         _knnIndex.create(_dataStore.getBaseData(), _dataStore.getNumDimensions(), knn::Metric::COSINE);
     qDebug() << "Adding data";
@@ -1263,12 +1264,15 @@ void GradientExplorerPlugin::useSelectionAsMask()
     _maskedDataMatrix = _dataStore.getDataView()(_mask, Eigen::all);
     _maskedProjMatrix = _dataStore.getProjectionView()(_mask, Eigen::all);
 
+    const bool preciseKnn = getUI().getSettingsAction().getOverlayAction().getPreciseKnnAction().isChecked();
+    _maskedKnnIndex.setPrecise(preciseKnn);
+
     if (_maskedKnn)
     {
         if (_maskedDataMatrix.rows() < 5000)
-            _maskedKnnIndex.create(_maskedDataMatrix.cols(), knn::Metric::MANHATTAN);
+            _maskedKnnIndex.create(_maskedDataMatrix, _maskedDataMatrix.cols(), knn::Metric::MANHATTAN);
         else
-            _maskedKnnIndex.create(_maskedDataMatrix.cols(), knn::Metric::EUCLIDEAN);
+            _maskedKnnIndex.create(_maskedDataMatrix, _maskedDataMatrix.cols(), knn::Metric::EUCLIDEAN);
         _maskedKnnIndex.addData(_maskedDataMatrix);
 
         _largeKnnGraph.build(_maskedDataMatrix, _maskedKnnIndex, 30);

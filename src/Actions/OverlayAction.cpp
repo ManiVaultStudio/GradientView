@@ -10,9 +10,10 @@ OverlayAction::OverlayAction(QObject* parent, const QString& title) :
     WidgetAction(parent, "Overlay Settings"),
     _plugin(nullptr),
     _computeKnnGraphAction(this, "Compute Floods"),
+    _preciseKnnAction(this, "Compute floods precisely (may be slow)", true),
     _floodDecimal(this, "Flood nodes", 10, 500, 10),
     _floodStepsAction(this, "Flood steps", 2, 50, 10),
-    _sharedDistAction(this, "Shared distances", false),
+    _sharedDistAction(this, "Shared Distances", false), // intentionally empty title, use label in OverlayAction::Widget
     _floodOverlayAction(this, "Flood Steps"),
     _dimensionOverlayAction(this, "Top Dimension Values"),
     _dimensionalityOverlayAction(this, "Local Dimensionality")
@@ -24,9 +25,10 @@ OverlayAction::OverlayAction(QObject* parent, const QString& title) :
 
 void OverlayAction::initialize(GradientExplorerPlugin* scatterplotPlugin)
 {
-    connect(&_computeKnnGraphAction, &TriggerAction::triggered, this, [scatterplotPlugin](bool enabled)
+    connect(&_computeKnnGraphAction, &TriggerAction::triggered, this, [scatterplotPlugin, this](bool enabled)
     {
-        scatterplotPlugin->createKnnIndex();
+        const bool preciseKnn = _preciseKnnAction.isChecked();
+        scatterplotPlugin->createKnnIndex(preciseKnn);
         scatterplotPlugin->computeKnnGraph();
     });
 
@@ -77,6 +79,7 @@ QMenu* OverlayAction::getContextMenu()
     };
 
     addActionToMenu(&_computeKnnGraphAction);
+    addActionToMenu(&_preciseKnnAction);
     addActionToMenu(&_floodDecimal);
     addActionToMenu(&_floodStepsAction);
     addActionToMenu(&_sharedDistAction);
@@ -87,6 +90,8 @@ QMenu* OverlayAction::getContextMenu()
 void OverlayAction::fromVariantMap(const QVariantMap& variantMap)
 {
     WidgetAction::fromVariantMap(variantMap);
+
+    _preciseKnnAction.fromParentVariantMap(variantMap);
 
     _floodDecimal.fromParentVariantMap(variantMap);
     _floodStepsAction.fromParentVariantMap(variantMap);
@@ -100,6 +105,8 @@ void OverlayAction::fromVariantMap(const QVariantMap& variantMap)
 QVariantMap OverlayAction::toVariantMap() const
 {
     QVariantMap variantMap = WidgetAction::toVariantMap();
+
+    _preciseKnnAction.insertIntoVariantMap(variantMap);
 
     _floodDecimal.insertIntoVariantMap(variantMap);
     _floodStepsAction.insertIntoVariantMap(variantMap);
@@ -125,19 +132,22 @@ OverlayAction::Widget::Widget(QWidget* parent, OverlayAction* overlayAction, con
     layout->addWidget(overlayAction->getComputeKnnGraphAction().createLabelWidget(this), 0, 0);
     layout->addWidget(overlayAction->getComputeKnnGraphAction().createWidget(this), 0, 1);
 
-    layout->addWidget(overlayAction->getFloodDecimalAction().createLabelWidget(this), 1, 0);
-    layout->addWidget(overlayAction->getFloodDecimalAction().createWidget(this), 1, 1);
+    layout->addWidget(overlayAction->getPreciseKnnAction().createLabelWidget(this), 1, 0);
+    layout->addWidget(overlayAction->getPreciseKnnAction().createWidget(this), 1, 1);
 
-    layout->addWidget(overlayAction->getFloodStepsAction().createLabelWidget(this), 2, 0);
-    layout->addWidget(overlayAction->getFloodStepsAction().createWidget(this), 2, 1);
+    layout->addWidget(overlayAction->getFloodDecimalAction().createLabelWidget(this), 2, 0);
+    layout->addWidget(overlayAction->getFloodDecimalAction().createWidget(this), 2, 1);
 
-    layout->addWidget(overlayAction->getSharedDistAction().createLabelWidget(this), 3, 0);
-    layout->addWidget(overlayAction->getSharedDistAction().createWidget(this), 3, 1);
+    layout->addWidget(overlayAction->getFloodStepsAction().createLabelWidget(this), 3, 0);
+    layout->addWidget(overlayAction->getFloodStepsAction().createWidget(this), 3, 1);
 
-    layout->addWidget(new QLabel("Color flood nodes by:", parent), 4, 0);
-    layout->addWidget(overlayAction->getFloodOverlayAction().createWidget(this), 5, 0);
-    layout->addWidget(overlayAction->getDimensionOverlayAction().createWidget(this), 5, 1);
-    layout->addWidget(overlayAction->getDimensionalityOverlayAction().createWidget(this), 5, 2);
+    layout->addWidget(overlayAction->getSharedDistAction().createLabelWidget(this), 4, 0);
+    layout->addWidget(overlayAction->getSharedDistAction().createWidget(this), 4, 1);
+
+    layout->addWidget(new QLabel("Color flood nodes by:", parent), 5, 0);
+    layout->addWidget(overlayAction->getFloodOverlayAction().createWidget(this), 6, 0);
+    layout->addWidget(overlayAction->getDimensionOverlayAction().createWidget(this), 6, 1);
+    layout->addWidget(overlayAction->getDimensionalityOverlayAction().createWidget(this), 6, 2);
 
     setLayout(layout);
 }
