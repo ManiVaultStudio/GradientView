@@ -103,9 +103,10 @@ void createFaissIndex(faiss::IndexFlat*& index, int numDimensions, knn::Metric m
 void createFaissIVFIndex(const DataMatrix& data, faiss::IndexFlatL2*& quantizer, faiss::IndexIVFFlat*& index, int numDimensions, knn::Metric metric)
 {
     qDebug() << "Creating IVF index";
-    int nlist = 4000;
+    int nlist = sqrt(data.rows());
     quantizer = new faiss::IndexFlatL2(numDimensions);
     index = new faiss::IndexIVFFlat(quantizer, numDimensions, nlist);
+    index->nprobe = 10;
 
     std::vector<float> indexData;
     linearizeData(data, indexData, metric);
