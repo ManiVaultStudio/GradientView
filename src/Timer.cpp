@@ -12,13 +12,13 @@ namespace ge
             _names.push_back("Start");
         }
 
-        void Timer::mark(std::string name)
+        void Timer::mark(const std::string& name)
         {
             _timePoints.push_back(std::chrono::high_resolution_clock::now());
             _names.push_back(name);
         }
 
-        void Timer::finish(std::string name)
+        void Timer::finish(const std::string& name)
         {
             _timePoints.push_back(std::chrono::high_resolution_clock::now());
             _names.push_back(name);
@@ -35,4 +35,4 @@ namespace ge
             std::cout << std::endl;
         }
     }
-}
+} // namespace ge

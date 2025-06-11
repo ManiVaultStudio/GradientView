@@ -467,13 +467,13 @@ void MainView::initializeGL()
 void MainView::resizeGL(int w, int h)
 {
     // we need this here as we do not have the screen yet to get the actual devicePixelRatio when the view is created
-    _pixelRatio = devicePixelRatio();
+    //_pixelRatio = devicePixelRatio();
 
     // Pixelration tells us how many pixels map to a point
     // That is needed as macOS calculates in points and we do in pixels
     // On macOS high dpi displays pixel ration is 2
-    w *= _pixelRatio;
-    h *= _pixelRatio;
+    //w *= _pixelRatio;
+    //h *= _pixelRatio;
 
     _windowSize.setWidth(w);
     _windowSize.setHeight(h);

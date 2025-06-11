@@ -28,16 +28,22 @@ namespace knn
         Index();
         ~Index();
 
-        void create(int numDimensions, Metric metric);
+        void setPrecise(bool precise) { _preciseKnn = precise; }
+
+        //void create(int numDimensions, Metric metric);
+        void create(const DataMatrix& data, int numDimensions, Metric metric);
         void addData(const DataMatrix& data);
         void search(const DataMatrix& data, int numNeighbours, std::vector<int>& indices, std::vector<float>& distances) const;
 
     private:
-        void linearizeData(const DataMatrix& data, std::vector<float>& highDimArray) const;
+        //void linearizeData(const DataMatrix& data, std::vector<float>& highDimArray) const;
 
     private:
         AnnoyIndex*                         _annoyIndex     = nullptr;
         faiss::IndexFlat*                   _faissIndex     = nullptr;
+
+        faiss::IndexIVFFlat*                _faissIVFIndex  = nullptr;
+        faiss::IndexFlatL2*                 _ivfQuantizer   = nullptr;
 
         Metric                              _metric;
 

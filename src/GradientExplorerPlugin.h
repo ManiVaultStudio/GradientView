@@ -117,7 +117,7 @@ public:
     filters::Filters& getFilters()                      { return _filters; }
 
 public: // Flood fill
-    void createKnnIndex();
+    void createKnnIndex(bool preciseKnn);
     void computeKnnGraph();
     void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataStore.getBaseData(), _knnIndex, floodNeighbours); }
 

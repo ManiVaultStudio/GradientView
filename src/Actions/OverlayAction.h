@@ -52,6 +52,7 @@ public: // Serialization
 
 public: // Action getters
     TriggerAction& getComputeKnnGraphAction() { return _computeKnnGraphAction; }
+    ToggleAction& getPreciseKnnAction() { return _preciseKnnAction; }
 
     IntegralAction& getFloodDecimalAction() { return _floodDecimal; }
     IntegralAction& getFloodStepsAction() { return _floodStepsAction; }
@@ -66,6 +67,7 @@ public: // Action getters
 private:
     GradientExplorerPlugin* _plugin;             /** Pointer to scatterplot plugin */
     TriggerAction           _computeKnnGraphAction;
+    ToggleAction            _preciseKnnAction;
 
     IntegralAction          _floodDecimal;
     IntegralAction          _floodStepsAction;

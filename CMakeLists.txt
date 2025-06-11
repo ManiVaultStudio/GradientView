@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.22)
 
 # -----------------------------------------------------------------------------
-# GradientExplorer Viewer Plugin
+# Plugin project
 # -----------------------------------------------------------------------------
 set(PROJECT "GradientExplorer")
 PROJECT(${PROJECT})
@@ -16,20 +16,22 @@ set(CMAKE_AUTOMOC ON)
 
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /DWIN32 /EHsc /MP /permissive- /Zc:__cplusplus")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMT")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MD")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
 endif(MSVC)
 
-if(DEFINED CMAKE_TOOLCHAIN_FILE AND CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
-    set(MV_GRV_USE_VCPKG ON)
+if(NOT DEFINED MV_GRV_USE_VCPKG)
+    set(MV_GRV_USE_VCPKG OFF)
+elseif(MV_GRV_USE_VCPKG)
+    message(STATUS "SpaceWalker: Using vcpkg to install dependencies")
 endif()
 
 # -----------------------------------------------------------------------------
 # Dependencies
 # -----------------------------------------------------------------------------
 SET(faiss_VERSION "1.7.3" CACHE STRING "Version of faiss Library")
-SET_PROPERTY(CACHE faiss_VERSION PROPERTY STRINGS 1.73)
+SET_PROPERTY(CACHE faiss_VERSION PROPERTY STRINGS 1.80)
 
 find_package(ManiVault COMPONENTS Core PointData ClusterData CONFIG)
 
@@ -38,28 +40,23 @@ find_package(Qt6 COMPONENTS Widgets WebEngineWidgets OpenGL OpenGLWidgets REQUIR
 find_package(OpenMP)
 
 if(MV_GRV_USE_VCPKG)
-	find_package(faiss CONFIG REQUIRED)
-	message(STATUS "Found faiss with version ${faiss_VERSION}")
+    find_package(faiss CONFIG REQUIRED)
+    message(STATUS "Found faiss with version ${faiss_VERSION}")
 else ()
-	include(InstallArtifactoryPackage)
-	set(LIBRARY_INSTALL_DIR ${PROJECT_BINARY_DIR})
-	
-	if (NOT MV_GRAD_ARTIFACTORY_LIBS_INSTALLED) 
-		message(STATUS "Installing artifactory packages to: ${LIBRARY_INSTALL_DIR}")
-		# Both HDILib and flann are available prebuilt in the lkeb-artifactory as combined Debug/Release packages
-		# lz4 is also available in the lkb-artifactory in separate Debug and |Release packages
-		install_artifactory_package(PACKAGE_NAME faiss PACKAGE_VERSION ${faiss_VERSION} PACKAGE_BUILDER lkeb COMBINED_PACKAGE TRUE) 
+    include(InstallArtifactoryPackage)
+    set(LIBRARY_INSTALL_DIR ${PROJECT_BINARY_DIR})
+    
+    if (NOT MV_GRAD_ARTIFACTORY_LIBS_INSTALLED) 
+        message(STATUS "Installing artifactory packages to: ${LIBRARY_INSTALL_DIR}")
+        install_artifactory_package(PACKAGE_NAME faiss PACKAGE_VERSION ${faiss_VERSION} PACKAGE_BUILDER lkeb COMBINED_PACKAGE TRUE) 
 
-		message(STATUS "faiss root path ${faiss_ROOT}")
-	endif()
-	
-	set(faiss_ROOT ${LIBRARY_INSTALL_DIR}/${package_name})
-	set(faiss_USE_STATIC_LIBRARIES TRUE)
+        message(STATUS "faiss root path ${faiss_ROOT}")
+    endif()
+    
+    set(faiss_ROOT ${LIBRARY_INSTALL_DIR}/${package_name})
+    find_package(faiss COMPONENTS CXX C static REQUIRED NO_MODULE)
 
-	find_package(faiss COMPONENTS CXX C static REQUIRED NO_MODULE)
-
-	message(STATUS "Include for faiss at ${faiss_INCLUDE_DIR} - version ${faiss_VERSION_STRING}")
-	set(MV_GRAD_ARTIFACTORY_LIBS_INSTALLED TRUE CACHE BOOL "Use the prebuilt libraries from artifactory" FORCE)
+    set(MV_GRAD_ARTIFACTORY_LIBS_INSTALLED TRUE CACHE BOOL "Use the prebuilt libraries from artifactory" FORCE)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -199,6 +196,11 @@ target_compile_definitions(${PROJECT} PRIVATE NOGDI)
 
 target_compile_features(${PROJECT} PRIVATE cxx_std_17)
 
+set_target_properties(${PROJECT}
+    PROPERTIES
+    FOLDER ViewPlugins
+)
+
 # -----------------------------------------------------------------------------
 # Target include directories
 # -----------------------------------------------------------------------------
@@ -207,13 +209,16 @@ target_include_directories(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(${PROJECT} PRIVATE "${ManiVault_INCLUDE_DIR}")
 
 if(NOT MV_GRV_USE_VCPKG)
-    target_include_directories(${PROJECT} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/include)
-    target_include_directories(${PROJECT} SYSTEM PRIVATE ${CUDA_INCLUDE_DIRS})
+    if(MV_GRAD_ARTIFACTORY_LIBS_INSTALLED)
+        target_include_directories(${PROJECT} SYSTEM PRIVATE ${faiss_ROOT}/include)
+    else()
+        target_include_directories(${PROJECT} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/include)
+    endif()
 endif()
 
+target_include_directories(${PROJECT} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/Eigen/include)
 target_include_directories(${PROJECT} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/jcv/include)
 target_include_directories(${PROJECT} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/annoy/include)
-target_include_directories(${PROJECT} SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/Eigen/include)
 
 # -----------------------------------------------------------------------------
 # Target library linking
@@ -223,11 +228,11 @@ target_link_libraries(${PROJECT} PRIVATE Qt6::WebEngineWidgets)
 target_link_libraries(${PROJECT} PRIVATE Qt6::OpenGL)
 target_link_libraries(${PROJECT} PRIVATE Qt6::OpenGLWidgets)
 
-if (MV_GRV_USE_VCPKG)
+if (MV_GRV_USE_VCPKG OR MV_GRAD_ARTIFACTORY_LIBS_INSTALLED)
+    message(STATUS "Link to faiss")
     target_link_libraries(${PROJECT} PRIVATE faiss)
 else()
-    message(STATUS "Link to faiss and MKL")
-    message(STATUS "${MKL_LIBRARIES}")
+    message(STATUS "Link to faiss and MKL from thirdparty folder")
     target_link_libraries(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/faiss/lib/$<CONFIGURATION>/faiss.lib)
     target_link_libraries(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/MKL/lib/mkl_core_dll.lib)
     target_link_libraries(${PROJECT} PRIVATE ${PROJECT_SOURCE_DIR}/thirdparty/MKL/lib/mkl_intel_lp64_dll.lib)
@@ -264,17 +269,19 @@ add_custom_command(TARGET ${PROJECT} POST_BUILD
         --prefix ${ManiVault_INSTALL_DIR}/$<CONFIGURATION>
 )
 
-if(NOT MV_GRV_USE_VCPKG)
+if (MV_GRV_USE_VCPKG OR MV_GRAD_ARTIFACTORY_LIBS_INSTALLED)
+    mv_install_dependencies(${PROJECT} "faiss")
+else()
     # Copy faiss DLLs
     add_custom_command(TARGET ${PROJECT} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-	    "${PROJECT_SOURCE_DIR}/thirdparty/faiss/bin/"
-	    ${ManiVault_INSTALL_DIR}/$<CONFIGURATION>)
-	
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${PROJECT_SOURCE_DIR}/thirdparty/faiss/bin/"
+            ${ManiVault_INSTALL_DIR}/$<CONFIGURATION>/PluginDependencies/${PROJECT})
+            
     add_custom_command(TARGET ${PROJECT} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-    	    "${PROJECT_SOURCE_DIR}/thirdparty/MKL/bin"
-    	    ${ManiVault_INSTALL_DIR}/$<CONFIGURATION>)
+            "${PROJECT_SOURCE_DIR}/thirdparty/MKL/bin"
+            ${ManiVault_INSTALL_DIR}/$<CONFIGURATION>/PluginDependencies/${PROJECT})
 endif()
 
 # -----------------------------------------------------------------------------
@@ -282,6 +289,6 @@ endif()
 # -----------------------------------------------------------------------------
 # Automatically set the debug environment (command + working directory) for MSVC
 if(MSVC)
-    set_property(TARGET ${PROJECT} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<IF:$<CONFIG:DEBUG>,${ManiVault_INSTALL_DIR}/debug,${ManiVault_INSTALL_DIR}/release>)
-    set_property(TARGET ${PROJECT} PROPERTY VS_DEBUGGER_COMMAND $<IF:$<CONFIG:DEBUG>,"${ManiVault_INSTALL_DIR}/debug/ManiVault Studio.exe","${ManiVault_INSTALL_DIR}/release/ManiVault Studio.exe">)
+    set_property(TARGET ${PROJECT} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<IF:$<CONFIG:DEBUG>,${ManiVault_INSTALL_DIR}/Debug,$<IF:$<CONFIG:RELWITHDEBINFO>,${ManiVault_INSTALL_DIR}/RelWithDebInfo,${ManiVault_INSTALL_DIR}/Release>>)
+    set_property(TARGET ${PROJECT} PROPERTY VS_DEBUGGER_COMMAND $<IF:$<CONFIG:DEBUG>,${ManiVault_INSTALL_DIR}/Debug/ManiVault\ Studio.exe,$<IF:$<CONFIG:RELWITHDEBINFO>,${ManiVault_INSTALL_DIR}/RelWithDebInfo/ManiVault\ Studio.exe,${ManiVault_INSTALL_DIR}/Release/ManiVault\ Studio.exe>>)
 endif()
