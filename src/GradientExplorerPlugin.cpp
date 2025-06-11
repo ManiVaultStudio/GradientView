@@ -375,7 +375,6 @@ void GradientExplorerPlugin::resetState()
 
     // Graph
     _graphView->reset();
-    _bins.clear();
 
     // Local dimensionality
     _localSpatialDimensionality.clear();
@@ -554,7 +553,7 @@ void GradientExplorerPlugin::computeStaticData()
     }
 
     std::cout << "Number of enabled dimensions in the dataset : " << _dataStore.getNumDimensions() << std::endl;
-    _bins.resize(_dataStore.getNumDimensions(), std::vector<int>(30));
+    _graphView->setBinSizes(_dataStore.getNumDimensions(), 30);
 
     timer.finish("Graph init");
 }
@@ -1000,28 +999,7 @@ void GradientExplorerPlugin::updateFloodScalarOutput(const std::vector<float>& s
 
 void GradientExplorerPlugin::computeGraphs()
 {
-    // Binning
-    int numBins = (int)_bins.size();
-    int binSteps = (int)_bins[0].size();
-
-    for (int d = 0; d < numBins; d++)
-        std::fill(_bins[d].begin(), _bins[d].end(), 0);
-
-#pragma omp parallel for
-    for (int d = 0; d < numBins; d++)
-    {
-        int* const bins_d = &_bins[d][0];
-        float* const norm_d = &_normalizedData[d][0];
-
-        for (bigint i = 0; i < _floodFill.getTotalNumNodes(); i++)
-        {
-            const float& f = norm_d[_floodFill.getAllNodes()[i]];
-            bins_d[(bigint)(f * binSteps)]++;
-        }
-    }
-    qDebug() << "Graphs computed";
-
-    _graphView->setBins(_bins);
+    _graphView->recomputeGraphs(_floodFill, _normalizedData);
 }
 
 void GradientExplorerPlugin::onLineClicked(dint dim)

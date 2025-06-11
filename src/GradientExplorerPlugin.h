@@ -244,7 +244,6 @@ private:
 
     // Graph
     GraphView*                      _graphView;
-    std::vector<std::vector<int>>   _bins;
     QTimer*                         _graphTimer;
 
     // Local dimensionality

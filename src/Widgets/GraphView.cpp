@@ -1,5 +1,7 @@
 #include "GraphView.h"
 
+#include "Compute/FloodFill.h"
+
 #include "Timer.h"
 
 using namespace mv;
@@ -25,13 +27,44 @@ GraphView::GraphView() :
 
 void GraphView::reset()
 {
-
+    _bins.clear();
 }
 
 void GraphView::setTopDimensions(int d1, int d2)
 {
     _topDimension1 = d1;
     _topDimension2 = d2;
+}
+
+void GraphView::setBinSizes(int numDimensions, int numBins)
+{
+    _bins.resize(numDimensions, std::vector<int>(numBins));
+}
+
+void GraphView::recomputeGraphs(const FloodFill& floodFill, std::vector<std::vector<float>>& normalizedData)
+{
+    // Binning
+    int numBins = (int)_bins.size();
+    int binSteps = (int)_bins[0].size();
+
+    for (int d = 0; d < numBins; d++)
+        std::fill(_bins[d].begin(), _bins[d].end(), 0);
+
+#pragma omp parallel for
+    for (int d = 0; d < numBins; d++)
+    {
+        int* const bins_d = &_bins[d][0];
+        float* const norm_d = &normalizedData[d][0];
+
+        for (bigint i = 0; i < floodFill.getTotalNumNodes(); i++)
+        {
+            const float& f = norm_d[floodFill.getAllNodes()[i]];
+            bins_d[(bigint)(f * binSteps)]++;
+        }
+    }
+    qDebug() << "Graphs computed";
+
+    setBins(_bins);
 }
 
 void GraphView::setBins(const std::vector<std::vector<int>>& bins)

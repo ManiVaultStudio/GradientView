@@ -12,6 +12,8 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QMatrix4x4>
 
+class FloodFill;
+
 class GraphView : public QOpenGLWidget, QOpenGLFunctions_3_3_Core
 {
     Q_OBJECT
@@ -20,6 +22,11 @@ public:
 
     void reset();
     void setTopDimensions(int d1, int d2);
+
+    void setBinSizes(int numDimensions, int numBins);
+    void recomputeGraphs(const FloodFill& floodFill, std::vector<std::vector<float>>& normalizedData);
+
+private:
     void setBins(const std::vector<std::vector<int>>& bins);
 
 protected:
@@ -37,6 +44,8 @@ private:
     dint _topDimension1 = -1;
     dint _topDimension2 = -1;
     dint _selectedDimension = -1;
+
+    std::vector<std::vector<int>>   _bins;
 
     mv::gui::ColorMap1DAction _colorMapAction;
 
