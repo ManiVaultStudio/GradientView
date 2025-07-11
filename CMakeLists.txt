@@ -30,7 +30,7 @@ endif()
 # -----------------------------------------------------------------------------
 # Dependencies
 # -----------------------------------------------------------------------------
-SET(faiss_VERSION "1.7.3" CACHE STRING "Version of faiss Library")
+SET(faiss_VERSION "1.8.0" CACHE STRING "Version of faiss Library")
 SET_PROPERTY(CACHE faiss_VERSION PROPERTY STRINGS 1.80)
 
 find_package(ManiVault COMPONENTS Core PointData ClusterData CONFIG)
