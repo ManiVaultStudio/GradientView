@@ -194,7 +194,7 @@ add_library(${PROJECT} SHARED ${SOURCES} ${SHADERS} ${AUX})
 # Disable Windows GDI to avoid FloodFill name conflict
 target_compile_definitions(${PROJECT} PRIVATE NOGDI)
 
-target_compile_features(${PROJECT} PRIVATE cxx_std_17)
+target_compile_features(${PROJECT} PRIVATE cxx_std_20)
 
 set_target_properties(${PROJECT}
     PROPERTIES
