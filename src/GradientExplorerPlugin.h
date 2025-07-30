@@ -226,9 +226,9 @@ private:
     // Metadata visualisation
     Dataset<Clusters>               _metadataDataset;
     bool                            _showingMetadata = false;
-    QVector<Dataset<Clusters>>      _metadataDatasets;
-    MetadataView                    _metadataView;
-    std::vector<std::vector<int>>   _metadataIndexing;
+    //QVector<Dataset<Clusters>>      _metadataDatasets;
+    //MetadataView                    _metadataView;
+    //std::vector<std::vector<int>>   _metadataIndexing;
 
     // Masked KNN
     DataMatrix                      _maskedDataMatrix;

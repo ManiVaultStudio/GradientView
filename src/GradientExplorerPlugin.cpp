@@ -267,7 +267,7 @@ void GradientExplorerPlugin::init()
     // Expression graph
     gradientViewLayout->addWidget(&getUI().getSortedExpressionGraphLabel());
     gradientViewLayout->addWidget(_graphView, 70);
-    gradientViewLayout->addWidget(&_metadataView, 10);
+    //gradientViewLayout->addWidget(&_metadataView, 10);
 
     auto leftPanel = new QVBoxLayout();
     leftPanel->addWidget(&getUI().getMainView(), 90);
@@ -411,37 +411,37 @@ void GradientExplorerPlugin::positionDatasetChanged()
     // Update the window title to reflect the position dataset change
     updateWindowTitle();
 
-    // Collect metadata
-    auto* parentItem = dataHierarchy().getItem(_positionSourceDataset->getId());
-    DataHierarchyItems childrenItems = dataHierarchy().getChildren(*parentItem);
+    //// Collect metadata
+    //auto* parentItem = dataHierarchy().getItem(_positionSourceDataset->getId());
+    //DataHierarchyItems childrenItems = dataHierarchy().getChildren(*parentItem);
 
-    _metadataDatasets.clear();
-    for (DataHierarchyItem* item : childrenItems)
-    {
-        DataType type = item->getDataType();
-        if (type == ClusterType)
-        {
-            Dataset<Clusters> clusterDataset = item->getDataset<Clusters>();
-            _metadataDatasets.append(clusterDataset);
-            _metadataView.addListItem(clusterDataset);
-            qDebug() << clusterDataset->getGuiName();
-        }
-    }
-    // Compute metadata indices
-    _metadataIndexing.resize(_metadataDatasets.size(), std::vector<int>(_positionDataset->getNumPoints()));
-    for (int i = 0; i < _metadataDatasets.size(); i++)
-    {
-        Dataset<Clusters> metadata = _metadataDatasets[i];
+    //_metadataDatasets.clear();
+    //for (DataHierarchyItem* item : childrenItems)
+    //{
+    //    DataType type = item->getDataType();
+    //    if (type == ClusterType)
+    //    {
+    //        Dataset<Clusters> clusterDataset = item->getDataset<Clusters>();
+    //        _metadataDatasets.append(clusterDataset);
+    //        _metadataView.addListItem(clusterDataset);
+    //        qDebug() << clusterDataset->getGuiName();
+    //    }
+    //}
+    //// Compute metadata indices
+    //_metadataIndexing.resize(_metadataDatasets.size(), std::vector<int>(_positionDataset->getNumPoints()));
+    //for (int i = 0; i < _metadataDatasets.size(); i++)
+    //{
+    //    Dataset<Clusters> metadata = _metadataDatasets[i];
 
-        for (int c = 0; c < metadata->getClusters().size(); c++)
-        {
-            Cluster& cluster = metadata->getClusters()[c];
-            for (int index : cluster.getIndices())
-            {
-                _metadataIndexing[i][index] = c;
-            }
-        }
-    }
+    //    for (int c = 0; c < metadata->getClusters().size(); c++)
+    //    {
+    //        Cluster& cluster = metadata->getClusters()[c];
+    //        for (int index : cluster.getIndices())
+    //        {
+    //            _metadataIndexing[i][index] = c;
+    //        }
+    //    }
+    //}
 
     // Create flood nodes dataset if it doesn't exist yet
     if (!_floodScalars.isValid())
@@ -894,22 +894,22 @@ void GradientExplorerPlugin::onMetadataChanged()
 
 void GradientExplorerPlugin::computeCellMetadata()
 {
-    int selectedCell = _globalSelectedPoint;
+    //int selectedCell = _globalSelectedPoint;
 
-    QStringList metadataList;
+    //QStringList metadataList;
 
-    for (int i = 0; i < _metadataDatasets.size(); i++)
-    {
-        Dataset<Clusters> dataset = _metadataDatasets[i];
+    //for (int i = 0; i < _metadataDatasets.size(); i++)
+    //{
+    //    Dataset<Clusters> dataset = _metadataDatasets[i];
 
-        int clusterIndex = _metadataIndexing[i][selectedCell];
+    //    int clusterIndex = _metadataIndexing[i][selectedCell];
 
-        QString clusterName = dataset->getClusters()[clusterIndex].getName();
-        metadataList.append(dataset->getGuiName() + ": " + clusterName);
-    }
+    //    QString clusterName = dataset->getClusters()[clusterIndex].getName();
+    //    metadataList.append(dataset->getGuiName() + ": " + clusterName);
+    //}
 
-    getUI().getMainView().setMetadataList(metadataList);
-    qDebug() << metadataList;
+    //getUI().getMainView().setMetadataList(metadataList);
+    //qDebug() << metadataList;
 }
 
 void GradientExplorerPlugin::updateSelection()
@@ -987,7 +987,7 @@ void GradientExplorerPlugin::updateViewScalars()
 
 void GradientExplorerPlugin::updateFloodScalarOutput(const std::vector<float>& scalars)
 {
-    std::cout << "Flood scalars: " << scalars[1000] << std::endl;
+    //std::cout << "Flood scalars: " << scalars[1000] << std::endl;
 
     _floodScalars->setData<float>(scalars.data(), scalars.size(), 1);
     events().notifyDatasetDataChanged(_floodScalars);
