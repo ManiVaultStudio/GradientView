@@ -874,6 +874,7 @@ void GradientExplorerPlugin::onSliceIndexChanged()
     getUI().getMainView().setClusterName(QString::number(_currentSliceIndex) + ": " + clusterName);
 
     useSelectionAsDataView(indices);
+    updateSelection();
 }
 
 void GradientExplorerPlugin::onMetadataChanged()
