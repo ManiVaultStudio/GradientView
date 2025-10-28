@@ -205,6 +205,14 @@ bool GradientExplorerPlugin::eventFilter(QObject* target, QEvent* event)
 
         onSliceIndexChanged();
 
+        // when slice changes, the selected point should be reset
+        auto mouseEvent = static_cast<QMouseEvent*>(event);
+
+        Vector2f mousePos = Vector2f(mouseEvent->position().x(), mouseEvent->position().y());
+
+        if (_positionDataset.isValid())
+            mousePositionChanged(mousePos);
+
         break;
     }
 
