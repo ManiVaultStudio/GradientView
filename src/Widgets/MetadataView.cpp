@@ -12,7 +12,7 @@ MetadataView::MetadataView()
     setLayout(layout);
 }
 
-void MetadataView::addListItem(Dataset<Clusters> dataset)
+void MetadataView::addListItem(mv::Dataset<Clusters> dataset)
 {
     _listWidget->addItem(dataset->getGuiName());
 }

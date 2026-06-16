@@ -10,7 +10,7 @@ class MetadataView : public QWidget
 public:
     MetadataView();
 
-    void addListItem(Dataset<Clusters> dataset);
+    void addListItem(mv::Dataset<Clusters> dataset);
 private:
     QListWidget* _listWidget;
 };
