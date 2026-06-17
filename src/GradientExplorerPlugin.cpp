@@ -1077,7 +1077,8 @@ void GradientExplorerPlugin::importKnnGraph()
     _largeKnnGraph.readFromFile(fileName);
     _knnGraph.build(_largeKnnGraph, 10);
 
-    _graphAvailable = true;
+    if (_largeKnnGraph.getNeighbours().size() > 0) // check if the graph is valid
+        _graphAvailable = true;
 }
 
 /******************************************************************************
