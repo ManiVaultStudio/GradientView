@@ -17,6 +17,8 @@
 
 #include <DatasetsMimeData.h>
 
+#include <util/Serialization.h>
+
 #include "Compute/LocalDimensionality.h"
 #include "Compute/DataTransformations.h"
 #include "IO/RankingExport.h"
@@ -1157,7 +1159,7 @@ void GradientExplorerPlugin::fromVariantMap(const QVariantMap& variantMap)
 
         std::vector<int> linearNeighbours(numPoints * numNeighbours);
 
-        populateDataBufferFromVariantMap(qneighbours, (char*)linearNeighbours.data());
+        populateBytesFromBlobMap(qneighbours, (char*)linearNeighbours.data(), linearNeighbours.size() * sizeof(std::int32_t));
 
         std::vector<std::vector<int>> neighbours(numPoints, std::vector<int>(numNeighbours));
         int c = 0;
@@ -1222,7 +1224,7 @@ QVariantMap GradientExplorerPlugin::toVariantMap() const
                 linearNeighbours[c++] = neighbours[i][j];
         }
 
-        QVariantMap qneighbours = rawDataToVariantMap((char*)linearNeighbours.data(), linearNeighbours.size() * sizeof(std::int32_t), true);
+        QVariantMap qneighbours = bytesToBlobVariantMap((char*)linearNeighbours.data(), linearNeighbours.size() * sizeof(std::int32_t));
 
         variantMap.insert("largeKnnGraph", qneighbours);
         variantMap.insert("numPoints", QVariant::fromValue(neighbours.size()));
