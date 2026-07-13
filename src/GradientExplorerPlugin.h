@@ -119,7 +119,15 @@ public:
 public: // Flood fill
     void createKnnIndex(bool preciseKnn);
     void computeKnnGraph();
-    void rebuildKnnGraph(int floodNeighbours) { _knnGraph.build(_dataStore.getBaseData(), _knnIndex, floodNeighbours); }
+    void rebuildKnnGraph(int floodNeighbours) { 
+        if (_graphAvailable)
+        { 
+            _knnGraph.build(_dataStore.getBaseData(), _knnIndex, floodNeighbours);
+            qDebug() << "Rebuilt KNN graph with" << floodNeighbours << "neighbors.";
+        }
+        else 
+            qDebug() << "Graph not available: cannot rebuild KNN graph.";
+    }
 
     FloodFill& getFloodFill() { return _floodFill; }
 
